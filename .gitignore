@@ -4,3 +4,6 @@
 /rig_io/save*/*
 /save*/*
 /rig_io/DIFFS
+/__pycache__
+/dx/__pycache__
+/*/__pycache__

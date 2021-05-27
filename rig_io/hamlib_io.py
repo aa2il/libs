@@ -385,13 +385,13 @@ class hamlib_connect(direct_connect):
                 buf=self.get_response('BY;NA01;')
                 if VERBOSITY>0:
                     print('HAMLIB_IO - SET MODE: buf=',buf)
-            #buf=self.get_response('m')
-            #print('HAMLIB_IO - Set mode: buf=',buf)
-            self.select_vfo(vfo1)
+            print('HAMLIB_IO - Set mode: vfo1=',vfo1,VFO)
+            if vfo1!=VFO:
+                self.select_vfo(vfo1)
             
 
     def get_mode(self,VFO='A'):
-        VERBOSITY=1
+        #VERBOSITY=1
         if VERBOSITY>0:
             print('HAMLIB_IO: Get mode',VFO)
         
@@ -428,7 +428,7 @@ class hamlib_connect(direct_connect):
 
         
     def get_ant(self):
-        VERBOSITY=1
+        #VERBOSITY=1
         if VERBOSITY>0:
             print('HAMLIB_IO: Get Ant')
         
@@ -445,7 +445,7 @@ class hamlib_connect(direct_connect):
                     ant=int(buf[3])
                 else:
                     # They changed command and response in V4 - ugh!
-                    # Looks like they're changing again in V4.2?
+                    # Need my code patch to hamlib for this to work.
                     x = self.get_response('y 0').split('\n')
                     if VERBOSITY>0:
                         print('HAMLIB_IO: Get Ant: x=',x)
@@ -837,3 +837,23 @@ class hamlib_connect(direct_connect):
             return -1
 
 
+
+    # Function to get monitor level
+    def get_monitor_gain(self):
+        VERBOSITY=1
+        buf = self.get_response('l MONITOR_GAIN')
+        if VERBOSITY>0:
+            print('HAMLIB_IO - GET_MONITOR_GAIN: buf=',buf)
+        return int( 100*float(buf) )
+    
+        
+    # Function to set monitor level
+    def set_monitor_gain(self,gain):
+        VERBOSITY=1
+        #print('gain=',gain)
+        cmd  = 'L MONITOR_GAIN '+str(.01*float(gain))
+        buf=self.get_response(cmd)
+        if VERBOSITY>0:
+            print('HAMLIB_IO - SET_MONITOR_GAIN: buf=',buf)
+    
+        

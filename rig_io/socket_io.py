@@ -293,6 +293,12 @@ def get_status(self):
         frq  = s.get_freq() * 1e-3
         mode = s.get_mode()
         ant  = s.get_ant()
+        read_mic_gain(self)
+        print(("GAIN: %d" % self.gain))
+        try:
+            self.slider1.set(self.gain)
+        except:
+            pass
         print('Get Status:',frq,mode,ant)
         
     elif s.rig_type=='Kenwood':
@@ -348,7 +354,8 @@ def get_status(self):
         mode='RTTY'
 
     # Save these
-    x=str(frq)+' KHz  '+str(mode)
+    #x=str(frq)+' KHz  '+str(mode)
+    x = format(frq,',.3f')+' KHz  '+str(mode)
 
     # Decode which band
     if frq>=1200000 and frq<=1400000:
@@ -639,6 +646,7 @@ def SelectMode(self,b=None,m=None):
     if self.sock.rig_type=='Hamlib' or self.sock.rig_type=='Icom':
         print("\n=-=-=- Select Mode:",b,m,self.sock.connection)
         self.sock.set_mode(m)
+        get_status(self)
         return
         
     c = modes[m]["Code"]
@@ -811,7 +819,11 @@ def set_mic_gain(self,gain=None):
 
     mode=s.get_mode()
     print("SET_MIC_GAIN: Setting Mic Gain to",gain,mode)
-    if mode=='PKTUSB' or mode=='PKT-U' or mode=='RTTY':
+    if mode=='CW':
+        # There's no mic gain to set in CW!
+        return
+    
+    elif mode=='PKTUSB' or mode=='PKT-U' or mode=='RTTY':
         if s.rig_type2=='FT991a':
             cmd = 'BY;'                                # No-op since what we really need isn't available
             #cmd = 'BY;EX073'+str(gain).zfill(3)+';'   # Set input audio level for digital modes - nope
@@ -831,15 +843,21 @@ def set_mic_gain(self,gain=None):
     
 def set_mon_level(self,gain=None):
     s = self.sock
-    if s.rig_type=='Kenwood' or s.rig_type=='Icom' or s.rig_type=='Hamlib':
+    if s.rig_type=='Kenwood' or s.rig_type=='Icom':
         print('SET_MON_LEVEL not available in',s.rig_type,s.rig_type2,'command set')
         return
     if not gain:
         gain = self.mon_level
     print(("SET_MON_LEVEL: Setting Monitor Level Gain %s " % gain))
 
-    #cmd  = 'BY;EX035'+str(gain).zfill(3)+';'   # Set input audio level for digital modes
-    cmd  = 'BY;ML1'+str(gain).zfill(3)+';'   # Set input audio level for digital modes
+
+    self.sock.set_monitor_gain(gain)
+    #print('-------------------------------------- Mon Level=',self.mon_level)
+    return 
+
+    # Old obsolete code
+    #cmd  = 'BY;EX035'+str(gain).zfill(3)+';' 
+    cmd  = 'BY;ML1'+str(gain).zfill(3)+';' 
     buf=self.sock.get_response(cmd)
     print('Monitor level set.')
 
@@ -847,10 +865,15 @@ def set_mon_level(self,gain=None):
 def read_monitor_level(self):
     s = self.sock
     self.mon_level=0
-    if s.rig_type=='Kenwood' or s.rig_type=='Icom' or s.rig_type=='Hamlib':
+    if s.rig_type=='Kenwood' or s.rig_type=='Icom':
         print('READ_MONITOR_LEVEL not available in',s.rig_type,s.rig_type2,'command set')
         return self.mon_level
-    
+
+    self.mon_level = self.sock.get_monitor_gain()
+    #print('-------------------------------------- Mon Level=',self.mon_level)
+    return  self.mon_level
+
+    # Old obsolete code
     print("Reading Monitor level ...")
     Done=False
     itries=0
@@ -915,12 +938,17 @@ def read_mic_gain(self):
     #if s.rig_type=='Kenwood' or s.rig_type=='Icom' or s.rig_type=='Hamlib':
     if s.rig_type=='Kenwood' or s.rig_type=='Icom' or \
        (s.rig_type=='Hamlib' and s.rig_type2!='FTdx3000' and s.rig_type2!='FT991a'):
+    #if s.rig_type=='Kenwood' or s.rig_type=='Icom':
         print('READ_MIC_GAIN not available in',s.rig_type,s.rig_type2,'command set')
         return self.gain
 
     mode=s.get_mode()
     print("SOCKET_IO: READ_MIC_GAIN - Reading Mic Gain ...",mode)
-    if mode=='PKTUSB' or mode=='PKT-U' or mode=='RTTY':
+    if mode=='CW':
+        # There's no mic gain to set in CW!
+        return
+    
+    elif mode=='PKTUSB' or mode=='PKT-U' or mode=='RTTY':
         if s.rig_type2=='FT991a':
             #cmd = 'BY;EX073;'   # Get input audio level for digital modes - nope
             cmd = 'EX073;'   # Get input audio level for digital modes - nope
