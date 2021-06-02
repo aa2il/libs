@@ -1,17 +1,14 @@
 #!/usr/bin/python
 ################################################################################
-
+#
 # Spot Processing - J.B.Attili - ?
-
+#
 # Functions for processing spot from the dx cluster
 #
-# I think the original basis for this came from
-# https://github.com/magicbug/dxcluster-slurper
+# I think the original for this came from
+# https://github.com/dh1tw/DX-Cluster-Parser
 # If you recognize this code, please email me so I can give proper attribution.
-
-# To Do:
-# - Test main under python 3
-
+#
 ################################################################################
 
 import os

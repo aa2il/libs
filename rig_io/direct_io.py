@@ -1,17 +1,31 @@
-############################################################################################
-
-# Direct IO - J.B.Attili - 2019
-
-# Socket I/O routines related to commanding the radio via a direct USB connection.
-
+#######################################################################################
+#
+# Direct Rig IO - Rev 1.0
+# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+#
+# Socket I/O routines related to commanding the radio via a
+# direct USB connection.
+#
 # If there are problems with serial module:
 # First uninstall serial with
 #         sudo pip uninstall serial
 # Then, if import serial does not work anymore: use
 #         sudo pip install pyserial
 # to install the correct serial module.
-
-############################################################################################
+#
+#######################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+#######################################################################################
 
 import sys
 from .ft_tables import *
@@ -23,11 +37,11 @@ from .icom_io import *
 from datetime import timedelta,datetime
 from pytz import timezone
 
-############################################################################################
+#######################################################################################
 
 VERBOSITY=0
 
-############################################################################################
+#######################################################################################
 
 # Routine to strip off any leading garbage (e.g. ?;)
 def strip_garbage(buf,cmd):
@@ -93,7 +107,10 @@ def try_port(port,baud,verbosity):
                 print('TRY_PORT: cmd=%s \t response=%s',(cmd,buf))
                 
             if buf=='ID0460;':
-                return ['Yaesu','FTdx3000']
+                self.rig_type  = 'Yaesu'
+                self.rig_type2 = 'FTdx3000'
+                self.lock      = threading.Lock() 
+                return ['Yaesu','FTdx3000',self]
             elif buf=='ID0670;':
                 self.rig_type  = 'Yaesu'
                 self.rig_type2 = 'FT991a'

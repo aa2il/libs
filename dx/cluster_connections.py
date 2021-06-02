@@ -2,9 +2,9 @@
 
 # Cluster Connections - J.B.Attili - ?
 
-# Functions relaed to connections to dx cluster.
+# Functions related to connections to dx cluster.
 #
-# I'm not sure where the original for this came from.
+# I'm not completely sure where the original for this came from.
 # If you recognize this code, please email me so I can give proper attribution.
 
 ################################################################################
@@ -35,7 +35,8 @@ def get_logger(name):
     return(logger)
 
 # Function to open telnet connection
-def connection(TEST_MODE,CLUSTER,fname=None,ip_addr=None,port=None):
+def connection(TEST_MODE,CLUSTER,MY_CALL,fname=None,ip_addr=None,port=None):
+    
     if TEST_MODE:
 #        tn = open('spots.dat', 'r')
 #        tn = open('all_spots.dat', 'r')
@@ -100,7 +101,7 @@ def connection(TEST_MODE,CLUSTER,fname=None,ip_addr=None,port=None):
                         else:
                             line=line+ch
 
-            tn.write(b"AA2IL\n")              # send the callsign
+            tn.write( bytes(MY_CALL+"\n",'utf-8') )              # send the callsign
             print("--- Connected to DXCluster ---")
             time.sleep(.1)
             tn.write(b"SET/FT8\n")            # Enable ft8 spots - there are a bunch of other things we can do also

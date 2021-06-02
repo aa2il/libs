@@ -1,9 +1,26 @@
 ############################################################################################
-
-# Hamlib IO - J.B.Attili - 2019
-
+#
+# Hamlib Rig IO - Rev 1.0
+# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+#
 # Socket I/O routines related to commanding the radio via hamlib.
-
+#
+############################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# Notes:
+# To test hamlib:
+#   echo f | nc -w 1 localhost 4532
+#
 ############################################################################################
 
 from .ft_tables import *
@@ -14,9 +31,6 @@ import select
 from .icom_io import icom_civ
 import threading
 
-# To test hamlib:
-#   echo f | nc -w 1 localhost 4532
-
 ############################################################################################
 
 VERBOSITY=0
@@ -25,8 +39,8 @@ USE_LOCK=True
 ############################################################################################
 
 # Object for connection via hamlib
-# We use direct_connect as the base class so we can inherit all the direct commands that we may need
-# as hamlib doesn't provide everythin
+# We use direct_connect as the base class so we can inherit all the
+# direct commands that we may need as hamlib doesn't provide everything
 class hamlib_connect(direct_connect):
     def __init__(self,host,port,baud,tag=''):
         if baud==0:

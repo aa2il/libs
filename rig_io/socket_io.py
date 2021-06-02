@@ -1,12 +1,13 @@
 ############################################################################################
-
-# Socket IO - J.B.Attili - 2019
-
+#
+# Socker IO - Rev 1.0
+# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+#
 # This module contains socket I/O routines related to commanding the radio.
-
+#
 # The "BY;" at the beginning of some commands is to make sure the radio responses.
 # Otherwise, hamlib takes much too long to respond.
-
+#
 # Notes on power control with the FT991a:
 #    The command we need is DT GAIN under the F/M-LIST menu.
 #    There doesn't appear to be a cat command for this.
@@ -15,7 +16,19 @@
 #        Use pactl -- set-sink-volume 12 90%  to set the volume of device 12 to 90%
 #        Use pactl -- set-sink-volume 12 -10%  to decrease the volume of device 12 by 10%
 #        etc
-
+#
+############################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
 ############################################################################################
 
 import sys

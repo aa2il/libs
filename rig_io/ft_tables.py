@@ -1,9 +1,22 @@
 ############################################################################################
-
-# FT Tables - J.B.Attili - 2019
-
+#
+# FT Tables - Rev 1.0
+# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+#
 # Tables defining various operating parameters and capabilities
-
+#
+############################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
 ############################################################################################
 
 from collections import OrderedDict
@@ -71,24 +84,25 @@ SAT_RIGS    = ['FT991a','IC9700']
 
 ############################################################################################
 
-MY_CALL     = 'AA2IL'
-#MY_CALL     = 'AA2IL/6'            # Use this for state QSO parties!!!
-MY_STATE    = 'CA'
-MY_COUNTY   = 'SDIE'
-MY_SEC      = 'SDG'
-MY_CAT      = '2E'
-MY_QTH      = 'SAN DIEGO, CA'
-MY_NAME     = 'JOE'
-MY_PREC     = 'A'
-MY_CQ_ZONE  = '3'
-MY_ITU_ZONE = '6'
-MY_CONT     = 'NA'
-MY_STATE    = 'CA'
-MY_GRID     = 'DM12'
-MY_SECTION  = 'SDG'
-MY_POWER    = 'LOW'
-MY_CHECK    = '78'
-MY_CITY     = 'Ramona, CA'
+if False:
+    MY_CALL     = 'AA2IL'
+    #MY_CALL     = 'AA2IL/6'            # Use this for state QSO parties!!!
+    MY_STATE    = 'CA'
+    MY_COUNTY   = 'SDIE'
+    MY_SEC      = 'SDG'
+    MY_CAT      = '2E'
+    MY_QTH      = 'SAN DIEGO, CA'
+    MY_NAME     = 'JOE'
+    MY_PREC     = 'A'
+    MY_CQ_ZONE  = '3'
+    MY_ITU_ZONE = '6'
+    MY_CONT     = 'NA'
+    MY_STATE    = 'CA'
+    MY_GRID     = 'DM12'
+    MY_SECTION  = 'SDG'
+    MY_POWER    = 'LOW'
+    MY_CHECK    = '78'
+    MY_CITY     = 'Ramona, CA'
 
 if False:
     # Overrides for Field day
@@ -651,16 +665,17 @@ def Icom_Decode_Mode(m):
 ############################################################################################
 
 # CW keyer messages for various contests
-KEYER_MSGS = OrderedDict()
-KEYER_MSGS["Defaults"]  = [MY_CALL,'TU 5NN '+MY_STATE,'OP '+MY_NAME,'73','BK','0001']
-KEYER_MSGS["ARRL DX"]   = [MY_CALL,'TU 5NN '+MY_STATE,MY_STATE+' '+MY_STATE,'73','AGN?','0001']
-KEYER_MSGS["NAQP"]      = [MY_CALL,'TU '+MY_NAME+' '+MY_STATE,MY_NAME+' '+MY_NAME,MY_STATE+' '+MY_STATE,'AGN?','0001']
-KEYER_MSGS["IARU"]      = [MY_CALL,'TU 5NN '+MY_ITU_ZONE,'T6 T6','73','AGN?','0001']
-KEYER_MSGS["CQ WW"]     = [MY_CALL,'TU 5NN '+MY_CQ_ZONE,'T3 T3','73','AGN?','GL']
-KEYER_MSGS["CQ WPX"]    = [MY_CALL,'TU 5NN 1','001 001','73','AGN?','0001']
-KEYER_MSGS["ARRL 160m"] = [MY_CALL,'TU 5NN '+MY_SEC,MY_SEC+' '+MY_SEC,'73','AGN?','0001']
-KEYER_MSGS["Field Day"] = [MY_CALL,'TU '+MY_CAT+' '+MY_SEC,MY_CAT+' '+MY_CAT,MY_SEC+' '+MY_SEC,'AGN?','0001']
-#KEYER_MSGS["Test"]      = ['TEST1','2','3','4','5','0001']
+if False:
+    KEYER_MSGS = OrderedDict()
+    KEYER_MSGS["Defaults"]  = [MY_CALL,'TU 5NN '+MY_STATE,'OP '+MY_NAME,'73','BK','0001']
+    KEYER_MSGS["ARRL DX"]   = [MY_CALL,'TU 5NN '+MY_STATE,MY_STATE+' '+MY_STATE,'73','AGN?','0001']
+    KEYER_MSGS["NAQP"]      = [MY_CALL,'TU '+MY_NAME+' '+MY_STATE,MY_NAME+' '+MY_NAME,MY_STATE+' '+MY_STATE,'AGN?','0001']
+    KEYER_MSGS["IARU"]      = [MY_CALL,'TU 5NN '+MY_ITU_ZONE,'T6 T6','73','AGN?','0001']
+    KEYER_MSGS["CQ WW"]     = [MY_CALL,'TU 5NN '+MY_CQ_ZONE,'T3 T3','73','AGN?','GL']
+    KEYER_MSGS["CQ WPX"]    = [MY_CALL,'TU 5NN 1','001 001','73','AGN?','0001']
+    KEYER_MSGS["ARRL 160m"] = [MY_CALL,'TU 5NN '+MY_SEC,MY_SEC+' '+MY_SEC,'73','AGN?','0001']
+    KEYER_MSGS["Field Day"] = [MY_CALL,'TU '+MY_CAT+' '+MY_SEC,MY_CAT+' '+MY_CAT,MY_SEC+' '+MY_SEC,'AGN?','0001']
+    #KEYER_MSGS["Test"]      = ['TEST1','2','3','4','5','0001']
 
 ############################################################################################
 

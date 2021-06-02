@@ -1,25 +1,11 @@
-#! /usr/bin/python
+#! /usr/bin/python3
 ############################################################################################
-
-# AUDIO IO - J.B.Attili - 2018
-
-# Wave recorder class - based on code from
-# https://gist.github.com/sloria/5693955
-
-# Provides WAV recording functionality via two approaches:
-# 1) Blocking mode (record for a set duration):
-# >>> rec = WaveRecorder('blocking.wav', 'wb',channels=2)
-# ... rec.record(duration=5.0)
 #
-# 2) Non-blocking mode (start and stop recording):
-# >>> rec = WaveRecorder('nonblocking.wav', 'wb',channels=2)
-# ... rec.start_recording()
-# ... time.sleep(5.0)
-# ... rec.stop_recording()
-
-# To Do:
-#   - Test under python 3
-
+# audio_io.py - Rev 1.0 - Joseph B. Attili, aa2il AT arrl DOT net
+#
+# Wave recorder class.
+# Originally inspired by code snippent found at https://gist.github.com/sloria/5693955.
+#
 ############################################################################################
 
 import pyaudio

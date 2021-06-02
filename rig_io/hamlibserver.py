@@ -1,12 +1,11 @@
 #! /usr/bin/python
 ##############################################################################################################
-
-# Hamlib Server - J.B.Attili - 2019
-
+#
+# Hamlib Server - Rev 1.0
+# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+#
 # Functions that implement a minimal subset of the hamlib protocal.
 # Just enough to make WSJTX & FLDIGI happy (with a few additions).
-#
-# Based on code by James C. Ahlstrom 2012
 #
 # Port scheme:
 #     Port       SDR RX     Rig VFO
@@ -22,19 +21,34 @@
 #     4676         1          B
 #     4677         2          B
 #     4678         3          B
-
+#
 # This module creates a Hamlib TCP server that implements the rigctl protocol.  To start the server,
 # run "python hamlibserver.py" from a command line.  To exit the server, type control-C.  Connect a
 # client to the server using localhost and port 4575.  The TCP server will imitate a software defined
 # radio, and you can get and set the frequency, etc.
-
+#
 # You can test it with "rigctl -m 2 -r localhost:4575".
-
+#
 # To Do:
 # Test stand alone under python 3
-
+#
 ##############################################################################################################
-
+#
+# Original for this module was based on code by James C. Ahlstrom (C) 2012
+# http://james.ahlstrom.name/hamlibserver.py
+# He has some interesting work posted there including an SDR transceiver called quisk.
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+##############################################################################################################
+#
 # !!!!!!!!!!! BIG NOTE !!!!!!!!!!!!!!
 # As used right now, this seems sluggish.  It is probably bx I'm using threading instead of multiprocessing
 # libraries to spawn various threads.  According to the Python Docs:
@@ -48,12 +62,14 @@
 # So at some point, let's try to multiprocessing instead.  Although the APIs are very similar, there is
 # the issue of sharing data.  For threading, this is trivial but for multiprocessing, it looks a bit
 # tricky.  STUDY UP B4 TRYING THIS!!!!!!!!
-
-############################################################################################
+#
+##############################################################################################################
 
 import sys, time, socket, string
 from pprint import pprint
 import threading
+
+##############################################################################################################
 
 DEFAULT_VERBOSITY=0     # 0=quiet, 1=enough to see hand-shaking, 2=detailed
 

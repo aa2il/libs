@@ -1,10 +1,23 @@
-################################################################################
-
-# File IO - J.B.Attili - 2018
-
-# Functions related to file io
-
-################################################################################
+#######################################################################################
+#
+# File IO - Rev 1.0
+# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+#
+# Functions related to file io.
+#
+#######################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+#######################################################################################
 
 import sys
 import os
@@ -78,7 +91,7 @@ def parse_simple_log(fn,args):
 
     return logbook
 
-
+#######################################################################################
 
 # Function to read list of qsos from input file
 def parse_adif(fn):
@@ -89,8 +102,6 @@ def parse_adif(fn):
     for record in raw:
 #        print record
         qso = {}
-#        tags = re.findall('<(.*?):(\d+).*?>([^<\t\n\r\f\v\Z]+)',record)
-#        tags = re.findall('<(.*?):(\d+).*?>([^<\s]+)',record)
         tags = re.findall('<(.*?):(\d+).*?>([^<]+)',record.replace('<RST> <CNTR>','A AA2IL 78 CA'))
 #        print tags
         for tag in tags:
@@ -162,3 +173,14 @@ def write_adif_log(qsos,fname,contest=''):
     fp.close()
             
 
+# Function to compute length of time for a qso
+def qso_time(rec):
+    if 'time_on' in rec :
+        ton = rec["time_on"]
+#        print "time on  = ",ton
+    if 'time_off' in rec :
+        toff = rec["time_off"]
+#        print "time off = ",toff
+
+    dt = 3600.*( int(toff[0:2]) - int(ton[0:2]) ) + 60.*(int(toff[2:4]) - int(ton[2:4])) + 1.*( int(toff[4:6]) - int(ton[4:6]) )
+    return dt

@@ -1,9 +1,10 @@
 ############################################################################################
-
-# Hamlib IO - J.B.Attili - 2019
-
+#
+# Icom Rig IO - Rev 1.0
+# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+#
 # Functions to support communicating with Icom 706 & 9700 rigs
-
+#
 # Some notes on the 706:
 #   - Press LOCK while powering on to set the following CI-V menu items:
 #        25 CI-V Address = 0x4E  - This is the default for the 706 MKII
@@ -12,13 +13,27 @@
 #                                  My software is not (yet?) robust enough to handle this so disable it.
 #        28 CI-V 731     = ?     - ??? - Probably should be off
 #   - Steve's radio only has the FL-223 optional filter installed which has BW = 1.9 KHz - very tough for CW!
-
+#
+############################################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# Notes:
+# To test hamlib:
+#   echo f | nc -w 1 localhost 4532
+#
 ############################################################################################
 
 import sys
 import numpy as np
-
-#VERBOSITY=0
 
 ############################################################################################
 
