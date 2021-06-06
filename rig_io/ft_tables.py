@@ -664,19 +664,6 @@ def Icom_Decode_Mode(m):
 
 ############################################################################################
 
-# CW keyer messages for various contests
-if False:
-    KEYER_MSGS = OrderedDict()
-    KEYER_MSGS["Defaults"]  = [MY_CALL,'TU 5NN '+MY_STATE,'OP '+MY_NAME,'73','BK','0001']
-    KEYER_MSGS["ARRL DX"]   = [MY_CALL,'TU 5NN '+MY_STATE,MY_STATE+' '+MY_STATE,'73','AGN?','0001']
-    KEYER_MSGS["NAQP"]      = [MY_CALL,'TU '+MY_NAME+' '+MY_STATE,MY_NAME+' '+MY_NAME,MY_STATE+' '+MY_STATE,'AGN?','0001']
-    KEYER_MSGS["IARU"]      = [MY_CALL,'TU 5NN '+MY_ITU_ZONE,'T6 T6','73','AGN?','0001']
-    KEYER_MSGS["CQ WW"]     = [MY_CALL,'TU 5NN '+MY_CQ_ZONE,'T3 T3','73','AGN?','GL']
-    KEYER_MSGS["CQ WPX"]    = [MY_CALL,'TU 5NN 1','001 001','73','AGN?','0001']
-    KEYER_MSGS["ARRL 160m"] = [MY_CALL,'TU 5NN '+MY_SEC,MY_SEC+' '+MY_SEC,'73','AGN?','0001']
-    KEYER_MSGS["Field Day"] = [MY_CALL,'TU '+MY_CAT+' '+MY_SEC,MY_CAT+' '+MY_CAT,MY_SEC+' '+MY_SEC,'AGN?','0001']
-    #KEYER_MSGS["Test"]      = ['TEST1','2','3','4','5','0001']
-
 ############################################################################################
 
 def arrl_sec2state(sec):

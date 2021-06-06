@@ -1399,6 +1399,28 @@ class direct_connect:
             print('DIRECT RIT: Invalid opt',opt)
             return -1
 
+
+
+    # Function to get monitor level
+    def get_monitor_gain(self):
+        VERBOSITY=1
+        buf = self.get_response('ML0;')
+        if VERBOSITY>0:
+            print('DIRECT_IO - GET_MONITOR_GAIN: buf=',buf,'\t',buf[3:6])
+        return int( buf[3:6] )
+    
+        
+    # Function to set monitor level
+    def set_monitor_gain(self,gain):
+        VERBOSITY=1
+        #print('gain=',gain)
+        cmd  = 'ML0'+str(gain).zfill(3)+';'
+        buf=self.get_response(cmd)
+        if VERBOSITY>0:
+            print('HAMLIB_IO - SET_MONITOR_GAIN: gain=',gain, \
+                  '\tcmd=',cmd,'\tbuf=',buf)
+    
+        
         
 # Empty structure
 class blank_struct(direct_connect):
@@ -1406,3 +1428,5 @@ class blank_struct(direct_connect):
         self.junk=None
 
     
+
+        
