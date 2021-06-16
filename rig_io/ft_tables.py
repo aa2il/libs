@@ -582,7 +582,7 @@ def Decode_Filter_ft991a(m,wide,idx):
         ret = str(filts[int(idx)])+' Hz'
     except:
         print('Decode_Filter_ft991a - Problem at end: m=',m,'\twide=',wide,'\tidx=',idx)
-        print('filts=',filts)
+        #print('filts=',filts)
         ret = '2400 Hz'
         
     return ret

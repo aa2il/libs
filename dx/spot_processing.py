@@ -167,17 +167,9 @@ class ChallengeData:
                 
 
             
-
-
-
-
-
-
-
-
 def get_configured_logger(name):
         logger = logging.getLogger(name)
-        #print 'GET_CONFIGURED_LOGGER 1...',name
+        #print('GET_CONFIGURED_LOGGER: name=',name)
         if (len(logger.handlers) == 0):
                 #print 'GET_CONFIGURED_LOGGER 2...',name
                 # This logger has no handlers, so we can assume it hasn't yet been configured
@@ -185,6 +177,7 @@ def get_configured_logger(name):
                 
                 #Define Formatters
                 formatter_simple="[%(levelname)s] [%(module)s]: %(message)s"
+                #formatter_verbose=("[%(levelname)s] [%(asctime)s] [%(module)s]: %(message)s","%d/%m/%Y %H:%M:%S")
                 formatter_verbose=("[%(levelname)s] [%(asctime)s] [%(module)s]: %(message)s","%d/%m/%Y %H:%M:%S")
 
                 #Define & Configure Handlers
@@ -198,7 +191,9 @@ def get_configured_logger(name):
 
                 #Assign Formatter to Handler
                 console_handler.setFormatter(logging.Formatter(formatter_simple))
-                file_handler.setFormatter(logging.Formatter(formatter_verbose))
+                #print('GET_CONFIGURED_LOGGER: fmt verbose=',formatter_verbose)
+                #file_handler.setFormatter(logging.Formatter(formatter_verbose))
+                file_handler.setFormatter(logging.Formatter(None))
                 
                 #Assign Handler to Logger
                 logger.addHandler(console_handler)

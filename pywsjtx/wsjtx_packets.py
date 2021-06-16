@@ -327,6 +327,12 @@ class DecodePacket(GenericWSJTXPacket):
                                                                                    self.mode)
         return str
 
+
+
+    def logged_contact(self):
+        print('Logged Contact: msg=',self.message)
+    
+
     
     def format_spot(self,old_status,my_call):
 
@@ -393,6 +399,35 @@ class QSOLoggedPacket(GenericWSJTXPacket):
         GenericWSJTXPacket.__init__(self, addr_port, magic, schema, pkt_type, id, pkt)
         # handle packet-specific stuff.
 
+        print('----------------------- TYPE 5 -------------------')
+        print('----------------------- TYPE 5 -------------------')
+        print('----------------------- TYPE 5 -------------------')
+
+        ps = PacketReader(pkt)
+        the_type = ps.QInt32()
+        self.wsjtx_id = ps.QString()
+
+"""
+ 
+ *                         Date & Time Off        QDateTime
+ *                         DX call                utf8
+ *                         DX grid                utf8
+ *                         Tx frequency (Hz)      quint64
+ *                         Mode                   utf8
+ *                         Report sent            utf8
+ *                         Report received        utf8
+ *                         Tx power               utf8
+ *                         Comments               utf8
+ *                         Name                   utf8
+ *                         Date & Time On         QDateTime
+ *                         Operator call          utf8
+ *                         My call                utf8
+ *                         My grid                utf8
+ *                         Exchange sent          utf8
+ *                         Exchange received      utf8
+ *                         ADIF Propagation mode  utf8
+ 
+ """
 class ClosePacket(GenericWSJTXPacket):
     TYPE_VALUE = 6
     def __init__(self, addr_port, magic, schema, pkt_type, id, pkt):
@@ -455,6 +490,16 @@ class LoggedADIFPacket(GenericWSJTXPacket):
         GenericWSJTXPacket.__init__(self, addr_port, magic, schema, pkt_type, id, pkt)
         # handle packet-specific stuff.
 
+        print('----------------------- TYPE 12 -------------------')
+        print('----------------------- TYPE 12 -------------------')
+        print('----------------------- TYPE 12 -------------------')
+
+        ps = PacketReader(pkt)
+        the_type = ps.QInt32()
+        self.wsjtx_id = ps.QString()
+        self.adif_text = ps.QString()
+        
+
     @classmethod
     def Builder(cls, to_wsjtx_id='WSJT-X', adif_text=""):
         # build the packet to send
@@ -497,7 +542,8 @@ class WSJTXPacketClassFactory(GenericWSJTXPacket):
         ReplayPacket.TYPE_VALUE:    ReplayPacket,
         HaltTxPacket.TYPE_VALUE:    HaltTxPacket,
         FreeTextPacket.TYPE_VALUE:  FreeTextPacket,
-        WSPRDecodePacket.TYPE_VALUE: WSPRDecodePacket
+        WSPRDecodePacket.TYPE_VALUE: WSPRDecodePacket,
+        LoggedADIFPacket.TYPE_VALUE: LoggedADIFPacket             # JBA
     }
     def __init__(self, addr_port, magic, schema, pkt_type, id, pkt):
         self.addr_port = addr_port

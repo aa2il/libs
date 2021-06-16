@@ -375,7 +375,10 @@ def write_mem_yaesu(self,grp,lab,ch,KHz,mode,pl,frq2,inverting):
         mode='FM'
     elif mode=='IQ':
         mode='USB'
-    P6=str(FTDX_MODES.index(mode))         # Mode
+    elif mode=='PKTUSB':
+        mode='PKT-U'
+    #P6=str(FTDX_MODES.index(mode))         # Mode
+    P6=hex(FTDX_MODES.index(mode))[2]         # Mode
     P7='0'
 
     # Check for a satellite
@@ -482,18 +485,18 @@ def write_mem_yaesu(self,grp,lab,ch,KHz,mode,pl,frq2,inverting):
     # Make sure tuner is off
     buf=self.sock.get_response('AC000;')
 
-    print('P1=',P1)
-    print('P2=',P2,len(P2))
-    print('P3=',P3)
-    print('P4=',P4)
-    print('P5=',P5)
-    print('P6=',P6)
-    print('P7=',P7)
-    print('P8=',P8)
-    print('P9=',P9)
-    print('P10=',P10)
-    print('P11=',P11)
-    print('P12=',P12,len(P12),lab)
+    print('Chan No.       = P1 =',P1)
+    print('Freq           = P2 =',P2,len(P2))
+    print('PL Tone        = P3 =',P3)
+    print('RX Clar Off/On = P4 =',P4)
+    print('TX Clar Off/On = P5 =',P5)
+    print('Mode           = P6 =',P6)
+    print('Zero?          = P7 =',P7)
+    print('PL Tone Off/ON = P8 =',P8)
+    print('00?            = P9 =',P9)
+    print('Shift/Offest   = P10=',P10)
+    print('Zero?          = P11=',P11)
+    print('Label          = P12=',P12,len(P12),lab)
 
     # Generate memory write tag command
     if self.sock.rig_type2=='FTdx3000':

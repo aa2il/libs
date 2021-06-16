@@ -1428,5 +1428,3 @@ class blank_struct(direct_connect):
         self.junk=None
 
     
-
-        

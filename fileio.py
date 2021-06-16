@@ -94,13 +94,26 @@ def parse_simple_log(fn,args):
 #######################################################################################
 
 # Function to read list of qsos from input file
-def parse_adif(fn):
-    raw = re.split('<eor>|<eoh>(?i)',open(fn).read() )
-    raw.pop(0)  #remove header
-    raw.pop()   #remove last empty item
+def parse_adif(fn,line=None):
+    if line==None:
+        #raw = re.split('<eor>|<eoh>(?i)',open(fn).read() )
+        raw1 = re.split('<eoh>(?i)',open(fn).read() )
+    else:
+        raw1 = re.split('<eoh>(?i)',line )
+        
+    raw = re.split('<eor>(?i)',raw1[-1] )
+
+    #print('raw[0] =',raw[0])
+    #print('raw[1] =',raw[1])
+    #raw.pop(0)  #remove header - this deletes 1st qso if there is no header!!!
+    #raw.pop()   #remove last empty item
+
     logbook =[]
     for record in raw:
-#        print record
+        #print(record,len(record))
+        if len(record)<=1:
+            continue
+        
         qso = {}
         tags = re.findall('<(.*?):(\d+).*?>([^<]+)',record.replace('<RST> <CNTR>','A AA2IL 78 CA'))
 #        print tags
@@ -113,10 +126,16 @@ def parse_adif(fn):
 
 
 # Function to create entire ADIF record and write it to a file
-def write_adif_record(fp,qso,contest):
+def write_adif_record(fp,qso,P):
+
+    contest = P.contest_name
+    MY_CALL = P.SETTINGS['MY_CALL']
+    MY_GRID = P.SETTINGS['MY_GRID']
+    MY_CITY = P.SETTINGS['MY_CITY']+', '+P.SETTINGS['MY_STATE']
 
     print('WRITE_ADIF_RECORD: keys=',list(qso.keys()))
     print('contest=',contest)
+    print('MY Call/Grid/City=',MY_CALL,MY_GRID,MY_CITY)
 
     if 'QSO_DATE' not in qso:
         qso['QSO_DATE'] = qso['QSO_DATE_OFF']

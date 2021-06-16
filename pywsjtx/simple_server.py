@@ -1,3 +1,6 @@
+# It looks like the original came from   https://github.com/bmo/py-wsjtx.git
+# There is some other interesting stuff there, e.g. interfacing with
+# N1MM logger.
 #
 # In WSJTX parlance, the 'network server' is a program external to the wsjtx.exe program that handles packets emitted by wsjtx
 #
@@ -11,6 +14,7 @@ import pywsjtx
 import logging
 import ipaddress
 from rig_io.util import convert_freq2band
+import re
 
 class SimpleServer(object):
     logger = logging.getLogger()
@@ -67,6 +71,17 @@ class SimpleServer(object):
                 the_packet = pywsjtx.WSJTXPacketClassFactory.from_udp_packet(addr_port, pkt)
                 print(the_packet)
 
+
+    def highlight_spot(self,callsign):
+        #print('HHHHHHHHHHHEEEEEEEEEEEEEYYYYYYYYYYYYYYY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!',
+        #      self.addr_port,self.wsjtx_id,callsign)
+        color_pkt = pywsjtx.HighlightCallsignPacket.Builder(self.wsjtx_id, callsign,
+                                                            pywsjtx.QCOLOR.Uncolor(),
+                                                            pywsjtx.QCOLOR.Red(),
+                                                            True)
+        self.send_packet(self.addr_port, color_pkt)
+
+
     # Function to process messages and spots from WSJT-X
     def get_spot2(self,line,verbosity=0):
         self.nsleep=0
@@ -97,6 +112,43 @@ class SimpleServer(object):
                     self.nsleep=1
                 except:
                     line=''
+
+                # Save these if we need to respond to this packet,e.g. highlight color
+                self.addr_port = addr_port
+                self.wsjtx_id  = the_packet.wsjtx_id
+                    
+                # This is how to highlight call signs
+                m = re.match(r"^CQ\s+(\S+)\s+", the_packet.message)
+                if m and False:
+                    print("Callsign {}".format(m.group(1)))
+                    callsign = m.group(1)
+
+                    print('&&&&&&&&&&&&&&&&&&&&&&&&&&&& ID=',the_packet.wsjtx_id)
+
+                    color_pkt = pywsjtx.HighlightCallsignPacket.Builder(the_packet.wsjtx_id, callsign,
+                                                                        pywsjtx.QCOLOR.White(),
+                                                                        pywsjtx.QCOLOR.Red(),
+                                                                        True)
+
+                    #normal_pkt = pywsjtx.HighlightCallsignPacket.Builder(the_packet.wsjtx_id, callsign,
+                    #                                                     pywsjtx.QCOLOR.Uncolor(),
+                    #                                                     pywsjtx.QCOLOR.Uncolor(),
+                    #                                                     True)
+                    self.send_packet(addr_port, color_pkt)
+
+                
+
+            elif type(the_packet) == pywsjtx.QSOLoggedPacket and False:
+                print(the_packet)
+                print('HEEEEEYYYYYYYYY!   5555555555555555')
+                #print('Logger:\t',the_packet.adif)
+                #line=the_packet.adif
+                    
+            elif type(the_packet) == pywsjtx.LoggedADIFPacket:
+                print(the_packet)
+                print('HEEEEEYYYYYYYYY!      12121212121212')
+                #print('Logger:\t',the_packet.adif_text)
+                line=the_packet.adif_text
                     
             else:
                 print('*** Need handler ***')
