@@ -42,6 +42,7 @@ preset_prefs['WFM2'] = ('200 KHz','10 KHz')
 preset_prefs['NFM']  = ('10 KHz','5 KHz')
 preset_prefs['FT8']   = ('10 KHz','4 KHz')
 preset_prefs['FT4']   = ('10 KHz','4 KHz')
+preset_prefs['PKTUSB']   = ('10 KHz','4 KHz')
 
 
 # Function to read presets from a spreadsheet
