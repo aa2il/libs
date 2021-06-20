@@ -361,9 +361,17 @@ class hamlib_connect(direct_connect):
             mode='CWR'
 
         if self.rig_type2=='FT991a':
+            if VFO=='A':
+                cmd  = 'M '+mode+' 0'
+            elif VFO=='B':
+                cmd  = 'X '+mode+' 0'
+            else:
+                print('HAMLIB_IO - SET MODE: Unknown VFO',VFO,mode)
+                return
+                
+        elif self.rig_type2=='FT991a' and VFO!='A':
             # RX VFO is always A, able to select VFO-B for tx using S 1 VFOB command but not yet implemented
-            if VFO!='A':
-                print('HAMLIB SET_MODE: Only VFO-A supported for FT991a (for now)')
+            print('HAMLIB SET_MODE: Only VFO-A supported for FT991a (for now)')
             return
             
         elif self.rig_type1 == 'Icom':
@@ -399,11 +407,11 @@ class hamlib_connect(direct_connect):
                 buf=self.get_response('BY;NA01;')
                 if VERBOSITY>0:
                     print('HAMLIB_IO - SET MODE: buf=',buf)
-            print('HAMLIB_IO - Set mode: vfo1=',vfo1,VFO)
-            if vfo1!=VFO:
+            if self.rig_type2=='FTdx3000' and vfo1!=VFO:
+                print('HAMLIB_IO - Set mode: vfo1=',vfo1,VFO)
                 self.select_vfo(vfo1)
-            
 
+                
     def get_mode(self,VFO='A'):
         #VERBOSITY=1
         if VERBOSITY>0:
@@ -871,3 +879,16 @@ class hamlib_connect(direct_connect):
             print('HAMLIB_IO - SET_MONITOR_GAIN: buf=',buf)
     
         
+    # Function to turn audio recording on/off - for use with SDR
+    def recorder(self,on_off=None):
+        VERBOSITY=1
+        if VERBOSITY>0:
+            print('HAMLIB_IO: Recorder',on_off)
+            
+        if on_off==None:
+            buf=self.get_response('REC')
+        elif on_off:
+            buf=self.get_response('REC1;REC')
+        else:
+            buf=self.get_response('REC0;REC')
+

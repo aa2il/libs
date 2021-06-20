@@ -168,7 +168,7 @@ class HamlibHandler:
     't':'ptt',
     'v':'vfo',
     's':'split',
-    #'w':'command',
+    'w':'command',
     'y':'ant',
     '_':'info',
     '1':'caps',
@@ -201,12 +201,14 @@ class HamlibHandler:
     h['set_ptt']	= self.SetPtt
     h['get_ant']	= self.GetAnt
     h['set_ant']	= self.SetAnt
-    #h['get_command']	= self.SendCommand
+    h['get_command']	= self.GetCommand
     #h['set_command']	= self.SendCommand
     h['get_info']	= self.GetInfo
     h['set_info']	= self.GetInfo
     h['get_quit']	= self.Quit
     h['set_quit']	= self.Quit
+    h['get_function']	= self.GetFunction
+    h['set_function']	= self.SetFunction
 
     if self.app.port==4675 and False:
       self.VERBOSITY = 2
@@ -233,17 +235,21 @@ class HamlibHandler:
       t += self.extended
       for i in range(0, len(args) - 1, 2):
         t = "%s%s: %s%c" % (t, args[i], args[i+1], self.extended)
-      t += "RPRT %d\n" % args[-1]
+      t += "RPRT A %d\n" % args[-1]
+      #print('HAMLIB_SERVER: Reply A - t=',t)
       
     elif len(args) > 1:
       # Use simple format
       t = ''
       for i in range(1, len(args) - 1, 2):
+        #print(i,args[i])
         t = "%s%s\n" % (t, args[i])
+      #print('HAMLIB_SERVER: Reply B - t=',t)
         
     else:
       # No names; just the required integer code
-      t = "RPRT %d\n" % args[0]
+      t = "RPRT C %d\n" % args[0]
+      #print('HAMLIB_SERVER: Reply C - t=',t)
       
     if self.VERBOSITY>=1:
       print('HAMLIB_SERVER: REPLY:',t.rstrip(),'on port',self.app.port)
@@ -542,9 +548,36 @@ class HamlibHandler:
     self.app.tx_vfo = "VFO"+vfo
     self.Reply('Split', self.app.split, 'TX VFO',self.app.tx_vfo,0)
 
+  # Receive a direct command 
+  def GetCommand(self):
+    if self.VERBOSITY>=1:
+      print('HAMLIB_SERVER: GET COMMAND: cmd=',self.cmd,self.params)
+
+    cmds = self.params.split(';')
+    #print('cmds=',cmds)
+    for cmd in cmds:
+      #print('cmd=',cmd,len(cmd))
+
+      # Special command for SDR - Audio Recorder on/off
+      if len(cmd)==3 and cmd=='REC':
+        #print('Recorder setting?')
+        resp = 'REC'+str(self.app.record)+';'
+      elif len(cmd)==4 and (cmd=='REC0' or cmd=='REC1'):
+        #print('Recorder set')
+        self.app.record=int(cmd[3])
+        #resp = 'REC'+str(self.app.record)+';'
+        resp=None
+        if self.P:
+          self.P.gui.StartStopSave_Demod(iopt=self.app.record)
+      else:
+        resp=-1
+        
+      if resp:
+        self.Reply('Cmd',resp,0)
+    
   # Send a command directly to the rig
   def SendCommand(self):
-    print('HAMLIB_SERVER: SEND COMMAND:',self.cmd,self.params)
+    print('HAMLIB_SERVER: SEND COMMAND: cmd=',self.cmd,self.params)
     print('This is not fully implemented yet')
     
   # Return rig info
@@ -609,6 +642,30 @@ class HamlibHandler:
       else:
         print('No P!')
 
+  # Return current function state
+  def GetFunction(self):
+    if self.VERBOSITY>=1 or True:
+      print('HAMLIB_SERVER: Get Function on port',self.app.port)
+    self.Reply('RECORD', self.app.record, 0)
+    
+  # Set Record
+  def SetFunction(self):
+    if self.VERBOSITY>=1 or True:
+      print('HAMLIB_SERVER: Set Function',self.params,'on port',self.app.port)
+      
+    try:
+      x = int(self.params)
+      self.Reply(0)
+    except:
+      self.ErrParam()
+    else:
+      print('x=',x)
+      if x:
+        self.app.record = 1
+      else:
+        self.app.record = 0
+
+        
   # No-op - ignore command
   def NoOp(self):
     if self.VERBOSITY>=1:
@@ -644,6 +701,7 @@ class HamlibServer:
     self.bandwidth = 2400
     self.vfo    = "VFOA"
     self.ptt    = 0
+    self.record = 0
     self.split  = 0
     self.tx_vfo = 'VFOA'
     self.ant    = 0
