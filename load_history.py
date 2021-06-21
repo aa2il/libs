@@ -128,7 +128,8 @@ def load_history(history):
 
 
     print('LOAD HISTORY:',history)
-    with open(history,'r') as csvfile:   # This was ok under 2.7 but sometimes not 3 - there is something in FD_2018 it doesn't like
+    with open(history,'r') as csvfile:   # This was ok under 2.7 but sometimes not 3
+    # In FD.txt, it doesn't like the e' in VE2CVN
     #with open(history,'r',errors='ISO-8859-1') as csvfile:   # This used to work
     #with open(history,'r',errors='replace') as csvfile:       # So does this
     #with open(history,'r',newline='',encoding='utf-8') as csvfile:  # This does not

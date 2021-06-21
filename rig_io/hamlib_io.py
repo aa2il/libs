@@ -131,7 +131,11 @@ class hamlib_connect(direct_connect):
             self.rig_type2 = 'FT991a'
         elif caps2['Model name']=='FT-2000':
             self.rig_type1 = 'Yaesu'
-            self.rig_type2 = 'FT-2000'            # Dummy for hamlibserver
+            self.rig_type2 = 'FT-2000'            # Was dummy for hamlibserver
+        elif caps2['Model name']=='pySDR':
+            self.rig_type1 = 'SDR'
+            #self.rig_type1 = 'Yaesu'
+            self.rig_type2 = 'pySDR'            # pySDR
         elif caps2['Model name']=='TS-850':
             self.rig_type1 = 'Kenwood'
             self.rig_type2 = 'TS850'
@@ -303,7 +307,7 @@ class hamlib_connect(direct_connect):
         return frq
 
     def set_freq(self,frq_KHz,VFO='A'):
-        VERBOSITY=1
+        #VERBOSITY=1
         if VERBOSITY>0:
             print('HAMLIB_IO: Set freq',frq_KHz,VFO,self.freq)
 
@@ -360,21 +364,7 @@ class hamlib_connect(direct_connect):
         elif mode=='CWLSB' or mode=='CW-R':
             mode='CWR'
 
-        if self.rig_type2=='FT991a':
-            if VFO=='A':
-                cmd  = 'M '+mode+' 0'
-            elif VFO=='B':
-                cmd  = 'X '+mode+' 0'
-            else:
-                print('HAMLIB_IO - SET MODE: Unknown VFO',VFO,mode)
-                return
-                
-        elif self.rig_type2=='FT991a' and VFO!='A':
-            # RX VFO is always A, able to select VFO-B for tx using S 1 VFOB command but not yet implemented
-            print('HAMLIB SET_MODE: Only VFO-A supported for FT991a (for now)')
-            return
-            
-        elif self.rig_type1 == 'Icom':
+        if self.rig_type1 == 'SDR' or self.rig_type1 == 'Icom' or self.rig_type2=='FT991a':
             if VFO in 'AM':
                 cmd  = 'M '+mode+' 0'
             elif VFO in 'BS':
@@ -382,7 +372,9 @@ class hamlib_connect(direct_connect):
             else:
                 print('HAMLIB_IO - SET MODE: Unknown VFO',VFO,mode)
                 return
+
         else:
+            # Not sure why we're treating this special - perhaps need to reset VFO on ftdx3000?
             vfo1=self.get_vfo()[0]
             if vfo1!=VFO:
                 self.select_vfo(VFO)
@@ -778,7 +770,7 @@ class hamlib_connect(direct_connect):
             return -1
 
 
-    # Function to get active VFO - only works for FTdx3000 so use direct connect instead
+    # Function to get active VFO - only works for FTdx3000 so use direct connect instead for now
     def get_vfo_hamlib(self):
         VERBOSITY=1
         buf = self.get_response('v')
@@ -881,14 +873,23 @@ class hamlib_connect(direct_connect):
         
     # Function to turn audio recording on/off - for use with SDR
     def recorder(self,on_off=None):
-        VERBOSITY=1
+        #VERBOSITY=1
         if VERBOSITY>0:
             print('HAMLIB_IO: Recorder',on_off)
-            
-        if on_off==None:
-            buf=self.get_response('REC')
-        elif on_off:
-            buf=self.get_response('REC1;REC')
-        else:
-            buf=self.get_response('REC0;REC')
 
+        if self.rig_type2 == 'pySDR':
+            
+            if on_off==None:
+                buf=self.get_response('w REC')
+            elif on_off:
+                buf=self.get_response('w REC1;REC')
+            else:
+                buf=self.get_response('w REC0;REC')
+            val = buf[3]=='1'
+
+        else:
+            print('HAMLIB_IO: Recorder - Not available for this rig',self.rig_type2)
+            val=False
+
+        return val
+    

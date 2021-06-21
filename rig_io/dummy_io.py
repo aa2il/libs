@@ -58,7 +58,7 @@ class no_connect:
     def get_mode(self):
         return 'CW'
         
-    def set_mode(self,mode):
+    def set_mode(self,mode,VFO='A'):
         return '0'
         
     def get_freq(self,VFO='A'):

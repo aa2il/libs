@@ -381,7 +381,8 @@ class HamlibHandler:
   def GetCaps(self):
     if self.VERBOSITY>=1:
       print('HAMLIB_SERVER: Get Caps on port',self.app.port)
-    caps=['Model name:\tFT-2000', 'Mfg name:\tYaesu']
+    #caps=['Model name:\tFT-2000', 'Mfg name:\tYaesu']
+    caps=['Model name:\tpySDR', 'Mfg name:\tAA2IL']
     self.Send(caps)
 
   # Routine to associate SDR RX number and RIG VFO with a prot number
