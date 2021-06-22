@@ -688,7 +688,8 @@ class direct_connect:
             
         #if self.rig_type=='Icom' or self.rig_type=='Hamlib':
         #    print('DIRECT_IO: Get Filters - not yet supported for Icom Rigs or Hamlib')
-        if self.rig_type=='Icom' or self.rig_type2=='IC9700' or self.rig_type2=='IC706':
+        if self.rig_type=='Icom' or self.rig_type2=='IC9700' or self.rig_type2=='IC706' or \
+           self.rig_type2=='Dummy':
             print('DIRECT_IO: Get Filters - not yet supported for Icom Rigs')
             return [None,None]
         elif self.rig_type=='Kenwood':
@@ -1311,7 +1312,7 @@ class direct_connect:
         idx=3
         #if self.rig_type=='Icom' or  self.rig_type=='Hamlib':
         #    print('DIRECT_IO: Read meter not support yet for Icom or Hamlib rigs')
-        if self.rig_type=='Icom':
+        if self.rig_type=='Icom' or  self.rig_type2=='Dummy':
             print('DIRECT_IO: Read meter not support yet for Icom rigs')
             return 0
             

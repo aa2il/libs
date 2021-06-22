@@ -162,10 +162,18 @@ class hamlib_connect(direct_connect):
         print('HAMLIB_IO: Rig type=',self.rig_type,self.rig_type2)
 
         if self.rotor:
-            self.min_az = float( caps2['Min Azimuth'] )
-            self.max_az = float( caps2['Max Azimuth'] )
-            self.min_el = float( caps2['Min Elevation'] )
-            self.max_el = float( caps2['Max Elevation'] )
+            try:
+                self.min_az = float( caps2['Min Azimuth'] )
+                self.max_az = float( caps2['Max Azimuth'] )
+                self.min_el = float( caps2['Min Elevation'] )
+                self.max_el = float( caps2['Max Elevation'] )
+            except:
+                self.min_az = -180
+                self.max_az = 180
+                self.min_el = 0
+                self.max_el = 180
+            print('Min/Max Az:',self.min_az,self.max_az,'\t',\
+                  'Min/Max El:',self.min_el,self.max_el)
         
         if False:
             # Test to make sure hamlib is still alive
@@ -323,6 +331,9 @@ class hamlib_connect(direct_connect):
             # Change freq of VFO A using regular hamlib F command
             self.freq  = frq_KHz*1e3
             cmd='F '+str( int(self.freq) ).zfill(8)
+        elif VFO=='B' and self.rig_type1 == 'Dummy':
+            frq  = int( frq_KHz*1000 )
+            cmd='I '+str( int(frq) ).zfill(8)
         else:
             # Hamlib doesn't seem to have a nice way of changing freq of VFO B without interrupting the
             # rig so just issue the direct FB command for Yaesu and Kenwood rigs
@@ -364,7 +375,8 @@ class hamlib_connect(direct_connect):
         elif mode=='CWLSB' or mode=='CW-R':
             mode='CWR'
 
-        if self.rig_type1 == 'SDR' or self.rig_type1 == 'Icom' or self.rig_type2=='FT991a':
+        if self.rig_type1 == 'SDR' or self.rig_type1 == 'Icom' or self.rig_type2=='FT991a'  or \
+           self.rig_type2=='Dummy':
             if VFO in 'AM':
                 cmd  = 'M '+mode+' 0'
             elif VFO in 'BS':
