@@ -519,6 +519,8 @@ class HighlightCallsignPacket(GenericWSJTXPacket):
 
     @classmethod
     def Builder(cls, to_wsjtx_id='WSJT-X', callsign="K1JT", background_color=None, foreground_color=None, highlight_last_only=True ):
+        #print('---------------------- HIGHLIGHT CALL SIGN PKT:',to_wsjtx_id,'\t',callsign)
+        
         # build the packet to send
         pkt = PacketWriter()
         pkt.write_QInt32(HighlightCallsignPacket.TYPE_VALUE)

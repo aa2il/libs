@@ -30,6 +30,8 @@ import time
 import select
 from .icom_io import icom_civ
 import threading
+from datetime import timedelta,datetime
+from pytz import timezone
 
 ############################################################################################
 
@@ -81,7 +83,7 @@ class hamlib_connect(direct_connect):
             self.s.connect((host, port))
 
             # So far so good - make sure its really an active connection
-            print('HAMLIB_IO: Hamlib Server Detected - checking if it is still active...',host,port)
+            print('\n*** HAMLIB_IO: Hamlib Server Detected - checking if it is still active...',host,port)
             self.s.settimeout(2.0)
             if tag=='ROTOR':
                 frq = self.get_position()[0]
@@ -729,7 +731,7 @@ class hamlib_connect(direct_connect):
         #pos[0]=max(0,min(359.9,pos[0]))
         pos[1]=max(self.min_el,min(self.max_el,pos[1]))
         #print('HAMLIB - SET_POSITION:',pos)
-        cmd='P '+str(pos[0])+' '+str(pos[1])
+        cmd='P '+str(int(pos[0]))+' '+str(int(pos[1]))
         #print('cmd=',cmd)
         x = self.get_response(cmd)
         #print('x=',x)
@@ -904,4 +906,38 @@ class hamlib_connect(direct_connect):
             val=False
 
         return val
+    
+
+
+
+
+
+    # Routine to set date & time 
+    def set_date_time(self,VERBOSITY=0):
+        now_utc = datetime.now(timezone('UTC'))
+        date = now_utc.strftime("%Y%m%d")
+        time = now_utc.strftime("%H%M%S")
+
+        if self.rig_type2=='FT991a':
+
+            print('\nSetting Rig Date ...',date)
+            cmd='w DT0'+date+';BY'
+            buf=self.get_response(cmd)
+            print('cmd=',cmd,'\tbuf=',buf)
+            
+            print('\nSetting Rig Time ...',time)
+            cmd='w DT1'+time+';BY'
+            buf=self.get_response(cmd)
+            print('cmd=',cmd,'\tbuf=',buf)
+
+            print('Setting Rig UTC offset ...')
+            cmd='w DT2+0000;BY;'
+            buf=self.get_response(cmd)
+            print('cmd=',cmd,'\tbuf=',buf)
+            
+        else:
+
+            print('DIRECT SET_DATE_TIME - Unknown rig',self.rig_type2)
+            sys.exit(0)
+            
     

@@ -97,7 +97,8 @@ class WaveRecorder(object):
 
             # Left channel is audio from RX
             # Direct decimation of the data
-            data1 = np.fromstring(in_data, 'Int16');
+            #data1 = np.fromstring(in_data, 'Int16');    # Doesn't work anymore
+            data1 = np.fromstring(in_data,dtype=np.int16);
             left  = data1[idx]
 
             # Right channel contains sidetone

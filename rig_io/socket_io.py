@@ -84,7 +84,7 @@ def find_fldigi_port(host,start,end,tag,required=True):
 def open_rig_connection(connection,host=0,port=0,baud=0,tag='',
                         required=True,rig=None,force=False):
 
-    print('OPEN_RIG_CONNECTION:',connection,rig,host,port,tag,'...')
+    print('\n*** OPEN_RIG_CONNECTION:',connection,rig,host,port,tag,'...')
     if connection=='NONE':
         return no_connect(host,port)
 
@@ -959,7 +959,7 @@ def read_mic_gain(self):
     print("SOCKET_IO: READ_MIC_GAIN - Reading Mic Gain ...",mode)
     if mode=='CW':
         # There's no mic gain to set in CW!
-        return
+        return 0
     
     elif mode=='PKTUSB' or mode=='PKT-U' or mode=='RTTY':
         if s.rig_type2=='FT991a':

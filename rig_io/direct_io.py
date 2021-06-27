@@ -544,7 +544,10 @@ class direct_connect:
             mode='PKT-U'
             mode='PKTUSB'
             mode='RTTY'
+        elif mode=='CW-LSB':
+            mode='CW-R'
         c = modes[mode]["Code"]
+        
         if self.rig_type=='Kenwood':
             self.send('MD'+c[1]+';')
             if VFO!='A':
@@ -803,8 +806,10 @@ class direct_connect:
             cmd = 'FR0;MD0;'
             idx = 3
         else:
-            cmd = 'FR4;MD0;'
-            idx = 3
+            #cmd = 'FR4;MD0;'       # This interrupts the rx
+            #idx = 3
+            cmd = 'OI;'
+            idx = 20
 
         buf = self.get_response(cmd,True)
         if VERBOSITY>0 or len(buf)<3:
@@ -1143,7 +1148,12 @@ class direct_connect:
         if VERBOSITY>0:
             print('DIRECT - SPLIT_MODE:',opt)
 
-        if self.rig_type2=='FT991a':
+        # The FT991a always uses VFO A for receiver while the FTdx3000
+        # can use either VFO.  For now, we assume the RX is on VFO A
+        # for both rigs since I primarily want to use this for satcom.
+        #- need to update this
+        #if self.rig_type2=='FT991a':
+        if self.rig_type=='Yaesu':
         
             if opt==-1:
                 #print('\nQuerying split ...')

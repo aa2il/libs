@@ -114,3 +114,6 @@ class no_connect:
     
     def set_position(self,pos):
         return 0
+
+    def recorder(self,on_off=None):
+        return False
