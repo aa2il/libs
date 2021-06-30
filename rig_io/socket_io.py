@@ -287,6 +287,7 @@ def read_radio_status(sock,verbosity=0):
 
     sock.filt = sock.get_filters()
     #sock.band = str( sock.get_band(sock.freq * 1e-6) ) + 'm'
+    #print('frq=',sock.freq*1e-6)
     b=sock.get_band(sock.freq * 1e-6)
     if isinstance(b, str):
         sock.band = b
@@ -650,15 +651,21 @@ def SelectBand(self,b=None,m=None,df=0):
 # Callback to select operating mode
 def SelectMode(self,b=None,m=None):
     s=self.sock
-    print('SelectMode',self.mode)  # ,self.TxT
+    #print('SelectMode',self.mode)  # ,self.TxT
     if not m:
         m = self.mode.get()
     elif m=='':
         m = s.get_mode()
 
     if self.sock.rig_type=='Hamlib' or self.sock.rig_type=='Icom':
-        print("\n=-=-=- Select Mode:",b,m,self.sock.connection)
-        self.sock.set_mode(m)
+        split=self.sock.split_mode(-1)
+        print("\n=-=-=- Select Mode:",b,m,self.sock.connection,'\tSplit=',split)
+        if split:
+            self.sock.set_mode(m,VFO='A')
+            self.sock.set_mode(m,VFO='B')
+        else:
+            self.sock.set_mode(m)
+        
         get_status(self)
         return
         
@@ -806,8 +813,10 @@ def set_tx_pwr(self,tx_pwr=None):
         return
     
     elif s.rig_type=='Hamlib':
-        # Hamlib has a goofy mapping for which .388 seems to correspond to 99W so go with it
-        cmd  = 'L RFPOWER ' + str(0.388*float(tx_pwr)*0.01)
+        # Hamlib had a goofy mapping for which .388 seems to correspond to 99W so go with it
+        # cmd  = 'L RFPOWER ' + str(0.388*float(tx_pwr)*0.01)
+        # not any more, just looks like 0 to 1
+        cmd  = 'L RFPOWER ' + str(float(tx_pwr)*0.01)
         buf=self.sock.get_response(cmd)
         print('cmd=',cmd)
         print('reply=',buf)
@@ -917,15 +926,17 @@ def read_tx_pwr(self):
     self.tx_pwr = 0
     s = self.sock
     if s.rig_type2=='TS850' or s.rig_type=='Icom':
-        print('READ_TX_PWR not available in',s.rig_type,'command set')
+        print('SOCKET_IO: READ_TX_PWR not available in',s.rig_type,'command set')
         return self.tx_pwr
 
     print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& Reading TX Power ...")
     if s.rig_type=='Hamlib':
         buf=self.sock.get_response('l RFPOWER')
-        print("READ_TX_PWR: buf=",buf)
-        # Hamlib has a goofy mapping for which .388 seems to correspond to 99W so go with it
-        self.tx_pwr = min( 99, int(100.*float(buf)/.388235) )
+        print("SOCKET_IO: READ_TX_PWR: buf=",buf)
+        # Hamlib had a goofy mapping for which .388 seems to correspond to 99W so go with it
+        # self.tx_pwr = min( 99, int(100.*float(buf)/.388235) )
+        # Now, it looks like scale is from 0 to 1:
+        self.tx_pwr = min( 99, int(100.*float(buf)) )
         return self.tx_pwr
         
     else:

@@ -539,7 +539,10 @@ class direct_connect:
     def set_mode(self,mode,VFO='A'):
         if VERBOSITY>0:
             print('DIRECT SET_MODE:',mode,VFO)
-        if mode=='RTTY' or mode=='DIGITAL' or mode=='FT8' or mode.find('PSK')>=0 or mode.find('JT')>=0:
+
+        if mode==None:
+            return
+        elif mode=='RTTY' or mode=='DIGITAL' or mode=='FT8' or mode.find('PSK')>=0 or mode.find('JT')>=0:
             #mode='RTTY'
             mode='PKT-U'
             mode='PKTUSB'

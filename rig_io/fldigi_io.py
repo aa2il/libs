@@ -33,11 +33,11 @@ import socket
 from .ft_tables import DELAY, Decode_Mode, modes
 import re
 
-#################################################################################################
+################################################################################################
 
-VERBOSITY=0
+VERBOSITY=1
 
-#################################################################################################
+################################################################################################
 
 class fldigi_xlmrpc:
     def __init__(self,host,port,tag='',MAX_TRYS=10):
@@ -58,6 +58,10 @@ class fldigi_xlmrpc:
         self.freq       = 0
         self.band       = ''
         self.mode       = ''
+
+        self.rig_type  = 'unknown'
+        self.rig_type1 = 'unknown'
+        self.rig_type2 = 'unknown'
         
         # Try to open connection
         for i in range(max(MAX_TRYS,1)):
@@ -83,7 +87,6 @@ class fldigi_xlmrpc:
         self.fldigi_active=False
         self.flrig_active=False
         self.v4 = False
-        self.rig_type = 'UNKNOWN'
         
         # Get version info
         try:
@@ -114,6 +117,7 @@ class fldigi_xlmrpc:
 
         # Determine which rig is on the other end
         self.active = self.fldigi_active or self.flrig_active
+
         if False:
             # This doesn't work for the FT991a
             buf = self.get_response('FA;')
@@ -123,6 +127,23 @@ class fldigi_xlmrpc:
             else:
                 self.rig_type = 'Yaesu'
 
+        if self.flrig_active :
+            info = self.s.rig.get_info()
+            a=info.split()
+            print("\nFLRIG active - Rig info: ",info,'\tinfo0=',a[0])
+            print('a=',a)
+            self.rig_type2 = a[0][2:]
+            if self.rig_type2[:2]=='FT':
+                self.rig_type  = 'FLRIG'
+                self.rig_type1 = 'Yaesu'
+                if self.rig_type2 == "FT-991A":
+                    self.rig_type2 = "FT991a"
+            else:
+                print('Unknown rig type')
+                sys.exit(0)
+            #self.flrig()
+            #sys.exit(0)
+            
         if self.fldigi_active:
             # Looking for something that distinguishes the rigs ...
             modes = self.s.rig.get_modes()
@@ -154,7 +175,7 @@ class fldigi_xlmrpc:
                     self.rig_type2 = 'FTdx3000'
 
         # Set rig name
-        print('FLDIGI_OPEN: rig type=',self.rig_type)
+        print('FLDIGI_OPEN: rig type=',self.rig_type1,self.rig_type2)
         #if self.rig_type=='Kenwood':
         #        self.s.rig.set_name("TS-850")
         #    else:
@@ -184,30 +205,32 @@ class fldigi_xlmrpc:
                 
     # Test function to probe FLRIG interface
     def flrig(self):
-        print("Probing FLRIG interface:")
+        print("\nProbing FLRIG interface:")
         print(self.s)
         #print dir(self.s)
         #print getattr(self.s)
         #print help(self.s)
 
         #print self.s.system.listMethods()
+        print('FLRIG Methods:')
         methods = self.s.system.listMethods()
         for m in methods:
             print(m)
 
         #print self.s.rig.list_methods()
+        print('FLRIG Methods:')
         methods = self.s.rig.list_methods()
         for m in methods:
             print(m)
 
-        if False:
+        if True:
             print("\nRig info: ",self.s.rig.get_info())
             print("FA:   ",self.s.rig.send_command("FA;"))
             print("FB:   ",self.s.rig.send_command("FB;"))
             print("FB:   ",self.s.rig.send_command("FB14080000;"))
             print("FB:   ",self.s.rig.send_command("FB;"))
-            #print "RA00: ",self.s.rig.send_command("RA00;")
-            #        sys.exit(0)
+            print("RA00: ",self.s.rig.send_command("RA00;"))
+            sys.exit(0)
 
     # Function to read list of available methods
     def get_methods(self,show_list=False):
@@ -230,6 +253,9 @@ class fldigi_xlmrpc:
 
     # Function to read rig freq 
     def get_freq(self,VFO='A'):
+        if VERBOSITY>0:
+            print('FLDIGI_IO: GET_FREQ vfo=',VFO)
+        
         if self.fldigi_active:
             if VFO=='A':
                 self.lock.acquire()
@@ -244,12 +270,18 @@ class fldigi_xlmrpc:
                     print('buf=',buf)
                     x=0
         elif self.flrig_active:
-            #self.lock.acquire()
-            #x=float( self.s.rig.get_vfo() )
-            #self.lock.release()
             print('GET_FREQ:',VFO)
-            buf = self.get_response('F'+VFO+';')
-            x = float(buf[2:-1])
+            self.lock.acquire()
+            if VFO=='A':
+                x=float( self.s.rig.get_vfoA() )
+            elif VFO=='B':
+                x=float( self.s.rig.get_vfoB() )
+            else:
+                print('GET_FREQ - Invalid VFO')
+                x='0'
+            self.lock.release()
+            #buf = self.get_response('F'+VFO+';')
+            #x = float(buf[2:-1])
             print('GET_FREQ:',x)
         else:
             x=0
@@ -279,14 +311,18 @@ class fldigi_xlmrpc:
         return f
 
     # Function to read rig band - there might be a better way to do this
-    def get_band(self):
+    def get_band(self,frq=None):
+        if VERBOSITY>0:
+            print('FLDIGI_IO - GET_BAND: frq=',frq)
+            
         if not self.fldigi_active and not self.flrig_active:
             return 0
 
         # Don't need lock here since get_freq does it
-        frq = self.get_freq()
-        band = convert_freq2band(frq * 1e-3)
-        print('GET BAND out',band)
+        if frq==None:
+            frq = self.get_freq()
+        band = convert_freq2band(1000*frq)
+        print('GET_BAND out=',band)
         return band
 
     # Function to set rig band - need to be able to issue BS command to get this to work better but for now
@@ -326,17 +362,15 @@ class fldigi_xlmrpc:
 
     # Function to read rig mode 
     def get_mode(self,VFO='A'):
+        if VERBOSITY>0:
+            print('FLDIGI_IO: GET_MODE vfo=',VFO)
+            
+        self.lock.acquire()
         if VFO=='A':
-            self.lock.acquire()
-            m=self.s.rig.get_mode()
-            self.lock.release()
+            m=self.s.rig.get_modeA()
         else:
-            cmd = 'FR4;MD0;'
-            buf = self.get_response(cmd)
-            time.sleep(DELAY)
-            self.send('FR0;')
-            #print 'GET_MODE:',buf
-            m = Decode_Mode( buf[3] )
+            m=self.s.rig.get_modeB()
+        self.lock.release()
             
         return m
 
@@ -363,7 +397,8 @@ class fldigi_xlmrpc:
     
     # Function to set rig mode - return old mode
     def set_mode(self,mode,VFO='A'):
-        print("SET_MODE=",mode,VFO)
+        if VERBOSITY>0:
+            print("FLDIGI_IO: SET_MODE=",mode,VFO)
         mode2=mode
 
         # Translate mode into something rig understands
@@ -372,6 +407,10 @@ class fldigi_xlmrpc:
                 mode='PSK-U'           # For some reason, this was changed in version 4
             else:
                 mode='PKT-U'    
+        elif mode=='CWUSB' or mode=='CW-USB':
+            mode='CW'
+        elif mode=='CWLSB' or mode=='CW-LSB' or mode=='CW-R':
+            mode='CWR'
         print('mode=',mode,self.v4)
 
         # Translate mode into something fldigi understands
@@ -469,9 +508,13 @@ class fldigi_xlmrpc:
         #print 'SEND: Waiting for LOCK...'
         self.lock.acquire()
         #print 'SEND: Got LOCK...'
-        if self.active:
+        if self.fldigi_active:
             #print "FLDIGI SEND:",cmd
             self.reply = self.s.rig.send_command(cmd,100)
+            #print 'SEND: REPLY=',self.reply
+        elif self.flrig_active:
+            #print "FLDIGI SEND:",cmd
+            self.reply = self.s.rig.cat_string(cmd)
             #print 'SEND: REPLY=',self.reply
         else:
             self.reply = ''
@@ -570,7 +613,118 @@ class fldigi_xlmrpc:
                 
         print('FLDIGI/FLRIG PTT Done.')
 
+    def get_PLtone(self):
+        if VERBOSITY>0:
+            print('\nFLDIGI_IO: Get PL Tone - Not available')
+        return 0
 
+    def get_filters(self,VFO='A'):
+        if VERBOSITY>0:
+            print('\nFLDIGI_IO: Get Filters - Not available')
+        #return [None,None]
+        return ['Wide','500 Hz']
+
+    # Routine to put rig into split mode
+    def split_mode(self,opt):
+        if VERBOSITY>0:
+            print('FLDIGI_IO - SPLIT_MODE: opt=',opt)
+
+        if opt==-1:
+            #print('\nQuerying split ...')
+            self.lock.acquire()
+            buf=self.s.rig.get_split()
+            self.lock.release()
+            if VERBOSITY>0:
+                print('SPLIT: buf=',buf)
+            return buf==1
+
+        elif opt==0:
+            
+            self.lock.acquire()
+            buf=self.s.rig.set_split(0)
+            self.lock.release()
+                
+        elif opt==1:
+            
+            self.lock.acquire()
+            buf=self.s.rig.set_split(1)
+            self.lock.release()
+                
+        else:
+            
+            print('FLDIGI_IO - SPLIT_MODE: Invalid opt',opt)
+            return -1
+            
+
+    # Function to effect pressing of TUNE button
+    def tuner(self,opt):
+        if VERBOSITY>0:
+            print('FLDIGI_IO - TUNER - Not available: opt=',opt)
+        return 0
+
+        #if opt==-1:
+        #elif opt==0 or opt==1:
+        #elif opt==2:
+        #else:
+        #    print('HAMLIB TUNER - Invalid option:',opt)
+
+    def mic_setting(self,m,iopt,src=None,lvl=None,prt=None):
+        if VERBOSITY>0:
+            print('FLDIGI_IO MIC_SETTING:',iopt,src,lvl,prt)
+
+        if iopt==0:
+            # Read
+            self.lock.acquire()
+            buf=self.s.rig.get_micgain()
+            print('buf=',buf)
+            src=int(buf)
+            self.lock.release()
+        else:
+            # Set
+            if lvl!=None and level:
+                self.lock.acquire()
+                buf=self.s.rig.set_micgain(lvl)
+                self.lock.release()
+                
+        return [src,lvl,prt]
+
+
+    def get_monitor_gain(self):
+        if VERBOSITY>0:
+            print('FLDIGI_IO - GET_MONITOR_GAIN: Not available')
+        return 0
+    
+    def set_monitor_gain(self,gain):
+        if VERBOSITY>0:
+            print('FLDIGI_IO - SET_MONITOR_GAIN: Not available - gain=',gain)
+        return 
+    
+
+    def read_meter(self,meter):
+        if VERBOSITY>0:
+            print('FLDIGI_IO - READ_METER:',meter)
+
+        self.lock.acquire()
+        if meter=='S':
+            buf=self.s.rig.get_smeter()
+        elif meter=='Power':
+            buf=self.s.rig.get_pwrmeter()
+        elif meter=='SWR':
+            buf=self.s.rig.get_swrmeter()
+        else:
+            print('Unknown meter')
+            buf=0
+        
+        print('buf=',buf)
+        self.lock.release()
+        return buf
+            
+
+    def recorder(self,on_off=None):
+        return False
+    
+################################################################################################
+    
 
 class fllog_xlmrpc:
     def __init__(self,host,port=8421,tag='',MAX_TRYS=10):

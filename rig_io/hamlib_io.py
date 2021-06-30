@@ -290,9 +290,11 @@ class hamlib_connect(direct_connect):
             return
             
         # Hamlib can be rather slow so do a crude "debouncing"
+        # Not sure why I thought this wa necessary???!!!!  Perhaps for v3.3???
+        # If this works out, get rid of dt and tlast
         dt = time.time() - self.tlast
         #print 'HAMLIB_IO: GET_FREQ: B',dt
-        if dt>1.5:
+        if dt>1.5 or True:
             #print 'HAMLIB_IO: GET_FREQ: C'
             cmd='f'
             x = self.get_response('f')
@@ -368,17 +370,19 @@ class hamlib_connect(direct_connect):
         VERBOSITY=1
         if VERBOSITY>0:
             print('HAMLIB_IO - SET MODE: mode=',mode,'\tVFO=',VFO)
-        
-        if mode=='RTTY' or mode=='DIGITAL' or mode=='FT8' or mode.find('PSK')>=0 or mode.find('JT')>=0:
+
+        if mode==None:
+            return
+        elif mode=='RTTY' or mode=='DIGITAL' or mode=='FT8' or mode.find('PSK')>=0 or mode.find('JT')>=0:
             #mode='RTTY'
             mode='PKTUSB'
-        elif mode=='CWUSB':
+        elif mode=='CWUSB' or mode=='CW-USB':
             mode='CW'
-        elif mode=='CWLSB' or mode=='CW-R':
+        elif mode=='CWLSB' or mode=='CW-LSB' or mode=='CW-R':
             mode='CWR'
 
         if self.rig_type1 == 'SDR' or self.rig_type1 == 'Icom' or self.rig_type2=='FT991a'  or \
-           self.rig_type2=='Dummy':
+           self.rig_type2=='Dummy' or True:
             if VFO in 'AM':
                 cmd  = 'M '+mode+' 0'
             elif VFO in 'BS':
@@ -389,6 +393,7 @@ class hamlib_connect(direct_connect):
 
         else:
             # Not sure why we're treating this special - perhaps need to reset VFO on ftdx3000?
+            # Disabled for now - let's see how if works
             vfo1=self.get_vfo()[0]
             if vfo1!=VFO:
                 self.select_vfo(VFO)
@@ -413,15 +418,16 @@ class hamlib_connect(direct_connect):
                 buf=self.get_response('BY;NA01;')
                 if VERBOSITY>0:
                     print('HAMLIB_IO - SET MODE: buf=',buf)
-            if self.rig_type2=='FTdx3000' and vfo1!=VFO:
-                print('HAMLIB_IO - Set mode: vfo1=',vfo1,VFO)
+            if False and self.rig_type2=='FTdx3000' and vfo1!=VFO:
+                # Disabled for now - let's see if this works
+                print('HAMLIB_IO - Set mode - Selecting VFO: vfo1=',vfo1,VFO)
                 self.select_vfo(vfo1)
 
                 
     def get_mode(self,VFO='A'):
         #VERBOSITY=1
         if VERBOSITY>0:
-            print('HAMLIB_IO: Get mode',VFO)
+            print('HAMLIB_IO: Get mode - vfo=',VFO)
         
         if VFO=='A':
             cmd  = 'm'
@@ -740,12 +746,15 @@ class hamlib_connect(direct_connect):
             
     # Routine to put rig into split mode
     def split_mode(self,opt):
-        print('HAMLIB - SPLIT_MODE:',opt)
+        VERBOSITY=1
+        if VERBOSITY>0:
+            print('HAMLIB - SPLIT_MODE: opt=',opt)
 
         if opt==-1:
             #print('\nQuerying split ...')
             buf=self.get_response('s')
-            #print('SPLIT: buf=',buf)
+            if VERBOSITY>0:
+                print('SPLIT: buf=',buf)
             return buf[0]=='1'
 
         elif opt==0:
