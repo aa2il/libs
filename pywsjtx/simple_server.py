@@ -71,7 +71,7 @@ class SimpleServer(object):
                 the_packet = pywsjtx.WSJTXPacketClassFactory.from_udp_packet(addr_port, pkt)
                 print(the_packet)
 
-
+    # Routine to highlight a particualr callsign in the WSJT decoding window - TYPE 13
     def highlight_spot(self,callsign):
         #print('HHHHHHHHHHHEEEEEEEEEEEEEYYYYYYYYYYYYYYY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!',
         #      self.addr_port,self.wsjtx_id,callsign)
@@ -80,6 +80,21 @@ class SimpleServer(object):
                                                             pywsjtx.QCOLOR.Red(),
                                                             True)
         self.send_packet(self.addr_port, color_pkt)
+
+    # Routine to configure some of the WSJT parameters - TYPE 15
+    def configure_wsjt(self,NewMode='',RxDF=-1,DxCall='',DxGrid=''):
+        #print('HHHHHHHHHHHEEEEEEEEEEEEEYYYYYYYYYYYYYYY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!',
+        #      self.addr_port,self.wsjtx_id,NewMode,RxDF,DxCall,DxGrid)
+
+        # At startup, this doesn't work so just trap error
+        try:
+            config_pkt = pywsjtx.ConfigurePacket.Builder(self.wsjtx_id,
+                                                         Mode=NewMode,
+                                                         RXDF=int(RxDF),
+                                                         DXCall=DxCall, DXGrid=DxGrid)
+            self.send_packet(self.addr_port, config_pkt)
+        except:
+            pass
 
 
     # Function to process messages and spots from WSJT-X
@@ -94,9 +109,11 @@ class SimpleServer(object):
             if type(the_packet) == pywsjtx.HeartBeatPacket:
                 print(the_packet)
             elif type(the_packet) == pywsjtx.StatusPacket:
-                #print(the_packet.de_call)                  # Individual fields
-                #print(the_packet)
-
+                if False:
+                    print('================= Get_Spot2: Status Packet:')
+                    print(the_packet)
+                    #print(the_packet.de_call)                  # Individual fields
+                
                 if self.old_status:
                     print(the_packet.status_changes(self.old_status))
                 else:

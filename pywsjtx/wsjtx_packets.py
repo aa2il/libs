@@ -531,6 +531,35 @@ class HighlightCallsignPacket(GenericWSJTXPacket):
         pkt.write_QBool(highlight_last_only)
         return pkt.packet
 
+    
+class ConfigurePacket(GenericWSJTXPacket):
+    TYPE_VALUE = 15
+    def __init__(self, addr_port, magic, schema, pkt_type, id, pkt):
+        GenericWSJTXPacket.__init__(self, addr_port, magic, schema, pkt_type, id, pkt)
+        # handle packet-specific stuff.
+
+    # the callsign field can contain text, callsigns, entire lines.
+
+    @classmethod
+    def Builder(cls, to_wsjtx_id='WSJT-X', Mode='', FreqTol=-1,SubMode='',FastMode=False, \
+                TRPeriod=-1,RXDF=-1,DXCall='',DXGrid='',GenMsgs=True):
+        print('---------------------- CONFIGURE PKT: Mode=',Mode,'\tRxDF=',RXDF)
+        
+        # build the packet to send
+        pkt = PacketWriter()
+        pkt.write_QInt32(ConfigurePacket.TYPE_VALUE)
+        pkt.write_QString(to_wsjtx_id)
+        pkt.write_QString(Mode)
+        pkt.write_QInt32(FreqTol)
+        pkt.write_QString(SubMode)
+        pkt.write_QBool(FastMode)
+        pkt.write_QInt32(TRPeriod)
+        pkt.write_QInt32(RXDF)
+        pkt.write_QString(DXCall)
+        pkt.write_QString(DXGrid)
+        pkt.write_QBool(GenMsgs)
+        return pkt.packet
+
 class WSJTXPacketClassFactory(GenericWSJTXPacket):
 
     PACKET_TYPE_TO_OBJ_MAP = {

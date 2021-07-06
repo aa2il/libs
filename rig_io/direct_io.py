@@ -408,18 +408,36 @@ class direct_connect:
                 return tone
             
         else:
-            buf = self.get_response('CT0;')
+            if self.rig_type2=='FTdx3000':
+                cmd1='CT0;'
+                cmd2='CN0;'
+                idx2=5
+            elif self.rig_type2=='FT991a':
+                cmd1='CT0;'
+                cmd2='CN00;'
+                idx2=7
+            else:
+                print('DIRECT GET_PL_TONE: Unknown rig',self.rig_type2)
+                return 0                
+            
+            buf = self.get_response(cmd1)
             on_off = int(buf[3])
             if VERBOSITY>0:
                 print('DIRECT GET_PL_TONE: CT buf=',buf,on_off)
             if on_off==0:
                 return 0
             else:
-                buf = self.get_response('CN00;')
+                buf = self.get_response(cmd2)
                 if VERBOSITY>0:
                     print('DIRECT GET_PL_TONE: CN buf=',buf)
-                idx = int(buf[4:7])
-                tone = PL_TONES[idx]
+                try:
+                    idx = int(buf[4:idx2])
+                    tone = PL_TONES[idx]
+                except:
+                    print('DIRECT GET_PL_TONE: Error reading PL Tone')
+                    print('DIRECT GET_PL_TONE: cmd=',cmd2,'\tbuf=',buf)
+                    tone=None
+                    
                 if VERBOSITY>0:
                     print('DIRECT GET_PL_TONE: CN idx=',buf[4:8],idx,tone)
                 return tone
@@ -1258,7 +1276,7 @@ class direct_connect:
         if VERBOSITY>0:
             print('DIRECT READing keyer SPEED ...',self.rig_type,self.rig_type2)
 
-        if self.rig_type=='Yaesu':
+        if self.rig_type=='Yaesu' or self.rig_type1=='Yaesu':
             buf = self.get_response('KS;')
             if buf[0:2]=='KS':
                 try:
@@ -1283,6 +1301,9 @@ class direct_connect:
             print('DIRECT_IO - READ_SPEED - Not supported on Kenwood rigs')
             wpm=0
             
+        else:
+            print('DIRECT READ SPEED - Unknown Rig Type:',self.rig_type)
+            
         return wpm
 
     # Set sub-dial function on Yaesu rigs
@@ -1302,7 +1323,7 @@ class direct_connect:
         if VERBOSITY>0:
             print('DIRECT SETting keyer SPEED ...',self.rig_type,self.rig_type2,wpm)
 
-        if self.rig_type=='Yaesu':
+        if self.rig_type=='Yaesu' or self.rig_type1=='Yaesu':
             cmd='BY;KS'+str(wpm).zfill(3)+';'
             buf = self.get_response(cmd)
                 
@@ -1317,7 +1338,10 @@ class direct_connect:
             print('cmd=',show_hex(cmd))
             x=self.get_response(cmd)
             y=self.civ.icom_response(cmd,x)
-            print('y=',y)            
+            print('y=',y)
+
+        else:
+            print('DIRECT SET SPEED - Unknown Rig Type:',self.rig_type)
             
 
     def read_meter(self,meter):

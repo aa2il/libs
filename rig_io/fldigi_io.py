@@ -26,6 +26,7 @@ if sys.version_info[0]==3:
 else:
     from xmlrpclib import ServerProxy, Error
     
+from .direct_io import direct_connect
 import threading
 import time
 from .util import *
@@ -35,11 +36,11 @@ import re
 
 ################################################################################################
 
-VERBOSITY=1
+VERBOSITY=0
 
 ################################################################################################
 
-class fldigi_xlmrpc:
+class fldigi_xlmrpc(direct_connect):
     def __init__(self,host,port,tag='',MAX_TRYS=10):
         #        parent.title("Rig Control via FLDIGI")
         #        print "Rig Control via FLDIGI"
@@ -270,19 +271,19 @@ class fldigi_xlmrpc:
                     print('buf=',buf)
                     x=0
         elif self.flrig_active:
-            print('GET_FREQ:',VFO)
+            #print('GET_FREQ:',VFO)
             self.lock.acquire()
             if VFO=='A':
                 x=float( self.s.rig.get_vfoA() )
             elif VFO=='B':
                 x=float( self.s.rig.get_vfoB() )
             else:
-                print('GET_FREQ - Invalid VFO')
+                print('FLDIGI_IO GET_FREQ - Invalid VFO')
                 x='0'
             self.lock.release()
             #buf = self.get_response('F'+VFO+';')
             #x = float(buf[2:-1])
-            print('GET_FREQ:',x)
+            #print('GET_FREQ:',x)
         else:
             x=0
         return x
@@ -311,7 +312,7 @@ class fldigi_xlmrpc:
         return f
 
     # Function to read rig band - there might be a better way to do this
-    def get_band(self,frq=None):
+    def get_band_FLDIGI(self,frq=None):
         if VERBOSITY>0:
             print('FLDIGI_IO - GET_BAND: frq=',frq)
             
@@ -321,12 +322,15 @@ class fldigi_xlmrpc:
         # Don't need lock here since get_freq does it
         if frq==None:
             frq = self.get_freq()
-        band = convert_freq2band(1000*frq)
-        print('GET_BAND out=',band)
+
+        # There is an inconsistency somewhere - maybe we don't even need this routine?
+        #band = convert_freq2band(1000*frq)
+        band = convert_freq2band(.001*frq)
+        print('FLDIGI_IO GET_BAND frq=',frq,'\tband=',band)
         return band
 
     # Function to set rig band - need to be able to issue BS command to get this to work better but for now
-    def set_band(self,band):
+    def set_band_fldigi(self,band):
 
         if band==160:
             frq = 1.8
@@ -351,10 +355,10 @@ class fldigi_xlmrpc:
         elif band==6:
             frq = 50.1
         else:
-            print("Invalid band",band)
+            print("FLDIGI_IO SET_BAND: Invalid band",band)
             frq = 0
 
-        print("SET BAND ",band,frq)
+        print("FLDIGI_IO SET BAND ",band,frq)
         if frq>0:
             self.lock.acquire()
             self.set_freq(frq*1000)
@@ -391,17 +395,19 @@ class fldigi_xlmrpc:
         return 'AA'
     
     # Dummied up for now
-    def set_vfo(self,vfo):
+    def set_vfo(self,rx=None,tx=None):
         print('SET_VFO not available yet for FLDIGI - assumes A')
-        return 'AA'
+        return 
     
     # Function to set rig mode - return old mode
     def set_mode(self,mode,VFO='A'):
         if VERBOSITY>0:
             print("FLDIGI_IO: SET_MODE=",mode,VFO)
-        mode2=mode
+        mode2=mode       # Fldigi mode needs to match rig mode
 
-        # Translate mode into something rig understands
+        # Translate rig mode into something rig understands
+        if mode==None:
+            return
         if mode=='RTTY' or mode=='DIGITAL' or mode=='FT8' or mode.find('PSK')>=0 or mode.find('JT')>=0:
             if not self.v4:
                 mode='PSK-U'           # For some reason, this was changed in version 4
@@ -413,7 +419,7 @@ class fldigi_xlmrpc:
             mode='CWR'
         print('mode=',mode,self.v4)
 
-        # Translate mode into something fldigi understands
+        # Translate fldigi mode into something fldigi understands
         if mode2=='DIGITAL' or mode2.find('JT')>=0 or mode2=='FT8':
             mode2='RTTY'
         elif mode2=='USB' or mode2=='LSB' or mode2=='AM':
@@ -448,15 +454,16 @@ class fldigi_xlmrpc:
 
     # Function to set call 
     def set_call(self,call):
-        print("SET CALL:",call)
-        self.lock.acquire()
-        x=self.s.log.set_call(call)
-        self.lock.release()
-        return x
+        if self.fldigi_active:
+            print("SET CALL:",call)
+            self.lock.acquire()
+            x=self.s.log.set_call(call)
+            self.lock.release()
+            return x
 
     # Function to set log fields
     def set_log_fields(self,fields):
-        if self.active:
+        if self.fldigi_active:
             print('SET_LOG_FIELDS: Fields:',fields)
             self.lock.acquire()
             for key in list(fields.keys()):
@@ -524,13 +531,14 @@ class fldigi_xlmrpc:
 
     # Function to run a macro
     def run_macro(self,idx):
-        self.lock.acquire()
-        if idx<0:
-            x=self.s.main.get_max_macro_id()
-        else:
-            x=self.s.main.run_macro(idx)
-        self.lock.release()
-        return x
+        if self.fldigi_active:
+            self.lock.acquire()
+            if idx<0:
+                x=self.s.main.get_max_macro_id()
+            else:
+                x=self.s.main.run_macro(idx)
+            self.lock.release()
+            return x
             
     def recv(self,n):
         #print "fldigi recv:",self.reply
@@ -541,7 +549,9 @@ class fldigi_xlmrpc:
 
     def get_response(self,cmd):
         if VERBOSITY>0:
-            print('Sending CMD ... ',cmd)
+            print('FLDIGI GET_RESPONSE: Sending CMD ... ',cmd)
+        #print('Waiting for lock')
+        #self.lock.acquire()
         self.send(cmd)
         if VERBOSITY>0:
             print('Waiting for response ...')
@@ -549,9 +559,11 @@ class fldigi_xlmrpc:
         if VERBOSITY>0:
             print('...Got it',buf)
 
+        #self.lock.release()
+        #print('Lock released')
         return buf
 
-    def set_ant(self,a):
+    def set_ant_FLDIGI(self,a):
         buf=self.get_response('BY;AN0'+str(a)+';')
         if a==1 or a==2:
             # Make sure ant tuner is on for ports 1 & 2
@@ -560,7 +572,7 @@ class fldigi_xlmrpc:
             # Make sure ant tuner is off for port 3
             buf=self.get_response('BY;AC000;')
         
-    def get_ant(self):
+    def get_ant_FLDIGI(self):
 
         for ntry in range(5):
             buf = self.get_response('AN0;')
@@ -613,12 +625,12 @@ class fldigi_xlmrpc:
                 
         print('FLDIGI/FLRIG PTT Done.')
 
-    def get_PLtone(self):
+    def get_PLtone_FLDIGI(self):
         if VERBOSITY>0:
             print('\nFLDIGI_IO: Get PL Tone - Not available')
         return 0
 
-    def get_filters(self,VFO='A'):
+    def get_filters_FLDIGI(self,VFO='A'):
         if VERBOSITY>0:
             print('\nFLDIGI_IO: Get Filters - Not available')
         #return [None,None]
@@ -689,12 +701,12 @@ class fldigi_xlmrpc:
         return [src,lvl,prt]
 
 
-    def get_monitor_gain(self):
+    def get_monitor_gain_FLDIGI(self):
         if VERBOSITY>0:
             print('FLDIGI_IO - GET_MONITOR_GAIN: Not available')
         return 0
     
-    def set_monitor_gain(self,gain):
+    def set_monitor_gain_FLDIGI(self,gain):
         if VERBOSITY>0:
             print('FLDIGI_IO - SET_MONITOR_GAIN: Not available - gain=',gain)
         return 
@@ -720,8 +732,36 @@ class fldigi_xlmrpc:
         return buf
             
 
-    def recorder(self,on_off=None):
+    def recorder_FLDIGI(self,on_off=None):
         return False
+
+
+    def read_speed_FLDIGI(self):
+        if VERBOSITY>0:
+            print('FLDIGI Reading Keyer SPEED ...',
+                  self.rig_type,self.rig_type1,self.rig_type2)
+
+        if self.rig_type1=='Yaesu':
+            buf = self.get_response('KS;')
+            if buf[0:2]=='KS':
+                try:
+                    wpm=int(buf[2:5])
+                except:
+                    wpm=0
+            else:
+                wpm=0
+
+        return wpm
+                
+    def set_speed_FLDIGI(self,wpm):
+        if VERBOSITY>0:
+            print('FLDIGI_IO: Setting Keyer SPEED ...',
+                  self.rig_type,self.rig_type1,self.rig_type2,wpm)
+
+        if self.rig_type1=='Yaesu':
+            cmd='BY;KS'+str(wpm).zfill(3)+';'
+            buf = self.get_response(cmd)
+                
     
 ################################################################################################
     
