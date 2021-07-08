@@ -803,8 +803,9 @@ def tone_gen(fo,N,fs,nchunk):
 # https://wiki.archlinux.org/index.php/PulseAudio#Setting_the_default_fragment_number_and_buffer_size_in_PulseAudio
 
 class AudioIO():
-    def __init__(self,P,fs,rb,device=None,Chan='B',ZeroFill=False):
-        print('Init audio player @',fs,' Hz','\tdevice=',device,' ...')
+    def __init__(self,P,fs,rb,device=None,Chan='B',ZeroFill=False,Tag=None):
+        print('AUDIO_IO: Init audio player @',fs,' Hz',
+              '\tdevice=',device,'\tTag=',Tag,' ...')
         self.device = device
         self.fs = fs
         self.rb = rb
@@ -821,9 +822,9 @@ class AudioIO():
             print('Default device=',default_device)
         else:
             loopbacks = self.find_loopback_devices()
-            print('loopbacks=',loopbacks)
+            print('AUDIO_IO: loopback device ids=',loopbacks)
             self.device = loopbacks[device-1]
-            print('device=',device,'\t Device id=',self.device,'\n')
+            print('device=',device,'\t Using Device id=',self.device,'\n')
             #sys,exit(0)
 
         self.idle =True

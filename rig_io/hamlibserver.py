@@ -71,7 +71,7 @@ import threading
 
 ##############################################################################################################
 
-DEFAULT_VERBOSITY=0     # 0=quiet, 1=enough to see hand-shaking, 2=detailed
+DEFAULT_VERBOSITY=1     # 0=quiet, 1=enough to see hand-shaking, 2=detailed
 
 ##############################################################################################################
 
@@ -393,7 +393,7 @@ class HamlibHandler:
         vfo='A'
       elif port==4533 or port==4633 or port==4733:
         irx = 0
-        vfo='B'
+        vfo='B'         
       elif port>=4675:
         irx = port - 4675
         vfo='B'
@@ -544,9 +544,10 @@ class HamlibHandler:
   def GetSplit(self):
     if self.VERBOSITY>=1:
       print('HAMLIB_SERVER: Get SPLIT on port',self.app.port)
-      print('*** Get Split is NOT FULLY IMPLEMENTED ***')
+      print('HAMLIB_SERVER: *** Get Split is NOT FULLY IMPLEMENTED ***')
     [irx,vfo] = self.port2rx()
     self.app.tx_vfo = "VFO"+vfo
+    #self.app.tx_vfo = "VFOA"
     self.Reply('Split', self.app.split, 'TX VFO',self.app.tx_vfo,0)
 
   # Receive a direct command 
@@ -598,9 +599,9 @@ class HamlibHandler:
       print('HAMLIB_SERVER: Get Ant on port',self.app.port)
     if self.P:
       ant=self.P.sock.get_ant()
-      self.Reply('Ant', ant, 0)
+      self.Reply('Ant', 'ANT'+str(ant), 0)
     else:
-      self.Reply('Ant', self.app.ant, 0)
+      self.Reply('Ant', 'ANT'+str(self.app.ant), 0)
     
   # Set antenna port
   def SetAnt(self):
@@ -710,6 +711,7 @@ class HamlibServer:
 
     self.hamlib_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     self.hamlib_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    print(('localhost', port))
     self.hamlib_socket.bind(('localhost', port))
     self.hamlib_socket.settimeout(0.1)
     self.hamlib_socket.listen(5)

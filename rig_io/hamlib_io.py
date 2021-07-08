@@ -125,7 +125,10 @@ class hamlib_connect(direct_connect):
         # Those that don't, we do it the hard way
         x = self.get_response('_')
         print('HAMLIB_IO: info=',x)
-        if x=='ID0460':
+        if caps2['Model name']=='pySDR':
+            self.rig_type1 = 'SDR'
+            self.rig_type2 = 'pySDR'            # pySDR
+        elif x=='ID0460':
             self.rig_type1 = 'Yaesu'
             self.rig_type2 = 'FTdx3000'
         elif x=='ID0670':
@@ -134,10 +137,6 @@ class hamlib_connect(direct_connect):
         elif caps2['Model name']=='FT-2000':
             self.rig_type1 = 'Yaesu'
             self.rig_type2 = 'FT-2000'            # Was dummy for hamlibserver
-        elif caps2['Model name']=='pySDR':
-            self.rig_type1 = 'SDR'
-            #self.rig_type1 = 'Yaesu'
-            self.rig_type2 = 'pySDR'            # pySDR
         elif caps2['Model name']=='TS-850':
             self.rig_type1 = 'Kenwood'
             self.rig_type2 = 'TS850'
@@ -462,9 +461,9 @@ class hamlib_connect(direct_connect):
 
         
     def get_ant(self):
-        #VERBOSITY=1
+        VERBOSITY=1
         if VERBOSITY>0:
-            print('HAMLIB_IO: Get Ant')
+            print('HAMLIB_IO: Get Ant',self.rig_type,self.rig_type1,self.rig_type2)
         
         if True:
             # The 'y' command isn't available on all rigs but its really
@@ -483,7 +482,11 @@ class hamlib_connect(direct_connect):
                     x = self.get_response('y 0').split('\n')
                     if VERBOSITY>0:
                         print('HAMLIB_IO: Get Ant: x=',x)
-                    ant=int( x[0][3] )
+                    xx=x[0]
+                    if len(xx)==1 and False:
+                        ant=int(xx)
+                    else:
+                        ant=int( xx[3] )
                     if VERBOSITY>0:
                         print('HAMLIB_IO: Get Ant: ant=',ant)
             else:

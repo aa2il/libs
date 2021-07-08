@@ -124,21 +124,42 @@ def parse_adif(fn,line=None):
     return logbook
 
 
+# Convert dict keys to upper case
+#def upper_dict_keys(d):
+#   new_dict = dict((key.upper(), value) for key, value in d.items())
+#   return new_dict
+
 
 # Function to create entire ADIF record and write it to a file
-def write_adif_record(fp,qso,P):
+def write_adif_record(fp,rec,P):
+    VERBOSITY=0
 
     contest = P.contest_name
     MY_CALL = P.SETTINGS['MY_CALL']
     MY_GRID = P.SETTINGS['MY_GRID']
     MY_CITY = P.SETTINGS['MY_CITY']+', '+P.SETTINGS['MY_STATE']
 
-    print('WRITE_ADIF_RECORD: keys=',list(qso.keys()))
-    print('contest=',contest)
-    print('MY Call/Grid/City=',MY_CALL,MY_GRID,MY_CITY)
+    if True:
+        # Convert keys to upper case to avoid further complications
+        if VERBOSITY>0:
+            print('\nqso in  =',rec)
+        qso = dict((key.upper(), value) for key, value in rec.items())
+        if VERBOSITY>0:
+            print('\nqso out =',qso)
+
+    if VERBOSITY>0:
+        print('WRITE_ADIF_RECORD: keys=',list(qso.keys()))
+        print('contest=',contest)
+        print('MY Call/Grid/City=',MY_CALL,MY_GRID,MY_CITY)
 
     if 'QSO_DATE' not in qso:
-        qso['QSO_DATE'] = qso['QSO_DATE_OFF']
+        try:
+            qso['QSO_DATE'] = qso['QSO_DATE_OFF']
+        except:
+            print('FILE_IO - Write Adif Rec - Cant figure out QSO Date - giving up')
+            print('qso=',qso)
+            sys,exit(0)
+            
     if 'TIME_ON' not in qso:
         qso['TIME_ON'] = qso['TIME_OFF']
     if 'RST_SENT' not in qso:
@@ -158,17 +179,19 @@ def write_adif_record(fp,qso,P):
         qso['QTH']  = exch[1]
         
     fields = list(qso.keys())
-    print(fields)
+    #print('keys=',fields)
     fields.sort()
     for fld in fields:
         val = qso[fld]
-        print('WRITE_ADIF_RECORD:',fld,val)
+        #print('WRITE_ADIF_RECORD:',fld,val)
         if fld=='SAT_NAME':
             if val!='None':
                 fp.write('<%s:%d>%s ' % (fld,len(val),val) )
                 fld2='PROP_MODE'
                 val2='SAT'
                 fp.write('<%s:%d>%s ' % (fld2,len(val2),val2) )
+        elif fld=='TIME_STAMP':
+            pass
         else:
             fp.write('<%s:%d>%s ' % (fld,len(val),val) )
     fp.write('<EOR>\n')
