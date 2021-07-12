@@ -193,6 +193,8 @@ def write_adif_record(fp,rec,P):
         elif fld=='TIME_STAMP':
             pass
         else:
+            if fld=='FREQ' and len(val)>8:
+                val=val[0:8]
             fp.write('<%s:%d>%s ' % (fld,len(val),val) )
     fp.write('<EOR>\n')
     fp.flush()

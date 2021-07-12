@@ -176,10 +176,25 @@ def load_history(history):
                             print('state=',state)
                             
                     else:
-                        try:
-                            state = row[5]                 # AZ format
-                        except:
+                        if len(row)>=6 and False:
+                            state = row[5]                 # AZ format - haven't used this in quite some time
+                            print('LOAD_HISTORY: Rut-roh')
+                            print('row=',row,'\t',len(row))
+                            sys.exit(0)
+                        elif len(row)>=3:
                             state = row[2]                 # N1MM format
+                        else:
+                            state = ''
+
+                        #try:
+                        #    state = row[5]                 # AZ format - haven't used this in quite some time
+                        #except:
+                        #    state = row[2]                 # N1MM format
+                            #try:
+                            #except:
+                            #    print('LOAD_HISTORY: Rut-roh')
+                            #    print('row=',row,'\t',len(row))
+                            #    sys.exit(0)
 
                     try:
                         unknown = row[3]
@@ -255,14 +270,14 @@ def load_history(history):
                         state=''
 
                     # ITU
-                    if fname=='IARU.txt':
+                    if fname[0:4]=='IARU' and ext=='.txt':
                         ITUz = name.upper()
                         name=''
                     #else:
                     #    ITUz = ''
 
                     # ARRL VHF
-                    if fname=='ARRLVHFJAN.txt':
+                    if fname[0:7]=='ARRLVHF' and ext=='.txt':
                         gridsq = state.upper()
                         state=''
                     #else:

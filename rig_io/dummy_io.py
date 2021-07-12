@@ -43,9 +43,12 @@ class no_connect:
         self.rig_type2  = None
         self.tlast      = None
 
-    def get_band(self,frq=None):
+    def get_band(self,frq=None,VFO='A'):
         return 0
         
+    def set_band(self,b,VFO='A'):
+        return 0
+    
     def get_ant(self):
         return 0
         
@@ -55,7 +58,7 @@ class no_connect:
     def get_fldigi_mode(self):
         return '0'
 
-    def get_mode(self):
+    def get_mode(self,VFO='A'):
         return 'CW'
         
     def set_mode(self,mode,VFO='A'):

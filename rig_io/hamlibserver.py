@@ -71,7 +71,7 @@ import threading
 
 ##############################################################################################################
 
-DEFAULT_VERBOSITY=1     # 0=quiet, 1=enough to see hand-shaking, 2=detailed
+DEFAULT_VERBOSITY=0     # 0=quiet, 1=enough to see hand-shaking, 2=detailed
 
 ##############################################################################################################
 
@@ -393,7 +393,7 @@ class HamlibHandler:
         vfo='A'
       elif port==4533 or port==4633 or port==4733:
         irx = 0
-        vfo='B'         
+        vfo='B'
       elif port>=4675:
         irx = port - 4675
         vfo='B'

@@ -47,7 +47,17 @@ from .direct_io import *
 
 ############################################################################################
 
+# Crude debugging functions
+import inspect
+
+def whoami():
+    print('SOCKET_IO - INSPECT:',inspect.stack()[2][3],
+          '->',inspect.stack()[1][3] )
+
+############################################################################################
+
 VERBOSITY=0
+DIGI_MODES=['PKTUSB','PKT-U','RTTY','PSK-U']
 
 ############################################################################################
 
@@ -93,24 +103,6 @@ def open_rig_connection(connection,host=0,port=0,baud=0,tag='',
         sock = direct_connect(850,baud,force)
         return sock
 
-    if connection=='FLDIGI' or connection=='ANY':
-        pids = check_app('fldigi')
-        if len(pids)==0:
-            if connection=='FLDIGI':
-                print('*** Connection to FLDIGI required - exiting ***\n')
-                sys,exit(0)
-                
-        else:
-            # Use xlmrpc server in FLDIGI 
-            if port==0:
-                port = 7362;
-            print('Atempting to open FLDIGI',host,port,tag,'...')
-            sock = fldigi_xlmrpc(host,port,tag)
-            if connection=='FLDIGI' and not sock.fldigi_active and True:
-                print('SOCKET_IO: Unable to activate FLDIGI connection - aborting')
-                sys.exit(0)
-            return sock
-            
     if connection=='FLRIG' or connection=='ANY':
         pid = get_PIDs('flrig')
         if len(pid)==0:
@@ -129,6 +121,24 @@ def open_rig_connection(connection,host=0,port=0,baud=0,tag='',
                 sys.exit(0)
             return sock
 
+    if connection=='FLDIGI' or connection=='ANY':
+        pids = check_app('fldigi')
+        if len(pids)==0:
+            if connection=='FLDIGI':
+                print('*** Connection to FLDIGI required - exiting ***\n')
+                sys,exit(0)
+                
+        else:
+            # Use xlmrpc server in FLDIGI 
+            if port==0:
+                port = 7362;
+            print('Atempting to open FLDIGI',host,port,tag,'...')
+            sock = fldigi_xlmrpc(host,port,tag)
+            if connection=='FLDIGI' and not sock.fldigi_active and True:
+                print('SOCKET_IO: Unable to activate FLDIGI connection - aborting')
+                sys.exit(0)
+            return sock
+            
     if connection=='FLLOG':
         pid = get_PIDs('fllog')
         if len(pid)==0:
@@ -301,10 +311,9 @@ def read_radio_status(sock,verbosity=0):
 def get_status(self):
 
     s=self.sock
-    print("\n++++++++++++++++++ Reading status ... ",s.connection,s.rig_type,s.rig_type2)
+    print("\n++++++++++++++++++ Reading status ... ",s.connection,s.rig_type,s.rig_type1,s.rig_type2)
 
-    print('Rig type:',s.rig_type,s.rig_type2)
-    if s.rig_type=='Hamlib':
+    if s.rig_type=='Hamlib' or s.rig_type=='FLDIGI':
 
         frq  = s.get_freq() * 1e-3
         mode = s.get_mode()
@@ -366,7 +375,7 @@ def get_status(self):
     print("Mode,frq=",mode,frq)
     if mode=='USB' or mode=='LSB':
         mode='SSB'
-    elif mode=='PKTUSB' or mode=='PKT-U':
+    elif mode in DIGI_MODES:
         mode='RTTY'
 
     # Save these
@@ -477,9 +486,17 @@ def GetInfo(self):
     if VERBOSITY>0:
         print('GetInfo ...')
 
-    if self.sock.rig_type=='Kenwood' or self.sock.rig_type=='Icom' or self.sock.rig_type=='Hamlib':
-        #print 'GET INFO not (yet) fully implemented for',self.sock.rig_type,'command set'
-        frx = 1e-3*self.sock.get_freq()
+    if self.sock.rig_type=='Kenwood' or self.sock.rig_type=='Icom' or \
+       self.sock.rig_type=='Hamlib' or self.sock.rig_type=='FLDIGI' or \
+       self.sock.rig_type=='FLRIG':
+        print('GET INFO not (yet) fully implemented for rig type', \
+            self.sock.rig_type)
+        try:
+            frx = 1e-3*self.sock.get_freq()
+        except:
+            whoami()
+            print('******* SOCKET_IO - GetInfo - Unxcepted error')
+            frx=0
         return (frx,frx)
 
     # Yaesu - Query rig
@@ -847,7 +864,7 @@ def set_mic_gain(self,gain=None):
         # There's no mic gain to set in CW!
         return
     
-    elif mode=='PKTUSB' or mode=='PKT-U' or mode=='RTTY':
+    elif mode in DIGI_MODES:
         if s.rig_type2=='FT991a':
             cmd = 'BY;'                                # No-op since what we really need isn't available
             #cmd = 'BY;EX073'+str(gain).zfill(3)+';'   # Set input audio level for digital modes - nope
@@ -974,13 +991,16 @@ def read_mic_gain(self):
         # There's no mic gain to set in CW!
         return 0
     
-    elif mode=='PKTUSB' or mode=='PKT-U' or mode=='RTTY':
+    elif mode in DIGI_MODES:
         if s.rig_type2=='FT991a':
             #cmd = 'BY;EX073;'   # Get input audio level for digital modes - nope
             cmd = 'EX073;'   # Get input audio level for digital modes - nope
-        else:
+        elif s.rig_type2=='FTdx3000':
             #cmd = 'BY;EX076;'   # Get input audio level for digital modes
             cmd = 'EX076;'   # Get input audio level for digital modes
+        else:
+            print('\n******* SOCKET_IO READ_MIC_GAIN: Unknown rig type - giving up',s.rig_type2,'\n')
+            sys.exit(0)
     else:
         cmd = 'MG;'       # Get input audio level for SSB
     
@@ -1073,12 +1093,13 @@ def Auto_Adjust_Mic_Gain(self,sock=None):
     else:
         s=sock
 
-    #try:
-    s1=self.sock1
-    #except:
-    #    s1=None
+    # Some apps have multiple sockets, e.g. for SO2V
+    try:
+        s1=self.sock1
+    except:
+        s1=None
 
-    print("\nAuto adjusting mic gain ...",s.connection,s1)
+    print("\nSOCKET_IO: Auto adjusting mic gain ...",s.connection,s1)
             
     # Try to key the radio
     NTRYS=10

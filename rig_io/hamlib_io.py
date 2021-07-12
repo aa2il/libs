@@ -461,7 +461,7 @@ class hamlib_connect(direct_connect):
 
         
     def get_ant(self):
-        VERBOSITY=1
+        #VERBOSITY=1
         if VERBOSITY>0:
             print('HAMLIB_IO: Get Ant',self.rig_type,self.rig_type1,self.rig_type2)
         

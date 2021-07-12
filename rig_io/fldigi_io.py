@@ -6,6 +6,11 @@
 # Functions to control rig through FLDIGI or FLRIG from python.
 # See methods.txt for list of methods for these two protocols
 #
+# To Do:
+#    This was originally developed for use with fldigi and flrig was added as an after though.
+#    As is turns out, flrig is very good for rig control and is becomeing my main pathway.
+#    Should therefore separate capability for flrig into its own module
+#
 ############################################################################################
 #
 # This program is free software: you can redistribute it and/or modify
@@ -52,7 +57,7 @@ class fldigi_xlmrpc(direct_connect):
         self.host       = host
         self.port       = port
         self.tag        = tag
-        self.connection = 'FLDIGI'
+        self.connection = ''
         self.lock       = threading.Lock()             # Avoid collisions between various threads
 
         self.wpm        = 0
@@ -60,9 +65,9 @@ class fldigi_xlmrpc(direct_connect):
         self.band       = ''
         self.mode       = ''
 
-        self.rig_type  = 'unknown'
-        self.rig_type1 = 'unknown'
-        self.rig_type2 = 'unknown'
+        self.rig_type  = 'UNKNOWN'
+        self.rig_type1 = 'UNKNOWN'
+        self.rig_type2 = 'UNKNOWN'
         
         # Try to open connection
         for i in range(max(MAX_TRYS,1)):
@@ -97,6 +102,8 @@ class fldigi_xlmrpc(direct_connect):
             print("fldigi version: ",self.version,self.v4)
             self.fldigi_active=True
             self.flrig_active=False
+            self.connection = 'FLDIGI'
+            self.rig_type   = 'FLDIGI'
 
             # Kludge
             #socket.setdefaulttimeout(5)           # set the timeout to N seconds
@@ -110,6 +117,8 @@ class fldigi_xlmrpc(direct_connect):
                 self.version = 'flrig'
                 print("Connected to flrig")
                 self.flrig_active=True
+                self.connection = 'FLRIG'
+                self.rig_type   = 'FLRIG'
 
                 # Probe FLRIG interface
                 self.flrig()
@@ -124,9 +133,9 @@ class fldigi_xlmrpc(direct_connect):
             buf = self.get_response('FA;')
             print('buf=',buf,len(buf))
             if len(buf)>11:
-                self.rig_type = 'Kenwood'
+                self.rig_type1 = 'Kenwood'
             else:
-                self.rig_type = 'Yaesu'
+                self.rig_type1 = 'Yaesu'
 
         if self.flrig_active :
             info = self.s.rig.get_info()
@@ -135,7 +144,6 @@ class fldigi_xlmrpc(direct_connect):
             print('a=',a)
             self.rig_type2 = a[0][2:]
             if self.rig_type2[:2]=='FT':
-                self.rig_type  = 'FLRIG'
                 self.rig_type1 = 'Yaesu'
                 if self.rig_type2 == "FT-991A":
                     self.rig_type2 = "FT991a"
@@ -147,6 +155,8 @@ class fldigi_xlmrpc(direct_connect):
             
         if self.fldigi_active:
             # Looking for something that distinguishes the rigs ...
+            name = self.s.rig.get_name()
+            print('Rig name=',name)
             modes = self.s.rig.get_modes()
             print('Avail modes=',modes)
             bws = self.s.rig.get_bandwidths()
@@ -158,21 +168,26 @@ class fldigi_xlmrpc(direct_connect):
                 # ['LSB', 'USB', 'CW-USB', 'FM', 'AM', 'RTTY-LSB', 'CW-LSB', 'DATA-LSB', 'RTTY-USB', 'DATA-FM', 'FM-N', 'DATA-USB', 'AM-N']
                 print('Rig appears to be FT991a')
                 self.s.rig.set_name("FT991a")
-                self.rig_type = 'Yaesu'
+                self.rig_type1 = 'Yaesu'
                 self.rig_type2 = 'FT991a'
                 name = self.s.rig.get_name()
                 print('name=',name)
+
+                # FLRIG attached to FTdx3000:
+                #Avail modes= ['LSB', 'USB', 'CW', 'FM', 'AM', 'RTTY-L', 'CW-R', 'PSK-L', 'RTTY-U', 'PKT-FM', 'FM-N', 'PSK-U', 'AM-N']
+                
             else:
                 print('*** Need some more code to figure out what rig we are attached to ***')
                 buf = self.get_response('FA;')
-                print('buf=',buf,len(buf))
+                print('buf=-',buf,'-\t',len(buf))
                 if len(buf)>11:
-                    self.rig_type = 'Kenwood'
+                    self.rig_type1 = 'Kenwood'
                     self.s.rig.set_name("TS-850")
                     self.rig_type2 = 'TS850'
-                else:
-                    self.rig_type = 'Yaesu'
-                    self.s.rig.set_name("FTDX-3000")
+                elif len(buf)==11:
+                    self.rig_type1 = 'Yaesu'
+                    #self.s.rig.set_name("FTDX-3000")
+                    self.s.rig.set_name("FTdx3000")
                     self.rig_type2 = 'FTdx3000'
 
         # Set rig name
@@ -195,13 +210,13 @@ class fldigi_xlmrpc(direct_connect):
             print(c)
             sys.exit(0)
             
-            if self.fldigi_active:
-                methods = self.s.fldigi.list()
-                for m in methods:
-                    print(m)
-                sys.exit(0)
-            else:
-                self.flrig()
+        if self.fldigi_active and False:
+            methods = self.s.fldigi.list()
+            for m in methods:
+                print(m['name'],'\t',m)
+            sys.exit(0)
+        elif False:
+            self.flrig()
 
                 
     # Test function to probe FLRIG interface
@@ -213,16 +228,16 @@ class fldigi_xlmrpc(direct_connect):
         #print help(self.s)
 
         #print self.s.system.listMethods()
-        print('FLRIG Methods:')
-        methods = self.s.system.listMethods()
-        for m in methods:
-            print(m)
+        #print('FLRIG Methods:')
+        #methods = self.s.system.listMethods()
+        #for m in methods:
+        #    print(m)
 
         #print self.s.rig.list_methods()
         print('FLRIG Methods:')
         methods = self.s.rig.list_methods()
         for m in methods:
-            print(m)
+            print(m['name'],'\t',m)
 
         if True:
             print("\nRig info: ",self.s.rig.get_info())
@@ -273,13 +288,17 @@ class fldigi_xlmrpc(direct_connect):
         elif self.flrig_active:
             #print('GET_FREQ:',VFO)
             self.lock.acquire()
-            if VFO=='A':
-                x=float( self.s.rig.get_vfoA() )
-            elif VFO=='B':
-                x=float( self.s.rig.get_vfoB() )
-            else:
-                print('FLDIGI_IO GET_FREQ - Invalid VFO')
-                x='0'
+            try:
+                if VFO=='A':
+                    x=float( self.s.rig.get_vfoA() )
+                elif VFO=='B':
+                    x=float( self.s.rig.get_vfoB() )
+                else:
+                    print('FLDIGI_IO GET_FREQ - Invalid VFO')
+                    x=0
+            except:
+                print('FLDIGI_IO GET FREQ - Unexpected error')
+                x=0
             self.lock.release()
             #buf = self.get_response('F'+VFO+';')
             #x = float(buf[2:-1])
@@ -291,22 +310,24 @@ class fldigi_xlmrpc(direct_connect):
     # Function to set rig freq 
     def set_freq(self,frq_KHz,VFO='A'):
         print('FLDIGI SET_FREQ:',frq_KHz,VFO)
+        f=float( 1000*frq_KHz )
         if self.fldigi_active:
-            f=1000*frq_KHz
             if VFO=='A':
                 self.lock.acquire()
-                self.s.main.set_frequency(float(f))
+                self.s.main.set_frequency(f)
                 self.lock.release()
             else:
                 cmd='BY;F'+VFO+str(int(f)).zfill(8)+';'
                 self.send(cmd)
         elif self.flrig_active:
-            #self.lock.acquire()
-            #self.s.rig.set_vfo(float(frq_KHz)*1000.)
-            #self.lock.release()
-            f=1000*frq_KHz
-            cmd='F'+VFO+str(int(f)).zfill(8)+';'
-            self.send(cmd)
+            self.lock.acquire()
+            if VFO=='A':
+                self.s.rig.set_vfoA(f)
+            else:
+                self.s.rig.set_vfoB(f)
+            self.lock.release()
+            #cmd='F'+VFO+str(int(f)).zfill(8)+';'
+            #self.send(cmd)
         else:
             f=0
         return f
@@ -370,10 +391,13 @@ class fldigi_xlmrpc(direct_connect):
             print('FLDIGI_IO: GET_MODE vfo=',VFO)
             
         self.lock.acquire()
-        if VFO=='A':
-            m=self.s.rig.get_modeA()
+        if self.fldigi_active:
+            m=self.s.rig.get_mode()
         else:
-            m=self.s.rig.get_modeB()
+            if VFO=='A':
+                m=self.s.rig.get_modeA()
+            else:
+                m=self.s.rig.get_modeB()
         self.lock.release()
             
         return m
@@ -390,14 +414,35 @@ class fldigi_xlmrpc(direct_connect):
         self.lock.release()
         return m
 
-    # Dummied up for now
     def get_vfo(self):
-        print('GET_VFO not available yet for FLDIGI - assumes A')
-        return 'AA'
+        if self.flrig_active:
+            vfo=self.s.rig.get_AB()
+            print('FLDIGI_IO: GET_VFO ',vfo)
+            return vfo
+        else:
+            # Dummied up for now
+            print('FLDIGI_IO: GET_VFO not available yet for FLDIGI - assumes A')
+            return 'AA'
     
-    # Dummied up for now
     def set_vfo(self,rx=None,tx=None):
-        print('SET_VFO not available yet for FLDIGI - assumes A')
+        print('FLDIGI_IO - SET_VFO:',rx,tx)
+        if self.flrig_active:
+            if rx:
+                self.s.rig.set_AB(rx)
+            else:
+                rx=self.s.rig.get_AB()
+            if tx:
+                if rx==tx:
+                    opt=0
+                else:
+                    opt=1
+                self.s.rig.set_split(opt)
+                
+            print('FLDIGI_IO: SET_VFO ',rx,tx)
+        else:
+            # Dummied up for now
+            print('SET_VFO not available yet for FLDIGI - assumes A')
+            
         return 
     
     # Function to set rig mode - return old mode
@@ -407,7 +452,7 @@ class fldigi_xlmrpc(direct_connect):
         mode2=mode       # Fldigi mode needs to match rig mode
 
         # Translate rig mode into something rig understands
-        if mode==None:
+        if mode==None or mode=='IQ':
             return
         if mode=='RTTY' or mode=='DIGITAL' or mode=='FT8' or mode.find('PSK')>=0 or mode.find('JT')>=0:
             if not self.v4:
@@ -429,14 +474,20 @@ class fldigi_xlmrpc(direct_connect):
             mode2='BPSK31'
         print('mode2=',mode2)
 
-        if VFO=='A':
+        if VFO=='A' or self.flrig_active:
         
             self.lock.acquire()
-            self.s.rig.set_mode(mode)  
             if self.fldigi_active:
+                self.s.rig.set_mode(mode)  
                 mold=self.s.modem.set_by_name(mode2)
                 print('mold=',mold)
                 mout=self.s.modem.get_name()
+            elif self.flrig_active:
+                if VFO=='A':
+                    self.s.rig.set_modeA(mode)
+                else:
+                    self.s.rig.set_modeA(mode)
+                mout=mode
             else:
                 print('*** FLDIGI_IO: Warning - unable to read modem name ***')
                 mout=self.s.rig.get_mode()
@@ -444,11 +495,15 @@ class fldigi_xlmrpc(direct_connect):
             print("mout=",mout)
 
         else:
-            c = modes[mode]["Code"]
-            self.send('FR4;MD'+c+';')
-            time.sleep(DELAY)
-            self.send('FR0;')
-            mout=mode
+            try:
+                c = modes[mode]["Code"]
+                self.send('FR4;MD'+c+';')
+                time.sleep(DELAY)
+                self.send('FR0;')
+                mout=mode
+            except:
+                print('FLDIGI_IO SET_MODE: Unable to set mode =',mode)
+                return mode
 
         print("SET MODE Done.")
         return mout
@@ -521,9 +576,13 @@ class fldigi_xlmrpc(direct_connect):
             self.reply = self.s.rig.send_command(cmd,100)
             #print 'SEND: REPLY=',self.reply
         elif self.flrig_active:
-            #print "FLDIGI SEND:",cmd
-            self.reply = self.s.rig.cat_string(cmd)
-            #print 'SEND: REPLY=',self.reply
+            try:
+                #print "FLDIGI SEND:",cmd
+                self.reply = self.s.rig.cat_string(cmd)
+                #print 'SEND: REPLY=',self.reply
+            except:
+                print("**** FLDIGI SEND FAILURE cmd=",cmd)
+                self.reply = ''
         else:
             self.reply = ''
         #print 'SEND: Releasing LOCK...'

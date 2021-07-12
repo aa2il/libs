@@ -866,7 +866,7 @@ class direct_connect:
         
     def mic_setting(self,m,iopt,src=None,lvl=None,prt=None):
         if VERBOSITY>0:
-            print('DIRECT GET_MIC:')
+            print('DIRECT MIC_SETTING:')
         if m=='CW':
             return
         menu_nums=YAESU_MIC_MENU_NUMBERS[self.rig_type2]
@@ -913,18 +913,18 @@ class direct_connect:
         cmd1 = 'BY;PC'+str(p).zfill(3)+';'          # Power select
         buf=self.get_response(cmd1)
         
-    def set_band(self,b):
+    def set_band(self,b,VFO='A'):
         if VERBOSITY>0:
             print('DIRECT SET_BAND: band=',b)
         code = bands[b]["Code"]
         cmd1 = 'BY;BS'+str(code).zfill(2)+';'          # Band select
         buf=self.get_response(cmd1)
         
-    def get_band(self,frq=None):
+    def get_band(self,frq=None,VFO='A'):
         if not frq:
             if not self.active:
                 return 0
-            frq = self.get_freq() * 1e-6
+            frq = self.get_freq(VFO=VFO) * 1e-6
 
         if frq<0:
             band=None
