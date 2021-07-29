@@ -38,16 +38,20 @@ from dx.spot_processing import Station
 from dx.cluster_connections import get_logger
 from pprint import pprint
 
-from rig_io.ft_tables import SST_SECS
+from rig_io.ft_tables import NAQP_SECS
 
 ###################################################################
 
 # Function to load history file
 def load_history(history):
     
+    COMMENT_CHARS=['#','!']
     HIST = OrderedDict()
     if history=='':
         return HIST
+
+    ALL_FIELDS=['name','state','sec','check','county','cwops', \
+                'fdcat','fdsec','ituz','cqz','grid']
 
     # Open logger file used by spot_processing routines
     rootlogger = "dxcsucker"
@@ -100,7 +104,7 @@ def load_history(history):
                 if state=='--' or state=='nan':
                     state=''
 
-                if call=='K5WSN' and False:
+                if call=='AA5B' and False:
                     print(call)
                     print(sheet.iloc[i,:])
                     print(call,number,name,state)
@@ -111,11 +115,11 @@ def load_history(history):
                 HIST[call]['state']  = state.upper()
                 HIST[call]['check']  = ''
                 HIST[call]['county'] = ''
-                HIST[call]['CWops']  = str( int(number) )
-                HIST[call]['FDcat']  = ''
-                HIST[call]['FDsec']  = ''
-                HIST[call]['ITUz']   = ''
-                HIST[call]['CQz']    = ''
+                HIST[call]['cwops']  = str( int(number) )
+                HIST[call]['fdcat']  = ''
+                HIST[call]['fdsec']  = ''
+                HIST[call]['ituz']   = ''
+                HIST[call]['cqz']    = ''
                 HIST[call]['grid']   = ''
 
         else:
@@ -137,182 +141,89 @@ def load_history(history):
         hist = csv.reader(csvfile, delimiter=',', quotechar='|')
 
         #print(hist)
-        nrows=0
 
-        caqp = fname=='CQP-CH-N1MM-05Oct2018.txt'
-        
         for row in hist:
-            #print(row)
-            #print(type(row))
-            #for el in row:
-            #    print( [ord(c) for c in el] )  
-            valid=False
+            
             if len(row)>0:
 
-                if row[0][0]!='#' and row[0][0]!='!':
-                    
-                    # N1MM Logger helper file OR AZ Outlaws history file
-                    call = row[0]
-                    name = row[1]
-                    number = ''
+                if row[0][0]=='!':
+                    #print('Howdy Ho!')
+                    KEYS=[]
+                    print('row=',row)
+                    for item in row:
+                        if len(item)>0 and item[0] not in COMMENT_CHARS:
+                            key = item.strip().lower()
+                            if key=='sect':
+                                key='sec'
+                            elif key=='ck':
+                                key='check'
+                            elif fname[:5]=='FD_20':
+                                if key=='exch1':
+                                    key='fdcat'
+                                elif key=='sec':
+                                    key='fdsec'
+                            elif fname[:7]=='QSOP_CA':
+                                if key=='exch1':
+                                    key='qth'
+                            elif fname[:6]=='CWOPS_' and key=='exch1':
+                                key='cwops'
+                            elif fname[:8]=='K1USNSST' and key=='exch1':
+                                key='state'
+                            elif fname[:7]=='ARRLVHF' and key=='loc1':
+                                key='grid'
+                            KEYS.append( key )
+                    print('KEYS=',KEYS)
+                    #sys.exit(0)
 
-                    if fname[:6]=='CWOPS_':
-                        if row[2].isnumeric():
-                            number = row[2]
-                            try:
-                                qth=row[3].split(' ')
-                            except:
-                                qth=''
-                            if len(qth)>0 and qth[-1] in SST_SECS:
-                                state=qth[-1]
+                elif row[0][0] not in COMMENT_CHARS:
+
+                    #print('KEYS=',KEYS)
+                    #print('row=',row)
+                    for i in range(len(KEYS)):
+                        if i==0:
+                            call=row[0]
+                            HIST[call] = OrderedDict()
+                            for field in ALL_FIELDS:
+                                HIST[call][field]=''
+                        else:
+                            key=KEYS[i]
+                            if len(row)>i:
+                                val = row[i].upper()
                             else:
-                                state=''
-                        else:
-                            state=row[2]
-                            number=''
+                                val = ''
+                            if key=='qth':
+                                if val in NAQP_SECS:
+                                    key='state'
+                                elif len(val)==4:
+                                    key='county'
+                            if key in ALL_FIELDS:
+                                HIST[call][key] = val
+                            elif key!='usertext' and len(val)>0:
+                                print(row)
+                                print('key/val=',key,row[i])
+                                #sys.exit(0)
 
-                        if call=='KC1KUG':
-                            print('row=',row)
-                            print('state=',state)
+                    if False:
+                        print('row=',row)
+                        print('call=',call)
+                        print('HIST=',HIST[call])
+                        sys.exit(0)
                             
-                    else:
-                        if len(row)>=6 and False:
-                            state = row[5]                 # AZ format - haven't used this in quite some time
-                            print('LOAD_HISTORY: Rut-roh')
-                            print('row=',row,'\t',len(row))
-                            sys.exit(0)
-                        elif len(row)>=3:
-                            state = row[2]                 # N1MM format
-                        else:
-                            state = ''
-
-                        #try:
-                        #    state = row[5]                 # AZ format - haven't used this in quite some time
-                        #except:
-                        #    state = row[2]                 # N1MM format
-                            #try:
-                            #except:
-                            #    print('LOAD_HISTORY: Rut-roh')
-                            #    print('row=',row,'\t',len(row))
-                            #    sys.exit(0)
-
-                    try:
-                        unknown = row[3]
-                    except:
-                        unknown = ''
-                    try:
-                        sec = row[4]
-                    except:
-                        sec =''
-                    try:
-                        check = row[6]
-                    except:
-                        check = ''
-                    try:
-                        county = row[7]
-                    except:
-                        county = ''
-
-                    if number=='':
-                        try:
-                            number = row[8]
-                        except:
-                            number = ''
-                        
-                    try:
-                        FDcat = row[9]
-                    except:
-                        FDcat = ''
-                    try:
-                        FDsec = row[10]
-                    except:
-                        FDsec = ''
-                    try:
-                        ITUz = row[11]
-                    except:
-                        ITUz = ''
-                    try:
-                        CQz = row[12]
-                    except:
-                        CQz = ''
-                    try:
-                        gridsq = row[13]
-                    except:
-                        gridsq = ''
-
-                    valid=True
-
-                    # Fix-up for CA QSO Party
-                    if caqp:
-                        check = ''
-                        sec=''
-                        if len(state)==4:
-                            county=state
-                            state='CA'
-
-                    # Fix-up for Sweepstakes
-                    if fname=='SSCW.txt':
-                        sec = row[1]
-                        check = row[3]
-                        name=''
-                        
-                    # Fix-up for SST
-                    #if fname=='K1USNSST-017.txt':
-                    #    sec = row[1]
-                    #    check = row[3]
-                    #    name=''
-                        
-                    # Fix-up for Field day
-                    if fname[0:5]=='FD_20' and ext=='.txt':
-                        FDcat = name.upper()
-                        name=''
-                        FDsec = state.upper()
-                        state=''
-
-                    # ITU
-                    if fname[0:4]=='IARU' and ext=='.txt':
-                        ITUz = name.upper()
-                        name=''
-                    #else:
-                    #    ITUz = ''
-
-                    # ARRL VHF
-                    if fname[0:7]=='ARRLVHF' and ext=='.txt':
-                        gridsq = state.upper()
-                        state=''
-                    #else:
-                    #    gridsq = ''
-                                            
-                if valid:
-                    HIST[call] = OrderedDict()
-                    HIST[call]['name']   = name.upper()
-                    HIST[call]['state']  = state.upper()
-                    HIST[call]['sec']    = sec.upper()
-                    HIST[call]['check']  = check
-                    HIST[call]['county'] = county.upper()
-                    HIST[call]['CWops']  = number
-                    HIST[call]['FDcat']  = FDcat
-                    HIST[call]['FDsec']  = FDsec
-                    HIST[call]['ITUz']   = ITUz
-                    HIST[call]['CQz']    = CQz
-                    HIST[call]['grid']   = gridsq
-
-                    if call=='K5WSN' and False:
-                        print(row)
-                        print(HIST[call])
-                        #sys.exit(0)
-
-    # Fill in ITU & CQ Zones
-    calls=list(HIST.keys())
-    for call in calls:
-        if len(HIST[call]['CQz'])==0 or len(HIST[call]['ITUz'])==0:
+    # Some fix-ups
+    for call in HIST.keys():
+        # Fix-up for Field day
+        if len(HIST[call]['fdcat'])>0 and len(HIST[call]['fdsec'])==0:
+            HIST[call]['fdsec'] = HIST[call]['sec']
+        
+        # Fill in ITU & CQ Zones
+        if len(HIST[call]['cqz'])==0 or len(HIST[call]['ituz'])==0:
             #print call
             #print HIST[call]
             dx_station = Station(call)
-            if len(HIST[call]['CQz'])==0:
-                HIST[call]['CQz'] = str( dx_station.cqz )
-            if len(HIST[call]['ITUz'])==0:
-                HIST[call]['ITUz'] = str( dx_station.ituz )
+            if len(HIST[call]['cqz'])==0:
+                HIST[call]['cqz'] = str( dx_station.cqz )
+            if len(HIST[call]['ituz'])==0:
+                HIST[call]['ituz'] = str( dx_station.ituz )
 
         if False and call=='W1WEF':
             print(call,HIST[call])

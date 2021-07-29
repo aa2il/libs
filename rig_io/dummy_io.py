@@ -109,6 +109,9 @@ class no_connect:
     def read_meter(self,meter):
         return 0
 
+    def read_speed(self):
+        return 0
+    
     def get_position(self):
         return [None,None]
 

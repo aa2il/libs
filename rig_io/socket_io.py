@@ -182,6 +182,8 @@ def open_rig_connection(connection,host=0,port=0,baud=0,tag='',
             else:
                 print('OPEN_RIG_CONNECTION: Unknown rig',rig)
                 sys.exit(0)
+        else:
+            port=0
                 
         # Direct connection to rig
         sock = direct_connect(port,baud)
