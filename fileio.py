@@ -95,11 +95,18 @@ def parse_simple_log(fn,args):
 
 # Function to read list of qsos from input file
 def parse_adif(fn,line=None):
-    if line==None:
-        #raw = re.split('<eor>|<eoh>(?i)',open(fn).read() )
-        raw1 = re.split('<eoh>(?i)',open(fn).read() )
-    else:
-        raw1 = re.split('<eoh>(?i)',line )
+    logbook =[]
+    
+    try:
+        if line==None:
+            #raw = re.split('<eor>|<eoh>(?i)',open(fn).read() )
+            raw1 = re.split('<eoh>(?i)',open(fn).read() )
+        else:
+            raw1 = re.split('<eoh>(?i)',line )
+    except Exception as e:
+        print('*** Unable to open file or other error in PARSE_ADIF ***')
+        print('Error msg:\t',getattr(e, 'message', repr(e)))
+        return logbook
         
     raw = re.split('<eor>(?i)',raw1[-1] )
 
@@ -108,7 +115,6 @@ def parse_adif(fn,line=None):
     #raw.pop(0)  #remove header - this deletes 1st qso if there is no header!!!
     #raw.pop()   #remove last empty item
 
-    logbook =[]
     for record in raw:
         #print(record,len(record))
         if len(record)<=1:

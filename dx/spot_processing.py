@@ -78,7 +78,6 @@ class ChallengeData:
             
     # Work through Challenge sheet
     def needed_challenge(self,dxcc,band,verbosity):
-
         band=str(band)
         if dxcc is None or band=='60M':
             return False
@@ -86,7 +85,13 @@ class ChallengeData:
             dxcc=dxcc.upper()
             if dxcc=='UNITED STATES':           # This helps to speed things up
                 return False
+            #if dxcc=='FRANCE':
+            #    dxcc='ST. MARTIN'
 
+        if 'MARTIN' in dxcc:
+            print('NEEDED_CHALLENGE: dxcc=',dxcc,'\tband=',band)
+            verbosity=1
+ 
         special = ['VIET','GERMANY','NEVIS','LUCIA','EUSTATIUS','FIJI', \
                    'SOUTH AFRICA','PIERRE','CHATHAM','BARTHELEMY','MARTIN',\
                    'PAUL ISLAND','VINCENT','SAN ANDRES']
@@ -112,9 +117,10 @@ class ChallengeData:
             found = dxcc==cell
             for s in special:
                 found = found or (s in dxcc and s in cell)
-            
+
             if found:
-                #print 'CHALLENGE_NEEDED:',dxcc,i,jj
+                if verbosity>0:
+                    print('CHALLENGE_NEEDED: dxcc=',dxcc,'\ti=',i,'\tjj=',jj)
 
                 if jj>0:
                     #print 'jj=',jj
@@ -122,9 +128,12 @@ class ChallengeData:
                     #if isinstance(call,float):
                     #    call = str(call)
                     #print 'CHALLENGE_NEEDED:',dxcc,i,jj,call,call=='',len(call)
-                    if band=='2020' and False:
-                        print('CHALLENGE_NEEDED: ',band,dxcc,found,i,jj,call)
-                    return call=='' or call=='PAPER'
+                    needed= call=='' or call=='PAPER'
+                    if verbosity>0:
+                        print('CHALLENGE_NEEDED: band=',band,'\tdxcc=',dxcc,\
+                              '\tfound='.found,'\ti=',i,'\tjj=',jj,\
+                              '\tcall=',call,'\tneeded=',needed)
+                    return needed
                 
                 for j in range(10):
                     b2 = self.bands[j]
@@ -144,7 +153,7 @@ class ChallengeData:
                 break
         else:
             if verbosity>0:
-                print(dxcc,' not found - *** NEEDED ***')
+                print('NEEDED_CHALLENGE: ',dxcc,' not found - *** NEEDED ***')
 
         #sys.exit(0)
         return needed
