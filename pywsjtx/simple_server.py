@@ -15,6 +15,7 @@ import logging
 import ipaddress
 from rig_io.util import convert_freq2band
 import re
+import datetime
 
 class SimpleServer(object):
     logger = logging.getLogger()
@@ -26,6 +27,8 @@ class SimpleServer(object):
         self.timeout = None
         self.verbose = kwargs.get("verbose",False)
         self.old_status=None
+        self.prev_time=None
+        self.prev_band=None
 
         if kwargs.get("timeout") is not None:
             self.timeout = kwargs.get("timeout")
@@ -107,7 +110,13 @@ class SimpleServer(object):
             the_packet = pywsjtx.WSJTXPacketClassFactory.from_udp_packet(addr_port, pkt)
 
             if type(the_packet) == pywsjtx.HeartBeatPacket:
-                print(the_packet)
+                print('\n',the_packet)
+                utc = datetime.datetime.utcnow()
+                try:
+                    print('time=',utc,'\tfrq =',self.old_status.dial_frequency)
+                except:
+                    pass
+
             elif type(the_packet) == pywsjtx.StatusPacket:
                 if False:
                     print('================= Get_Spot2: Status Packet:')
@@ -115,17 +124,30 @@ class SimpleServer(object):
                     #print(the_packet.de_call)                  # Individual fields
                 
                 if self.old_status:
-                    print(the_packet.status_changes(self.old_status))
+                    print('Status Change:\t',the_packet.status_changes(self.old_status))
                 else:
-                    print(the_packet)
+                    print('New Status:\t',the_packet)
                 self.old_status=the_packet  
             
             elif type(the_packet) == pywsjtx.DecodePacket:
-                #print(the_packet)
+                print(the_packet)
+                time=the_packet.time
+                band=self.old_status.dial_frequency
+                print('GetSpot2: time=',time,self.prev_time,'\tband=',band,self.prev_band)
+                if self.prev_time and (self.prev_time==time) and (self.prev_band!=band):
+                    #print('Get Spot2: Band change during interval - discarding packet')
+                    #return ''
+                    print('Get Spot2: Band change during interval - Fixing packet')
+                    FREQ=self.prev_band
+                else:
+                    self.prev_time=time
+                    self.prev_band=band
+                    FREQ=0
+            
                 #print('Decode:\t',the_packet.message)
                 try:
-                    line=the_packet.format_spot(self.old_status,'AA2IL')
-                    print(line)
+                    line=the_packet.format_spot(self.old_status,'AA2IL',FREQ)
+                    print('Decode:\t',line)
                     self.nsleep=1
                 except:
                     line=''
@@ -157,13 +179,13 @@ class SimpleServer(object):
 
             elif type(the_packet) == pywsjtx.QSOLoggedPacket and False:
                 print(the_packet)
-                print('HEEEEEYYYYYYYYY!   5555555555555555')
+                #print('HEEEEEYYYYYYYYY!   5555555555555555')
                 #print('Logger:\t',the_packet.adif)
                 #line=the_packet.adif
                     
             elif type(the_packet) == pywsjtx.LoggedADIFPacket:
                 print(the_packet)
-                print('HEEEEEYYYYYYYYY!      12121212121212')
+                #print('HEEEEEYYYYYYYYY!      12121212121212')
                 #print('Logger:\t',the_packet.adif_text)
                 line=the_packet.adif_text
                     
@@ -185,6 +207,9 @@ class SimpleServer(object):
             return spot
 
     def last_band(self):
-        frq = 1e-3*self.old_status.dial_frequency
+        try:
+            frq = 1e-3*self.old_status.dial_frequency
+        except:
+            frq=14074.
         return convert_freq2band(frq,True)
         

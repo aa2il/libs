@@ -82,18 +82,24 @@ class ChallengeData:
         if dxcc is None or band=='60M':
             return False
         else:
-            dxcc=dxcc.upper()
+            dxcc=dxcc.upper().replace('ST.','SAINT')
             if dxcc=='UNITED STATES':           # This helps to speed things up
                 return False
-            #if dxcc=='FRANCE':
-            #    dxcc='ST. MARTIN'
 
-        if 'MARTIN' in dxcc:
+        if 'MARTIN' in dxcc and False:
             print('NEEDED_CHALLENGE: dxcc=',dxcc,'\tband=',band)
             verbosity=1
- 
-        special = ['VIET','GERMANY','NEVIS','LUCIA','EUSTATIUS','FIJI', \
-                   'SOUTH AFRICA','PIERRE','CHATHAM','BARTHELEMY','MARTIN',\
+
+        # Its probably better to fix the names rather than have this
+        # special treatment.  The problem with St. Martin is that
+        # MARTIN is aslo in Martinique.  Try fixing these as they come up.
+        # The "St."'s should be easy but I left it like this for now to
+        # minimize potential issues.
+        #special = ['VIET','GERMANY','NEVIS','LUCIA','EUSTATIUS','FIJI', \
+        #          'SOUTH AFRICA','PIERRE','CHATHAM','BARTHELEMY','MARTIN',\
+        #           'PAUL ISLAND','VINCENT','SAN ANDRES']
+        special = ['VIET','GERMANY','NEVIS','EUSTATIUS','FIJI', \
+                   'SOUTH AFRICA','PIERRE','CHATHAM','BARTHELEMY', \
                    'PAUL ISLAND','VINCENT','SAN ANDRES']
         needed=True
 
@@ -131,7 +137,7 @@ class ChallengeData:
                     needed= call=='' or call=='PAPER'
                     if verbosity>0:
                         print('CHALLENGE_NEEDED: band=',band,'\tdxcc=',dxcc,\
-                              '\tfound='.found,'\ti=',i,'\tjj=',jj,\
+                              '\tfound=',found,'\ti=',i,'\tjj=',jj,\
                               '\tcall=',call,'\tneeded=',needed)
                     return needed
                 

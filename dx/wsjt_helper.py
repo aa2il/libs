@@ -100,7 +100,7 @@ class wsjt_helper:
         all_lines=[]
         for i in range(len(fnames)):
             fname = fnames[i]
-            print(('\nWSJT_HELPER: Reading',fname,' ...'))
+            print('\nWSJT_HELPER: Reading',fname,' ...')
 
             if not os.path.isfile(fname):
                 fp = open(fname,'w+')
@@ -111,12 +111,12 @@ class wsjt_helper:
             self.lines = fp.readlines()
             istart=self.find_recent_spots(MAX_AGE_DAYS*60.*24.)
             all_lines = all_lines + self.lines[istart:]
-            print((len(self.lines),len(all_lines)))
+            print(len(self.lines),len(all_lines))
         self.lines = all_lines
             
     def age_secs(self):
-        print(('date=',self.date2))
-        print(('time=',self.time,len(self.time)))
+        print('date=',self.date2)
+        print('time=',self.time,len(self.time))
         date_time = self.date2 + " " + self.time
         #print 'date_time=',date_time
         
@@ -125,7 +125,7 @@ class wsjt_helper:
         elif len(self.date2)==6:
             fmt1 = "%y%m%d"
         else:
-            print(('AGE_SECS: Unknown date format',date_time))
+            print('AGE_SECS: Unknown date format',date_time)
             fmt1 = "%Y-%m-%d"
             sys.exit(0)
 
@@ -136,7 +136,7 @@ class wsjt_helper:
         elif len(self.time)==4:
             fmt2 = "%H%M"
         else:
-            print(('AGE_SECS: Unknown time format',date_time))
+            print('AGE_SECS: Unknown time format',date_time)
             fmt2 = "%H:%M"
             sys.exit(0)
 
@@ -150,19 +150,19 @@ class wsjt_helper:
     def age_secs2(self,verbosity=0):
 
         if verbosity>=2:
-            print(('AGE_SEC2: date=',self.date2,'\t\ttime=',self.time2))
+            print('AGE_SEC2: date=',self.date2,'\t\ttime=',self.time2)
 
         if self.time2!=None and self.date2!=None:
             self.date_time = datetime.combine(self.date2, self.time2).replace(tzinfo=pytz.utc)
             age = (self.now - self.date_time).total_seconds() # In seconds
         else:
-            print(('AGE_SECS2: Rut-row',self.date2,self.time2))
+            print('AGE_SECS2: Rut-row',self.date2,self.time2)
             age=None
 
         if verbosity>=2:
             #print self.date,self.time
-            print(('mod data_time=',self.date_time))
-            print(('now=',self.now,'     - age=',age/3600.))
+            print('mod data_time=',self.date_time)
+            print('now=',self.now,'     - age=',age/3600.)
 
         #sys.exit(0)
         return age
@@ -188,21 +188,21 @@ class wsjt_helper:
         #istart=self.find_recent_spots(MAX_AGE_DAYS*60.*24.)
         istart=0
         
-        print(('Reading spot list...',len(self.lines),MAX_AGE_DAYS,istart))
-        print((istart,self.lines[istart]))
+        print('Reading spot list...',len(self.lines),MAX_AGE_DAYS,istart)
+        print(istart,self.lines[istart])
 
         spot_list=[]
         nlines = len(self.lines)
         for i in range(istart,nlines):
             if i%100000 ==0:
-                print((i,nlines))
+                print(i,nlines)
 
             spot=self.get_spot2(self.lines[i],0)
             #print self.age,MAX_AGE_DAYS*24*3600.,MAX_AGE_DAYS
             if spot and self.age<MAX_AGE_DAYS*24*3600.:
                 spot_list.append(spot)
 
-        print(('Total of',len(spot_list),' spots read'))
+        print('Total of',len(spot_list),' spots read')
 
         return spot_list
 
@@ -239,7 +239,7 @@ class wsjt_helper:
             if n==6 or n==4:
                 # Time,SNR,dT,df,Mode_Flag,Call1,Call2,Msg
                 if verbosity>=1:
-                    print((call1,'called by',call2))
+                    print(call1,'called by',call2)
 
                 self.time = line[0]
                 snr = int(line[1])
@@ -259,14 +259,14 @@ class wsjt_helper:
                 self.frq  = float(line[2])*1000.
                 self.mode = line[4]
                 if verbosity>=1:
-                    print(('Band/Mode change to',line[2],line[3],line[4]))
+                    print('Band/Mode change to',line[2],line[3],line[4])
             
             elif n==13:
                 # Date_Time,Transmitting,frq,frq_units,mode,Call1,Call2,Msg
                 self.date2 = line[0][0:6]
                 self.time = line[0][7:]
                 if verbosity>=1:
-                    print((call1,'called by',call2,' - My TX'))
+                    print(call1,'called by',call2,' - My TX')
             else:
                 print(line)
                 print('GET_SPOT: Unknown line format')
@@ -303,7 +303,7 @@ class wsjt_helper:
             line = line.strip().split()
             if verbosity>=2:
                 print(' ')
-                print((line,len(line)))
+                print(line,len(line))
             while len(line)<8:
                 line.append('')
 
@@ -389,7 +389,7 @@ class wsjt_helper:
                     min  = int( t[2:4] )
                     sec  = 0
                 else:
-                    print(('GET_SPOT2: Unknown time format',t))
+                    print('GET_SPOT2: Unknown time format',t)
                     sys.exit(0)
                 self.time2 = time( hour,min,sec)
                 #print 'GET_SPOT2:',self.date2, self.time2
@@ -410,10 +410,10 @@ class wsjt_helper:
                 
                 if verbosity>=1:
                     print(line)
-                    print((call1,'called by',call2))
-                    print(('Last band change:',self.new_date_time,'\t\t\t',self.new_frq))
-                    print(('Last QSO:        ',self.old_date_time))
-                    print(('Current QSO:     ',self.date_time,age1,age2,'\t',self.frq))
+                    print(call1,'called by',call2)
+                    print('Last band change:',self.new_date_time,'\t\t\t',self.new_frq)
+                    print('Last QSO:        ',self.old_date_time)
+                    print('Current QSO:     ',self.date_time,age1,age2,'\t',self.frq)
 
                 snr = int(line[1])
                 df  = int(line[3])
@@ -444,7 +444,7 @@ class wsjt_helper:
                     min  = int( t[3:5] )
                     sec  = 0
                 else:
-                    print(('GET_SPOT2: Unknown time format',date_time))
+                    print('GET_SPOT2: Unknown time format',date_time)
                     sys.exit(0)
 
                 if False:
@@ -475,7 +475,7 @@ class wsjt_helper:
                     
                 if verbosity>=1:
                     print(line)
-                    print(('GET_SPOT2: Band/Mode change to',line[2],line[3],line[4]))
+                    print('GET_SPOT2: Band/Mode change to',line[2],line[3],line[4])
                     
             elif n==13:
                 #elif n==10 and nfields>5:
@@ -496,7 +496,7 @@ class wsjt_helper:
                 self.time2 = time( hour,min,sec)
 
                 if verbosity>=1:
-                    print((call1,'called by',call2,' - My TX'))
+                    print(call1,'called by',call2,' - My TX')
 
                 #print n,line
                 #sys.exit(0)
@@ -524,7 +524,7 @@ class wsjt_helper:
 
     def find_recent_spots(self,mins):
 
-        print(('Searching for recent spots...',mins))
+        print('Searching for recent spots...',mins)
         if False:
             i=0
             while self.age>60.*mins and i<len(self.lines):
@@ -535,7 +535,7 @@ class wsjt_helper:
         else:
             today = date.today()
             days_min = 1 + mins/(60*24.)
-            print(('FIND_RECENT: Today:',today,days_min,len(self.lines)))
+            print('FIND_RECENT: Today:',today,days_min,len(self.lines))
             i=-1
             for line in self.lines:
                 line = line.strip().split()
@@ -562,15 +562,15 @@ class wsjt_helper:
                     days = (today - self.date2).days
                     if days<=days_min:
                         print(line)
-                        print((days,mins))
+                        print(days,mins)
                         break
 
             if i<0:
                 print('Did not find anything')
                 return None
 
-            print(('\nSearching from ',i))
-            print((self.lines[i]))
+            print('\nSearching from ',i)
+            print(self.lines[i])
             spot=None
             while self.age>60.*mins and i<len(self.lines):
                 spot=self.get_spot2(self.lines[i],0)
@@ -579,11 +579,11 @@ class wsjt_helper:
 
         #if self.age and True:
         if True:
-            print(('FIND_RECENT: age=',self.age/60.,mins,istart))
+            print('FIND_RECENT: age=',self.age/60.,mins,istart)
             print(spot)
-            print(('line=',self.line))
+            print('line=',self.line)
             #print 'date/time=',self.date2,self.time
-            print(('now=',self.now))
+            print('now=',self.now)
             #sys.exit(0)
 
         return istart

@@ -334,7 +334,7 @@ class DecodePacket(GenericWSJTXPacket):
     
 
     
-    def format_spot(self,old_status,my_call):
+    def format_spot(self,old_status,my_call,FREQ=None):
 
         print('Format Spot: msg=',self.message)
         msg=self.message.split(" ")
@@ -361,7 +361,10 @@ class DecodePacket(GenericWSJTXPacket):
         #print(msg,'\t',call1,call2)
         df =self.delta_f
         try:
-            frq=.001*( old_status.dial_frequency+df )
+            if FREQ:
+                frq=.001*( FREQ+df )
+            else:
+                frq=.001*( old_status.dial_frequency+df )
         except:
             return ''                    # Bail out if we can't figure it out
 
@@ -371,7 +374,7 @@ class DecodePacket(GenericWSJTXPacket):
                 
         snr=self.snr
         time=self.time
-                
+
         line = 'DX de %-9s %8.1f  %-12s %-30s %4sZ' % \
                (my_call+'-#:',frq,call2, \
                 mode+' '+str(snr)+' dB '+str(df)+' Hz',\
