@@ -124,10 +124,10 @@ class SimpleServer(object):
                     #print(the_packet.de_call)                  # Individual fields
                 
                 if self.old_status:
-                    print('Status Change:\t',the_packet.status_changes(self.old_status))
+                    print(the_packet.status_changes(self.old_status))
                 else:
                     print('New Status:\t',the_packet)
-                self.old_status=the_packet  
+                self.old_status=the_packet
             
             elif type(the_packet) == pywsjtx.DecodePacket:
                 print(the_packet)
@@ -157,7 +157,10 @@ class SimpleServer(object):
                 self.wsjtx_id  = the_packet.wsjtx_id
                     
                 # This is how to highlight call signs
-                m = re.match(r"^CQ\s+(\S+)\s+", the_packet.message)
+                if the_packet.message:
+                    m = re.match(r"^CQ\s+(\S+)\s+", the_packet.message)
+                else:
+                    m=None
                 if m and False:
                     print("Callsign {}".format(m.group(1)))
                     callsign = m.group(1)
@@ -212,4 +215,12 @@ class SimpleServer(object):
         except:
             frq=14074.
         return convert_freq2band(frq,True)
+
+    def wsjt_status(self):
+        try:
+            frq = 1e-3*self.old_status.dial_frequency
+        except:
+            frq=14074.
+        band=convert_freq2band(frq,True)            
+        return [frq,band]
         

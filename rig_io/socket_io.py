@@ -1063,6 +1063,9 @@ def SetSubBand(self,iopt):
         m = self.mode
         print('2: b=',b)
         print('2: m=',m)
+
+    if b[-1]!='m':
+        b+='m'
         
     if iopt==1:
         frq = bands[b][m+'1'] 

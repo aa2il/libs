@@ -253,7 +253,7 @@ class StatusPacket(GenericWSJTXPacket):
 
     # Function to determine what has changed in the status
     def status_changes(self,old):
-        str="Status:\t"
+        str="Status Change:\t"
         attrs=['dial_frequency','rx_df','tx_df', 'dx_call','dx_grid','report', \
                'transmitting','decoding','tx_enabled','tx_watchdog', \
                'sub_mode','fast_mode','special_op_mode']
@@ -338,7 +338,7 @@ class DecodePacket(GenericWSJTXPacket):
 
         print('Format Spot: msg=',self.message)
         msg=self.message.split(" ")
-        if len(msg)<=1:
+        if msg==None or len(msg)<=1:
             return ''                    # Bail out if we can't figure it out
         
         if False:

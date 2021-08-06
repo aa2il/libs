@@ -20,9 +20,18 @@
 #
 ############################################################################################
 
-VERBOSITY=0
+import logging               
 
 ############################################################################################
+
+VERBOSITY=1
+
+############################################################################################
+
+# Setup basic logging
+logging.basicConfig(
+    format="%(asctime)-15s [%(levelname)s] DUMMY_IO:%(funcName)s:\t%(message)s",
+    level=logging.INFO)
 
 # Object with dummy connection
 class no_connect:
@@ -44,82 +53,133 @@ class no_connect:
         self.tlast      = None
 
     def get_band(self,frq=None,VFO='A'):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return 0
         
     def set_band(self,b,VFO='A'):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return 0
     
     def get_ant(self):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return 0
         
     def set_ant(self,a):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return 0
         
     def get_fldigi_mode(self):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return '0'
 
     def get_mode(self,VFO='A'):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return 'CW'
         
     def set_mode(self,mode,VFO='A'):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return '0'
         
     def get_freq(self,VFO='A'):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return 0
 
     def set_freq(self,f,VFO='A'):
         if VERBOSITY>0:
-            print('Ignoring call to SET_FREQ')
+            logging.info('Ignoring call')
+            #print('Ignoring call to SET_FREQ')
         return 0
 
     def set_vfo(self,rx=None,tx=None):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return
     
     def send(self,cmd):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return 0
 
     def set_log_fields(self,fields):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return 0
         
     def set_call(self,call):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return 0
 
     def get_serial_out(self):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return 0
     
     def get_response(self,cmd):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return ''
 
     def get_info(self):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return ''
     
     def set_speed(self,wpm):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return 0
 
     def get_PLtone(self):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return 0
     
     def get_filters(self,VFO='A'):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         #return [None,None]
         return ['Wide','500 Hz']
 
     def tuner(self,opt):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return 0
     
     def read_meter(self,meter):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return 0
 
     def read_speed(self):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return 0
     
     def get_position(self):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return [None,None]
 
     def split_mode(self,opt):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return 0
     
     def set_position(self,pos):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return 0
 
     def recorder(self,on_off=None):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return False
