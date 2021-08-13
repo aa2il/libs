@@ -43,7 +43,7 @@ from rig_io.ft_tables import NAQP_SECS
 ###################################################################
 
 # Function to load history file
-def load_history(history):
+def load_history(history,DEBUG_CALL=None):
     
     COMMENT_CHARS=['#','!']
     HIST = OrderedDict()
@@ -104,11 +104,6 @@ def load_history(history):
                 if state=='--' or state=='nan':
                     state=''
 
-                if call=='AA5B' and False:
-                    print(call)
-                    print(sheet.iloc[i,:])
-                    print(call,number,name,state)
-                
                 HIST[call] = OrderedDict()
                 HIST[call]['name']   = name.upper()
                 HIST[call]['sec']    = ''
@@ -122,6 +117,13 @@ def load_history(history):
                 HIST[call]['cqz']    = ''
                 HIST[call]['grid']   = ''
 
+                if call==DEBUG_CALL:
+                    print(call)
+                    print(sheet.iloc[i,:])
+                    print(call,number,name,state)
+                    print(HIST[call])
+                    #sys.exit(0)
+                
         else:
             print('Unknown spreadsheet - aborting')
             sys.exit(1)
@@ -203,11 +205,11 @@ def load_history(history):
                                 print('key/val=',key,row[i])
                                 #sys.exit(0)
 
-                    if False:
+                    if call==DEBUG_CALL:
                         print('row=',row)
                         print('call=',call)
                         print('HIST=',HIST[call])
-                        sys.exit(0)
+                        #sys.exit(0)
                             
     # Some fix-ups
     for call in HIST.keys():
@@ -225,8 +227,9 @@ def load_history(history):
             if len(HIST[call]['ituz'])==0:
                 HIST[call]['ituz'] = str( dx_station.ituz )
 
-        if False and call=='W1WEF':
+        if call==DEBUG_CALL:
             print(call,HIST[call])
+            #sys.exit(0)
                 
     if False:
         print(HIST)

@@ -296,8 +296,9 @@ class fldigi_xlmrpc(direct_connect):
                 else:
                     print('FLDIGI_IO GET_FREQ - Invalid VFO')
                     x=0
-            except:
+            except Exception as e: 
                 print('FLDIGI_IO GET FREQ - Unexpected error')
+                print(e)
                 x=0
             self.lock.release()
             #buf = self.get_response('F'+VFO+';')
@@ -416,9 +417,14 @@ class fldigi_xlmrpc(direct_connect):
 
     def get_vfo(self):
         if self.flrig_active:
-            vfo=self.s.rig.get_AB()
-            print('FLDIGI_IO: GET_VFO ',vfo)
-            return vfo
+            try:
+                vfo=self.s.rig.get_AB()
+                print('FLDIGI_IO: GET_VFO ',vfo)
+                return vfo
+            except Exception as e: 
+                print('*** ERROR *** FLDIGI_IO - GET_VFO - Problem getting vfo')
+                print(e)
+                return 'AA'
         else:
             # Dummied up for now
             print('FLDIGI_IO: GET_VFO not available yet for FLDIGI - assumes A')
@@ -428,7 +434,12 @@ class fldigi_xlmrpc(direct_connect):
         print('FLDIGI_IO - SET_VFO:',rx,tx)
         if self.flrig_active:
             if rx:
-                self.s.rig.set_AB(rx)
+                try:
+                    self.s.rig.set_AB(rx)
+                except Exception as e: 
+                    print('***ERROR *** FLDIGI_IO - SET_VFO - Problem setting RX vfo:',rx,tx)
+                    print(e)
+                    return
             else:
                 rx=self.s.rig.get_AB()
             if tx:
@@ -437,8 +448,7 @@ class fldigi_xlmrpc(direct_connect):
                 else:
                     opt=1
                 self.s.rig.set_split(opt)
-                
-            print('FLDIGI_IO: SET_VFO ',rx,tx)
+
         else:
             # Dummied up for now
             print('SET_VFO not available yet for FLDIGI - assumes A')

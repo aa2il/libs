@@ -75,20 +75,20 @@ class SimpleServer(object):
                 print(the_packet)
 
     # Routine to highlight a particualr callsign in the WSJT decoding window - TYPE 13
-    def highlight_spot(self,callsign):
-        #print('HHHHHHHHHHHEEEEEEEEEEEEEYYYYYYYYYYYYYYY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!',
-        #      self.addr_port,self.wsjtx_id,callsign)
+    def highlight_spot(self,callsign,fg,bg):
+        #color_pkt = pywsjtx.HighlightCallsignPacket.Builder(self.wsjtx_id, callsign,
+        #                                                    pywsjtx.QCOLOR.Uncolor(),
+        #                                                    pywsjtx.QCOLOR.Red(),
+        #                                                    True)
+
         color_pkt = pywsjtx.HighlightCallsignPacket.Builder(self.wsjtx_id, callsign,
-                                                            pywsjtx.QCOLOR.Uncolor(),
-                                                            pywsjtx.QCOLOR.Red(),
+                                                            pywsjtx.QCOLOR.COLORS(bg),
+                                                            pywsjtx.QCOLOR.COLORS(fg),
                                                             True)
         self.send_packet(self.addr_port, color_pkt)
 
     # Routine to configure some of the WSJT parameters - TYPE 15
     def configure_wsjt(self,NewMode='',RxDF=-1,DxCall='',DxGrid=''):
-        #print('HHHHHHHHHHHEEEEEEEEEEEEEYYYYYYYYYYYYYYY!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!',
-        #      self.addr_port,self.wsjtx_id,NewMode,RxDF,DxCall,DxGrid)
-
         # At startup, this doesn't work so just trap error
         try:
             config_pkt = pywsjtx.ConfigurePacket.Builder(self.wsjtx_id,
