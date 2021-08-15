@@ -254,14 +254,16 @@ class StatusPacket(GenericWSJTXPacket):
     # Function to determine what has changed in the status
     def status_changes(self,old):
         str="Status Change:\t"
-        attrs=['dial_frequency','rx_df','tx_df', 'dx_call','dx_grid','report', \
-               'transmitting','decoding','tx_enabled','tx_watchdog', \
-               'sub_mode','fast_mode','special_op_mode']
+        attrs=['dial_frequency','mode','dx_call','report', \
+               'tx_mode','tx_enabled', \
+               'transmitting','decoding','rx_df','tx_df', \
+               'de_call','de_grid','dx_grid', \
+               'tx_watchdog','sub_mode','fast_mode','special_op_mode']
         for a in attrs:
             v1=getattr(old,a)
             v2=getattr(self,a)
             if v1!=v2:
-                str+='{}:{}'.format(a,v2)
+                str+='{}:{} '.format(a,v2)
         return str
 
     

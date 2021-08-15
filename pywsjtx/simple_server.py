@@ -219,8 +219,13 @@ class SimpleServer(object):
     def wsjt_status(self):
         try:
             frq = 1e-3*self.old_status.dial_frequency
+            mode=self.old_status.mode
+            band=convert_freq2band(frq,True)            
         except:
-            frq=14074.
-        band=convert_freq2band(frq,True)            
-        return [frq,band]
+            #frq=14074.
+            #mode='FT8'
+            frq=None
+            band=None
+            mode=None
+        return [frq,band,mode]
         

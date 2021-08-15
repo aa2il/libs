@@ -333,24 +333,6 @@ class fldigi_xlmrpc(direct_connect):
             f=0
         return f
 
-    # Function to read rig band - there might be a better way to do this
-    def get_band_FLDIGI(self,frq=None):
-        if VERBOSITY>0:
-            print('FLDIGI_IO - GET_BAND: frq=',frq)
-            
-        if not self.fldigi_active and not self.flrig_active:
-            return 0
-
-        # Don't need lock here since get_freq does it
-        if frq==None:
-            frq = self.get_freq()
-
-        # There is an inconsistency somewhere - maybe we don't even need this routine?
-        #band = convert_freq2band(1000*frq)
-        band = convert_freq2band(.001*frq)
-        print('FLDIGI_IO GET_BAND frq=',frq,'\tband=',band)
-        return band
-
     # Function to set rig band - need to be able to issue BS command to get this to work better but for now
     def set_band_fldigi(self,band):
 
@@ -633,30 +615,6 @@ class fldigi_xlmrpc(direct_connect):
         #print('Lock released')
         return buf
 
-    def set_ant_FLDIGI(self,a):
-        buf=self.get_response('BY;AN0'+str(a)+';')
-        if a==1 or a==2:
-            # Make sure ant tuner is on for ports 1 & 2
-            buf=self.get_response('BY;AC001;')
-        else:
-            # Make sure ant tuner is off for port 3
-            buf=self.get_response('BY;AC000;')
-        
-    def get_ant_FLDIGI(self):
-
-        for ntry in range(5):
-            buf = self.get_response('AN0;')
-            print('GET_ANT: buf=',buf,'/t',ntry)
-            try:
-                ant=int(buf[3])
-                break
-            except:
-                ant=None
-        else:
-            print('$$$$$$$$ FLDIGI GET_ANT - Unable to read current antenna $$$$$$$$$$$$')
-
-        return ant
-
     # Function to effect pressing of TUNE button
     def tune(self,on_off):
         self.lock.acquire()
@@ -668,24 +626,49 @@ class fldigi_xlmrpc(direct_connect):
 
     # Function to turn PTT on and off
     def ptt(self,on_off,VFO='A'):
-        print('FLDIGI_IO PTT:',on_off,VFO)
-        if VFO=='A':
+        #print('FLDIGI_IO PTT:',on_off,VFO)
+        if self.flrig_active and True:
+
+            # Need to test this pathway out but it shows promise
+            print('FLDIGI_IO PTT - Using flrig - on/off, vfo=:',\
+                  on_off,VFO)
+            self.lock.acquire()
+            if on_off:
+                # Need to set both TX&RX VFOs to get ant correct if
+                # monitoring different bands
+                self.s.rig.set_verify_AB(VFO)
+                #self.s.rig.set_split(1)          # Doesn't work
+                time.sleep(DELAY)
+                self.s.rig.set_ptt(1)
+            else:
+                self.s.rig.set_ptt(0)
+                self.s.rig.set_verify_AB('A')
+                #self.s.rig.set_split(0)
+            self.lock.release()
+            
+        elif VFO=='A':
+
+            print('FLDIGI_IO PTT - Using fl - on/off, vfo=:',\
+                  on_off,VFO,self.fldigi_active)
             
             self.lock.acquire()
             if on_off:
                 if self.fldigi_active:
                     self.s.main.tx()
                 else:
+                    # Shouldn't get here anymore
                     self.s.rig.set_ptt(1)
             else:
                 if self.fldigi_active:
                     self.s.main.rx()
                 else:
+                    # Shouldn't get here anymore
                     self.s.rig.set_ptt(0)
             self.lock.release()
 
         else:
-            
+
+            print('FLDIGI_IO PTT - Using direct - on/off, vfo=:',on_off,VFO)
             if on_off:
                 self.send('FT3;TX1;')
             else:
@@ -694,17 +677,6 @@ class fldigi_xlmrpc(direct_connect):
                 self.send('FT2;')
                 
         print('FLDIGI/FLRIG PTT Done.')
-
-    def get_PLtone_FLDIGI(self):
-        if VERBOSITY>0:
-            print('\nFLDIGI_IO: Get PL Tone - Not available')
-        return 0
-
-    def get_filters_FLDIGI(self,VFO='A'):
-        if VERBOSITY>0:
-            print('\nFLDIGI_IO: Get Filters - Not available')
-        #return [None,None]
-        return ['Wide','500 Hz']
 
     # Routine to put rig into split mode
     def split_mode(self,opt):
@@ -771,17 +743,6 @@ class fldigi_xlmrpc(direct_connect):
         return [src,lvl,prt]
 
 
-    def get_monitor_gain_FLDIGI(self):
-        if VERBOSITY>0:
-            print('FLDIGI_IO - GET_MONITOR_GAIN: Not available')
-        return 0
-    
-    def set_monitor_gain_FLDIGI(self,gain):
-        if VERBOSITY>0:
-            print('FLDIGI_IO - SET_MONITOR_GAIN: Not available - gain=',gain)
-        return 
-    
-
     def read_meter(self,meter):
         if VERBOSITY>0:
             print('FLDIGI_IO - READ_METER:',meter)
@@ -802,37 +763,6 @@ class fldigi_xlmrpc(direct_connect):
         return buf
             
 
-    def recorder_FLDIGI(self,on_off=None):
-        return False
-
-
-    def read_speed_FLDIGI(self):
-        if VERBOSITY>0:
-            print('FLDIGI Reading Keyer SPEED ...',
-                  self.rig_type,self.rig_type1,self.rig_type2)
-
-        if self.rig_type1=='Yaesu':
-            buf = self.get_response('KS;')
-            if buf[0:2]=='KS':
-                try:
-                    wpm=int(buf[2:5])
-                except:
-                    wpm=0
-            else:
-                wpm=0
-
-        return wpm
-                
-    def set_speed_FLDIGI(self,wpm):
-        if VERBOSITY>0:
-            print('FLDIGI_IO: Setting Keyer SPEED ...',
-                  self.rig_type,self.rig_type1,self.rig_type2,wpm)
-
-        if self.rig_type1=='Yaesu':
-            cmd='BY;KS'+str(wpm).zfill(3)+';'
-            buf = self.get_response(cmd)
-                
-    
 ################################################################################################
     
 

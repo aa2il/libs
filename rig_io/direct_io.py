@@ -373,9 +373,12 @@ class direct_connect:
             ant=1
         return ant
 
-    def set_ant(self,a):
+    def set_ant(self,a,VFO='A'):
         if self.rig_type2=='FTdx3000':
-            buf=self.get_response('BY;AN0'+str(a)+';')
+            if VFO=='B':
+                buf=self.get_response('BY;FR4;AN0'+str(a)+';FR0;')
+            else:
+                buf=self.get_response('BY;AN0'+str(a)+';')
             if a==1 or a==2:
                 # Make sure ant tuner is on for ports 1 & 2
                 self.tuner(1)

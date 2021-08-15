@@ -501,7 +501,7 @@ class hamlib_connect(direct_connect):
             print('HAMLIB_IO GET_ANT: buf=',ant)
         return ant
 
-    def set_ant(self,a):
+    def set_ant(self,a,VFO='A'):
         if VERBOSITY>0:
             print('HAMLIB_IO: Set ant',a)
         # The 'Y' command isn't avaiable on all rigs but its really

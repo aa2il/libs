@@ -67,7 +67,7 @@ class no_connect:
             logging.info('Ignoring call')
         return 0
         
-    def set_ant(self,a):
+    def set_ant(self,a,VFO='A'):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0
