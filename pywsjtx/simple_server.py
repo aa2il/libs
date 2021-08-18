@@ -91,13 +91,18 @@ class SimpleServer(object):
     def configure_wsjt(self,NewMode='',RxDF=-1,DxCall='',DxGrid=''):
         # At startup, this doesn't work so just trap error
         try:
+            print('CONFIGURE_WSJT: NewMode=',NewMode,'\tRxDF=',RxDF,\
+                  '\tDxCall=',DxCall)
             config_pkt = pywsjtx.ConfigurePacket.Builder(self.wsjtx_id,
                                                          Mode=NewMode,
                                                          RXDF=int(RxDF),
                                                          DXCall=DxCall, DXGrid=DxGrid)
             self.send_packet(self.addr_port, config_pkt)
-        except:
-            pass
+            return True
+        except Exception as e: 
+            print('\nCONFIGURE_WSJT: Unable to configure WSJT')
+            print(e,'\n')
+            return False
 
 
     # Function to process messages and spots from WSJT-X
@@ -108,6 +113,10 @@ class SimpleServer(object):
         line=''
         if (pkt != None):
             the_packet = pywsjtx.WSJTXPacketClassFactory.from_udp_packet(addr_port, pkt)
+            
+            # Save these if we need to respond to this packet,e.g. highlight color
+            self.addr_port = addr_port
+            self.wsjtx_id  = the_packet.wsjtx_id
 
             if type(the_packet) == pywsjtx.HeartBeatPacket:
                 print('\n',the_packet)
@@ -153,8 +162,8 @@ class SimpleServer(object):
                     line=''
 
                 # Save these if we need to respond to this packet,e.g. highlight color
-                self.addr_port = addr_port
-                self.wsjtx_id  = the_packet.wsjtx_id
+                #self.addr_port = addr_port
+                #self.wsjtx_id  = the_packet.wsjtx_id
                     
                 # This is how to highlight call signs
                 if the_packet.message:
