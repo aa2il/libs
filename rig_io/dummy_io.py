@@ -49,6 +49,7 @@ class no_connect:
         self.host=host
         self.port=port
         self.rig_type   = None
+        self.rig_type1  = None
         self.rig_type2  = None
         self.tlast      = None
 

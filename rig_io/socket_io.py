@@ -159,7 +159,11 @@ def open_rig_connection(connection,host=0,port=0,baud=0,tag='',
     if connection=='HAMLIB' or connection=='ANY':
         # Hamlib daemon
         if port==0:
-            port = 4532;
+            if tag=='ROTOR':
+                #port = 4533;
+                pass
+            else:
+                port = 4532;
         sock = hamlib_connect(host,port,baud,tag)
         if sock.active:
             return sock

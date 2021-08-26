@@ -19,7 +19,7 @@ import numpy as np
 # A recorder class for recording audio to a WAV file.
 # Records in mono @ 48KHz by default.
 class WaveRecorder(object):
-    def __init__(self, fname, mode='wb', channels=1, rate=48000, frames_per_buffer=1024, wav_rate=48000,rb2=None):
+    def __init__(self, fname, mode='wb', channels=1, rate=48000, frames_per_buffer=1024, wav_rate=48000,rb2=None,GAIN=[1,1]):
         self.channels = channels
         self.rate = rate
         self.wav_rate = wav_rate
@@ -99,7 +99,7 @@ class WaveRecorder(object):
             # Direct decimation of the data
             #data1 = np.fromstring(in_data, 'Int16');    # Doesn't work anymore
             data1 = np.fromstring(in_data,dtype=np.int16);
-            left  = data1[idx]
+            left  = GAIN[0]*data1[idx]
 
             # Right channel contains sidetone
             if self.rb2:
@@ -113,7 +113,7 @@ class WaveRecorder(object):
                     data3 = np.concatenate( (x,z) )
                 else:
                     data3 = np.array(N*[0])
-                right = data3[idx].astype(np.int16)
+                right = GAIN[1]*data3[idx].astype(np.int16)
 
             # Write out to file
             if self.rb2:

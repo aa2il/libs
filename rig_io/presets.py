@@ -73,7 +73,7 @@ def read_presets2(rig_type,sheet_name):
                 print(i,j,sheet.cell(i, j))
 
         # Fix-up entries
-        #print(i,row
+        #print('\n',i,row)
         if len(row['Tag'])>0:
             row['Freq1 (KHz)'] = float( row['Freq1 (KHz)'] )
             if len(row['Group'])==0:
@@ -109,7 +109,7 @@ def read_presets2(rig_type,sheet_name):
         
 
 # Function to read presets from a spreadsheet
-def read_presets(rig_type):
+def read_presets_OLD(rig_type):
     presets = OrderedDict()
 
     book  = xlrd.open_workbook(PRESETS_FNAME,formatting_info=True)
@@ -276,69 +276,115 @@ def read_mem_chan_icom(self,ch,band):
 
 ############################################################################################
 
+
+class MEM_CHAN:
+    def __init__(self):
+        self.chan=None
+        self.freq=None
+        self.mode=None
+        self.clar_offset=None
+        self.rx_clar_on_off=None
+        self.tx_clar_on_off=None
+        self.ctcss=None
+        self.tone=None
+        self.shift=None
+        self.tag=None
+        self.response=None
+
+
 # Routine to read contents of FTdx3000 or FT991a memories
 # At some point, might want to use MT command for FT991a instead since
 # it will return tag as well but for now ...
-def read_mem_yaesu(self):
+def read_mem_yaesu(self,chan):
 
-    NCHAN=117
-    #NCHAN=5
+    for ch in [chan]:
+        cmd = 'BY;MC'+str(ch+1).zfill(3)+';'
+        buf=self.sock.get_response(cmd)
+        print('\nSetting channel',ch,cmd)
+        print('response=',buf)
 
-    for ch in range(NCHAN):
-        cmd = 'MR'+str(ch+1).zfill(3)+';'
+        if self.sock.rig_type2=='FT991a':    
+            cmd = 'MT'+str(ch+1).zfill(3)+';'
+        else:
+            cmd = 'MR'+str(ch+1).zfill(3)+';'
         buf=self.sock.get_response(cmd)
         print('\nReading channel',ch,cmd)
         print('response=',buf)
 
-        if buf[0:2]=='MR':
+        return resp2struct(buf)
+        
+
+def resp2struct(self,buf):
+    mem=MEM_CHAN()
+    print('\nresp2struct: bufe=',buf)
+
+    if True:
+        if buf[0:2] in ['MR','MT']:
             P2=buf[2:5]
-            print('P2=',P2)
+            mem.chan=int(P2)
+            print('P2=',P2,'\tChan=',mem.chan)
             
             if self.sock.rig_type2=='FTdx3000':
                 last=13
             else:
                 last=14
             P3=buf[5:last]
-            print('P3=',P3,' - f=',float(P3)/1000.,'KHz')
+            mem.freq=float(P3)/1000.
+            print('P3=',P3,'\tf=',mem.freq,'KHz')
 
             first=last
             last=last+5
             P4=buf[first:last]
-            print('P4=',P4,' - df=',float(P4),'Hz')
+            mem.clar_offset=float(P4)
+            print('P4=',P4,'\tClar Offset=',mem.clar_offset,'Hz')
             
             P5=buf[last]
             last=last+1
-            print('P5=',P5,' - RX Clar ',OFF_ON[int(P5)])
+            mem.rx_clar_on_off=OFF_ON[int(P5)]
+            print('P5=',P5,'\tRX Clar=',mem.rx_clar_on_off)
             
             P6=buf[last]
             last=last+1
-            print('P6=',P6,' - TX Clar ',OFF_ON[int(P6)])
+            mem.tx_clar_on_off=OFF_ON[int(P6)]
+            print('P6=',P6,'\tTX Clar=',mem.tx_clar_on_off)
             
             P7=buf[last]
             last=last+1
-            mode=FTDX_MODES[int(P7,16)]
-            print('P7=',P7,mode)
+            mem.mode=FTDX_MODES[int(P7,16)]
+            print('P7=',P7,'\tmode=',mem.mode)
             
             P8=buf[last]
             last=last+1
-            print('P8=',P8,'VFO/Mem=',VFO_MEM[int(P8)])
+            print('P8=',P8,'\tVFO/Mem=',VFO_MEM[int(P8)])
 
             P9=buf[last]
             last=last+1
-            print('P9=',P9,'CTCSS=',CTCSS[int(P9)])
+            mem.ctcss=CTCSS[int(P9)]
+            print('P9=',P9,'\tCTCSS=',mem.ctcss)
             
             first=last
             last=last+2
             P10=buf[first:last]
-            tone=PL_TONES[ int(P10) ]
-            print('P10=',P10,'Tone=',tone)
+            mem.tone=PL_TONES[ int(P10) ]
+            print('P10=',P10,'\tTone=',mem.tone)
             
             P11=buf[last]
-            print('P11=',P11,'Shift=',SHIFTS[int(P11)])
+            mem.shift=SHIFTS[int(P11)]
+            print('P11=',P11,'\tShift=',mem.shift)
+            
+            first=last+2
+            last=first+12
+            P12=buf[first:last]
+            mem.tag=P12
+            print('P12=',P12,'\tTag=',mem.tag,len(mem.tag))
+
+            mem.response=buf
             
         else:
             print('Mem channel not programmed')
         
+    return mem
+            
 ############################################################################################
 
 # Routine to write a single memory channel of FTdx3000 or FT991a
@@ -355,11 +401,14 @@ def write_mem_yaesu(self,grp,lab,ch,KHz,mode,pl,frq2,inverting):
     else:
         frq = str( int( 1000*KHz )).zfill(9)
 
-    # Select memoru channel
+    # Select memory channel
     buf=self.sock.get_response('MC'+mem_chan+';')
     print('MC select:',buf)
-    buf=self.sock.get_response('MR'+mem_chan+';')
-    print('MR read:',buf)
+    if self.sock.rig_type2=='FT991a':    
+        mem_buf=self.sock.get_response('MT'+mem_chan+';')
+    else:
+        mem_buf=self.sock.get_response('MR'+mem_chan+';')
+    print('MR read:',mem_buf)
         
     # Don't alter satellites already stored - these need special attention
     # See page 109 of the user's manual as to how to do this.  Requires pressing PTT and
@@ -378,8 +427,7 @@ def write_mem_yaesu(self,grp,lab,ch,KHz,mode,pl,frq2,inverting):
         mode='USB'
     elif mode=='PKTUSB':
         mode='PKT-U'
-    #P6=str(FTDX_MODES.index(mode))         # Mode
-    P6=hex(FTDX_MODES.index(mode))[2]         # Mode
+    P6=hex(FTDX_MODES.index(mode))[2].upper()         # Mode
     P7='0'
 
     # Check for a satellite
@@ -510,6 +558,19 @@ def write_mem_yaesu(self,grp,lab,ch,KHz,mode,pl,frq2,inverting):
         print(cmd,len(cmd))
         print('*** Rut-Roh - command is not correct ***')
 
+    # Compare comand to what is alreay stored there
+    print('mem=',mem_buf)
+    mem_buf=mem_buf[:22]+'0'+mem_buf[23:]
+    print('mem=',mem_buf)
+    print('cmd=',cmd)
+    SAME = cmd==mem_buf
+    print('Same=',SAME)
+    if not SAME:
+        resp2struct(self,mem_buf)
+        resp2struct(self,cmd)
+    else:
+        return SAME
+
     # Execute command that turns PL on & off
     print('P8=',P8)
     print(cmd2,len(cmd2))
@@ -569,6 +630,9 @@ def write_mem_yaesu(self,grp,lab,ch,KHz,mode,pl,frq2,inverting):
       
         #self.Quit()
         #sys.exit(0)
+        
+                
+    return SAME
         
                 
 ############################################################################################

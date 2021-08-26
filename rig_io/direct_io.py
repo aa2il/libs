@@ -1461,7 +1461,11 @@ class direct_connect:
         if VERBOSITY>0:
             print('HAMLIB_IO - SET_MONITOR_GAIN: cmd=',cmd,'\tbuf=',buf)
     
-        
+    # Need to fill this out
+    def recorder(self,on_off=None):
+        print('DIRECT_IO RECORDER: Ignoring call')
+        return False
+            
         
 # Empty structure
 class blank_struct(direct_connect):
