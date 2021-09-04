@@ -83,7 +83,7 @@ class no_connect:
             logging.info('Ignoring call')
         return 'CW'
         
-    def set_mode(self,mode,VFO='A'):
+    def set_mode(self,mode,VFO='A',Filter=None):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return '0'

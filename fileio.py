@@ -125,7 +125,8 @@ def parse_adif(fn,line=None):
 #        print tags
         for tag in tags:
             qso[tag[0].lower()] = tag[2][:int(tag[1])]
-        logbook.append(qso)
+        if 'call' in qso:
+            logbook.append(qso)
 #        sys.exit(0)
     return logbook
 

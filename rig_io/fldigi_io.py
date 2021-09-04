@@ -438,7 +438,7 @@ class fldigi_xlmrpc(direct_connect):
         return 
     
     # Function to set rig mode - return old mode
-    def set_mode(self,mode,VFO='A'):
+    def set_mode(self,mode,VFO='A',Filter=None):
         if VERBOSITY>0:
             print("FLDIGI_IO: SET_MODE=",mode,VFO)
         mode2=mode       # Fldigi mode needs to match rig mode
@@ -532,31 +532,48 @@ class fldigi_xlmrpc(direct_connect):
 
     # Function to get log fields
     def get_log_fields(self):
-        self.lock.acquire()
-        call    = self.s.log.get_call()
-        name    = self.s.log.get_name()
-        qth     = self.s.log.get_qth()
-        rst_in  = self.s.log.get_rst_in()
-        rst_out = self.s.log.get_rst_out()
-        ser_in  = self.s.log.get_serial_number()
-        ser_out = self.s.log.get_serial_number_sent()
-        self.lock.release()
+        if self.fldigi_active:
+            print('GET_LOG_FIELDS:')
+            self.lock.acquire()
+            call    = self.s.log.get_call()
+            name    = self.s.log.get_name()
+            qth     = self.s.log.get_qth()
+            rst_in  = self.s.log.get_rst_in()
+            rst_out = self.s.log.get_rst_out()
+            ser_in  = self.s.log.get_serial_number()
+            ser_out = self.s.log.get_serial_number_sent()
+            self.lock.release()
+        else:
+            call    = ''
+            name    = ''
+            qth     = ''
+            rst_in  = ''
+            rst_out = ''
+            ser_in  = ''
+            ser_out = ''
+
 
         return {'Call':call,'Serial_In':ser_in,'Serial_Out':ser_out,\
                 'Name':name,'QTH':qth,\
                 'RST_in':rst_in,'RST_out':rst_out}
 
     def get_serial_out(self):
-        self.lock.acquire()
-        x=self.s.log.get_serial_number_sent()
-        self.lock.release()
+        if self.fldigi_active:
+            print('GET_SERIAL_OUT:')
+            self.lock.acquire()
+            x=self.s.log.get_serial_number_sent()
+            self.lock.release()
+        else:
+            x=0
         return x
 
     def set_serial_out(self,x):
-        self.lock.acquire()
-        #x=self.s.main.set_serial_number_sent()
-        self.s.main.set_counter(x)
-        self.lock.release()
+        if self.fldigi_active:
+            print('SET_SERIAL_OUT:',x)
+            self.lock.acquire()
+            #x=self.s.main.set_serial_number_sent()
+            self.s.main.set_counter(x)
+            self.lock.release()
 
     # Functions to send a command directly to the rig & get the response
     def send(self,cmd):

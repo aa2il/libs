@@ -29,6 +29,7 @@ class WaveRecorder(object):
         self._pa = pyaudio.PyAudio()
         self._stream = None
         self.rb2 = rb2
+        self.GAIN=GAIN
         
         self.down   = int( rate/wav_rate )
         self.istart = 0
@@ -99,7 +100,7 @@ class WaveRecorder(object):
             # Direct decimation of the data
             #data1 = np.fromstring(in_data, 'Int16');    # Doesn't work anymore
             data1 = np.fromstring(in_data,dtype=np.int16);
-            left  = GAIN[0]*data1[idx]
+            left  = self.GAIN[0]*data1[idx]
 
             # Right channel contains sidetone
             if self.rb2:
@@ -113,7 +114,7 @@ class WaveRecorder(object):
                     data3 = np.concatenate( (x,z) )
                 else:
                     data3 = np.array(N*[0])
-                right = GAIN[1]*data3[idx].astype(np.int16)
+                right = self.GAIN[1]*data3[idx].astype(np.int16)
 
             # Write out to file
             if self.rb2:

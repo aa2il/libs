@@ -559,7 +559,7 @@ class direct_connect:
 
         return 1000*frq_KHz
     
-    def set_mode(self,mode,VFO='A'):
+    def set_mode(self,mode,VFO='A',Filter=None):
         if VERBOSITY>0:
             print('DIRECT SET_MODE:',mode,VFO)
 
@@ -1064,6 +1064,27 @@ class direct_connect:
             self.keyed=False
             
         print('DIRECT PTT Done.')
+
+    # Routine to get date & time 
+    def get_date_time(self,VERBOSITY=0):
+        VERBOSITY=1
+        if self.rig_type2=='FT991a':
+            buf=self.get_response('DT0;')
+            d=buf[3:-1]
+            if VERBOSITY>0:
+                print('DIRECT GET_DATE_TIME: Date=',buf,d)
+
+            buf=self.get_response('DT1;')
+            t=buf[3:-1]
+            if VERBOSITY>0:
+                print('DIRECT GET_DATE_TIME: Time=',buf,t)
+
+            buf=self.get_response('DT2;')
+            z=buf[3:-1]
+            if VERBOSITY>0:
+                print('DIRECT GET_DATE_TIME: Zone=',buf,z)
+
+            return d,t,z
 
     # Routine to set date & time 
     def set_date_time(self,VERBOSITY=0):

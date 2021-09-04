@@ -365,7 +365,7 @@ class hamlib_connect(direct_connect):
         buf=self.get_response(cmd)
         print('HAMLIB_IO SET_BAND:',buf)
 
-    def set_mode(self,mode,VFO='A'):
+    def set_mode(self,mode,VFO='A',Filter=None):
         VERBOSITY=1
         if VERBOSITY>0:
             print('HAMLIB_IO - SET MODE: mode=',mode,'\tVFO=',VFO)
@@ -413,8 +413,11 @@ class hamlib_connect(direct_connect):
         if self.rig_type1 == 'Yaesu':
             if mode=='CW':
                 if VERBOSITY>0:
-                    print('HAMLIB_IO - SET MODE: Setting narrow filter for CW')
-                buf=self.get_response('BY;NA01;')
+                    print('HAMLIB_IO - SET MODE: Setting filter for CW:',Filter)
+                if Filter=='Wide':
+                    buf=self.get_response('BY;NA00;')
+                else:
+                    buf=self.get_response('BY;NA01;')
                 if VERBOSITY>0:
                     print('HAMLIB_IO - SET MODE: buf=',buf)
             if False and self.rig_type2=='FTdx3000' and vfo1!=VFO:
