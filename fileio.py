@@ -146,15 +146,12 @@ def write_adif_record(fp,rec,P):
     MY_GRID = P.SETTINGS['MY_GRID']
     MY_CITY = P.SETTINGS['MY_CITY']+', '+P.SETTINGS['MY_STATE']
 
-    if True:
-        # Convert keys to upper case to avoid further complications
-        if VERBOSITY>0:
-            print('\nqso in  =',rec)
-        qso = dict((key.upper(), value) for key, value in rec.items())
-        if VERBOSITY>0:
-            print('\nqso out =',qso)
-
+    # Convert keys to upper case to avoid further complications
     if VERBOSITY>0:
+        print('\nqso in  =',rec)
+    qso = dict((key.upper(), value) for key, value in rec.items())
+    if VERBOSITY>0:
+        print('\nqso out =',qso)
         print('WRITE_ADIF_RECORD: keys=',list(qso.keys()))
         print('contest=',contest)
         print('MY Call/Grid/City=',MY_CALL,MY_GRID,MY_CITY)
