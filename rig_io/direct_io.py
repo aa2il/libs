@@ -1067,7 +1067,7 @@ class direct_connect:
 
     # Routine to get date & time 
     def get_date_time(self,VERBOSITY=0):
-        VERBOSITY=1
+        #VERBOSITY=1
         if self.rig_type2=='FT991a':
             buf=self.get_response('DT0;')
             d=buf[3:-1]

@@ -279,14 +279,30 @@ class hamlib_connect(direct_connect):
 
     
     def get_freq(self,VFO='A'):
+        VERBOSITY=0
         if VERBOSITY>0:
-            print('HAMLIB_IO: GET_FREQ:')
+            print('HAMLIB_IO: GET_FREQ: vfo=',VFO)
         if self.rig_type1 == 'Icom' or False:
             # This actually might work for all rigs but only tested on 9700 so far
             self.select_vfo(VFO)            
         elif VFO!='A':
-            print('*** ERROR *** HAMLIB_IO: GET_FREQ: VFO B not implemented yet - ',self.rig_type1)
-            return
+            #print('*** ERROR *** HAMLIB_IO: GET_FREQ: VFO B not implemented yet - ',self.rig_type1)
+            #return
+            # Need to clean this up!!!!
+            # Hamlib doesn't seem to have a nice way of changing freq of VFO B without interrupting the
+            # rig so just issue the direct FB command for Yaesu and Kenwood rigs
+            buf = self.get_response('F'+VFO+';')
+            if buf[0]=='?':
+                buf = self.get_response('F'+VFO+';')
+        
+            try:
+                frq = float(buf[2:-1])
+            except:
+                print('HAMLIB GET_FREQ: Unable to read freq - buf=',buf)
+                frq=0
+
+            self.freq=frq
+            return frq
             
         # Hamlib can be rather slow so do a crude "debouncing"
         # Not sure why I thought this wa necessary???!!!!  Perhaps for v3.3???
