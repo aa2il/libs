@@ -805,7 +805,7 @@ def tone_gen(fo,N,fs,nchunk):
 class AudioIO():
     def __init__(self,P,fs,rb,device=None,Chan='B',ZeroFill=False,Tag=None):
         print('AUDIO_IO: Init audio player @',fs,' Hz',
-              '\tdevice=',device,'\tTag=',Tag,' ...')
+              '\trequested device=',device,'\tTag=',Tag,' ...')
         self.device = device
         self.fs = fs
         self.rb = rb
@@ -898,7 +898,8 @@ class AudioIO():
                 print("Too few samples to start Playback...")
                 return False
 
-        print("\nStarting audio play back @",self.fs," Hz ...",self.rb.tag,self.rb.nsamps,self.device)
+        print("\nStarting audio play back @",self.fs," Hz ... tag=",
+              self.rb.tag,'\tnsamps=',self.rb.nsamps,'\tdevice=',self.device)
 
         self.stream = self.p.open(output_device_index=self.device,
                                   format=pyaudio.paFloat32,
