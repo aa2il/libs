@@ -439,23 +439,27 @@ class fldigi_xlmrpc(direct_connect):
     
     # Function to set rig mode - return old mode
     def set_mode(self,mode,VFO='A',Filter=None):
+        VERBOSITY=1
         if VERBOSITY>0:
-            print("FLDIGI_IO: SET_MODE=",mode,VFO)
+            print("FLDIGI_IO - SET_MODE mode=",mode,'\tVFO=',VFO,self.v4)
         mode2=mode       # Fldigi mode needs to match rig mode
 
         # Translate rig mode into something rig understands
         if mode==None or mode=='IQ':
             return
-        if mode=='RTTY' or mode=='DIGITAL' or mode=='FT8' or mode.find('PSK')>=0 or mode.find('JT')>=0:
-            if not self.v4:
+        if mode in ['PKTUSB','RTTY','DIGITAL','FT8'] or mode.find('PSK')>=0 or mode.find('JT')>=0:
+            if not self.v4 or self.flrig_active:
                 mode='PSK-U'           # For some reason, this was changed in version 4
             else:
                 mode='PKT-U'    
         elif mode=='CWUSB' or mode=='CW-USB':
             mode='CW'
-        elif mode=='CWLSB' or mode=='CW-LSB' or mode=='CW-R':
-            mode='CWR'
-        print('mode=',mode,self.v4)
+        elif mode in ['CWLSB','CW-LSB','CW-R','CWR']:
+            if self.flrig_active:
+                mode='CW-R'
+            else:
+                mode='CWR'
+        print('FLDIGI_IO - SET_MODE: mode=',mode,self.v4)
 
         # Translate fldigi mode into something fldigi understands
         if mode2=='DIGITAL' or mode2.find('JT')>=0 or mode2=='FT8':
@@ -464,9 +468,10 @@ class fldigi_xlmrpc(direct_connect):
             mode2='SSB'
         elif mode2=='PSK':
             mode2='BPSK31'
-        print('mode2=',mode2)
+        print('FLDIGI_IO: mode2=',mode2)
 
         if VFO=='A' or self.flrig_active:
+            #print('FLDIGI_IO - SET_MODE: Using xlmrpc mode=',mode)
         
             self.lock.acquire()
             if self.fldigi_active:
@@ -475,19 +480,23 @@ class fldigi_xlmrpc(direct_connect):
                 print('mold=',mold)
                 mout=self.s.modem.get_name()
             elif self.flrig_active:
+                #print('FLDIGI_IO - SET_MODE: Using xlmrpc for FLRIG vfo/mode=',VFO,mode)
                 if VFO=='A':
+                    print('FLDIGI_IO: Setting VFO A to',mode)
                     self.s.rig.set_modeA(mode)
                 else:
-                    self.s.rig.set_modeA(mode)
+                    print('FLDIGI_IO: Setting VFO B to',mode)
+                    self.s.rig.set_modeB(mode)
                 mout=mode
             else:
                 print('*** FLDIGI_IO: Warning - unable to read modem name ***')
                 mout=self.s.rig.get_mode()
             self.lock.release()
-            print("mout=",mout)
+            print("FLDIGI_IO SET_MODE: mout=",mout)
 
         else:
             try:
+                print('FLDIGI_IO - SET_MODE: Trying direct approach',mode)
                 c = modes[mode]["Code"]
                 self.send('FR4;MD'+c+';')
                 time.sleep(DELAY)
@@ -497,7 +506,7 @@ class fldigi_xlmrpc(direct_connect):
                 print('FLDIGI_IO SET_MODE: Unable to set mode =',mode)
                 return mode
 
-        print("SET MODE Done.")
+        print("FLDIGI_IO: SET MODE Done.\n")
         return mout
 
     # Function to set call 
@@ -772,10 +781,10 @@ class fldigi_xlmrpc(direct_connect):
         elif meter=='SWR':
             buf=self.s.rig.get_swrmeter()
         else:
-            print('Unknown meter')
+            print('FLDIGI_IO - READ_METER: Unknown meter',meter)
             buf=0
         
-        print('buf=',buf)
+        #print('buf=',buf)
         self.lock.release()
         return buf
             

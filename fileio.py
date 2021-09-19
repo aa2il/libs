@@ -138,7 +138,7 @@ def parse_adif(fn,line=None):
 
 
 # Function to create entire ADIF record and write it to a file
-def write_adif_record(fp,rec,P):
+def write_adif_record(fp,rec,P,long=False):
     VERBOSITY=0
 
     contest = P.contest_name
@@ -146,6 +146,11 @@ def write_adif_record(fp,rec,P):
     MY_GRID = P.SETTINGS['MY_GRID']
     MY_CITY = P.SETTINGS['MY_CITY']+', '+P.SETTINGS['MY_STATE']
 
+    if long:
+        NL='\n'
+    else:
+        NL=' '
+        
     # Convert keys to upper case to avoid further complications
     if VERBOSITY>0:
         print('\nqso in  =',rec)
@@ -190,16 +195,16 @@ def write_adif_record(fp,rec,P):
         #print('WRITE_ADIF_RECORD:',fld,val)
         if fld=='SAT_NAME':
             if val!='None':
-                fp.write('<%s:%d>%s ' % (fld,len(val),val) )
+                fp.write('<%s:%d>%s%s' % (fld,len(val),val,NL) )
                 fld2='PROP_MODE'
                 val2='SAT'
-                fp.write('<%s:%d>%s ' % (fld2,len(val2),val2) )
+                fp.write('<%s:%d>%s%s' % (fld2,len(val2),val2,NL) )
         elif fld=='TIME_STAMP':
             pass
         else:
             if fld=='FREQ' and len(val)>8:
                 val=val[0:8]
-            fp.write('<%s:%d>%s ' % (fld,len(val),val) )
+            fp.write('<%s:%d>%s%s' % (fld,len(val),val,NL) )
     fp.write('<EOR>\n')
     fp.flush()
 

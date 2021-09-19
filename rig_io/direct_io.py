@@ -872,7 +872,7 @@ class direct_connect:
     def mic_setting(self,m,iopt,src=None,lvl=None,prt=None):
         if VERBOSITY>0:
             print('DIRECT MIC_SETTING:')
-        if m=='CW':
+        if m=='CW' or m=='RTTY':
             return
         menu_nums=YAESU_MIC_MENU_NUMBERS[self.rig_type2]
         if m=='LSB' or  m=='USB':
