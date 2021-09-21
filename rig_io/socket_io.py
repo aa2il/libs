@@ -172,7 +172,9 @@ def open_rig_connection(connection,host=0,port=0,baud=0,tag='',
             sys,exit(0)
 
     if connection=='DIRECT' or connection=='ANY':
-        if rig:
+        if tag=='ROTOR':
+            port=232
+        elif rig:
             if rig=='FTdx3000':
                 port=3000
             elif rig=='FT991a':
@@ -192,8 +194,12 @@ def open_rig_connection(connection,host=0,port=0,baud=0,tag='',
         # Direct connection to rig
         sock = direct_connect(port,baud)
         if sock.active or force:
-            sock.send('FA;')
-            print(sock.recv(256))
+            if tag=='ROTOR':
+                sock.send('C2\r')
+                print(sock.recv(256))
+            else:
+                sock.send('FA;')
+                print(sock.recv(256))
             return sock
         elif connection=='DIRECT':
             print('SOCKET_IO: Unable to activate DIRECT connection - aborting')

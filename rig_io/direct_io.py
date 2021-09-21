@@ -58,7 +58,8 @@ def strip_garbage(buf,cmd):
 # Routine to try a port and see if anything is connected
 def try_port(port,baud,verbosity):
     if verbosity>=1:
-        print('\nDIRECT TRY_PORT: Trying port %s at %d baud ...' % (port,baud) )
+        print('\nDIRECT_IO - TRY_PORT: Trying port %s at %d baud - verb=%d ...' %
+              (port,baud,verbosity) )
     
     try:
         self=blank_struct()
@@ -145,15 +146,26 @@ def try_rig(self,type1,type2,port,baud):
         if baud==0:
             if type2=='TS850':
                 baud = 4800
+            elif type2=='GS232b':
+                baud = 9600
             else:
                 baud = BAUD
-        self.s = serial.Serial(port,baud,timeout=0.1)
+        if type2=='GS232b':
+            TimeOut=1
+        else:
+            TimeOut=0.1
+        self.s = serial.Serial(port,baud,timeout=TimeOut)
         self.rig_type  = type1
         self.rig_type2 = type2
 
         if type1=='Icom':
             #print(port)
-            self.civ = icom_civ(self.rig_type2)            
+            self.civ = icom_civ(self.rig_type2)
+
+        if type2=='GS232b':
+            print('Hmmm - so far so good ... baud=',baud)
+            self.get_position()
+            return True
         
         #print('Hey4',self.rig_type)
         freq = self.get_freq()
@@ -167,7 +179,6 @@ def try_rig(self,type1,type2,port,baud):
             if type1=='Icom':
                 print("See comments at top of icom_io.py for necessary settings")
 
-    #except:
     except Exception as e: 
         print(e)
         print("... Can't find %s %s ..." % (type1,type2))
@@ -188,6 +199,12 @@ def find_direct_rig(self,port_in,baud_in,force=False):
     print('FIND_DIRECT_RIG: Looking for any rigs connected to a USB port ...')
     baud=baud_in
     
+    # The GS232 rotor
+    if port_in==232:
+        print('Hey!')
+        if try_rig(self,'Yaesu','GS232b',SERIAL_ROTOR,baud):
+            return True
+
     if port_in==0 or port_in==3000:
         if try_rig(self,'Yaesu','FTdx3000',SERIAL_PORT1,baud):
             return True
@@ -263,6 +280,10 @@ class direct_connect:
 
         # Test to make sure USB port is still alive
         if self.active:
+            if self.rig_type2=='GS232b':
+                print('DIRECT INIT - put test here!')
+                return
+
             if self.rig_type=='Icom':
 
                 # Read freq
@@ -344,7 +365,7 @@ class direct_connect:
         else:
             cnt=self.s.write(cmd.encode())
             self.s.flush()
-            x=self.s.read(1024).decode("utf-8") 
+            x=self.s.read(1024).decode("utf-8")
             q='?'
 
         #x=self.recv()   # Can't use this bx lock has already been acquired
@@ -1486,6 +1507,35 @@ class direct_connect:
     def recorder(self,on_off=None):
         print('DIRECT_IO RECORDER: Ignoring call')
         return False
+
+    # Read rotor position - if at first we don't succeed, try try again
+    def get_position(self):
+        VERBOSITY=1
+        if VERBOSITY>0:
+            print('DIRECT_IO Get Position...')
+        if True:
+            x = self.get_response('C\r')
+            print('x=',x)
+            x = self.get_response('C\r')
+            print('x=',x)
+            x = self.get_response('C\r')
+            print('x=',x)
+        
+        ntries=0
+        while ntries<3:
+            x = self.get_response('C2\r')
+            print('x=',x,ntries)
+            try:
+                pos = [float(x[3:6]),float(x[9:])]                
+                if VERBOSITY>0:
+                    print('\DIRECT - GET_POSITION:',pos)
+                return pos
+            except:
+                ntries+=1
+        else:
+            print('\nDIRECT_IO - GET_POSITION - Unable to read rotor position')
+            return [None,None]
+
             
         
 # Empty structure

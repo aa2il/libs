@@ -452,11 +452,20 @@ class fldigi_xlmrpc(direct_connect):
                 mode='PSK-U'           # For some reason, this was changed in version 4
             else:
                 mode='PKT-U'    
-        elif mode=='CWUSB' or mode=='CW-USB':
-            mode='CW'
-        elif mode in ['CWLSB','CW-LSB','CW-R','CWR']:
+        elif mode in ['CW','CW-U','CWUSB','CW-USB']:
             if self.flrig_active:
-                mode='CW-R'
+                if self.rig_type2 == 'FT991a':
+                    mode='CW-U'
+                else:
+                    mode='CW'
+            else:
+                mode='CW'
+        elif mode in ['CWLSB','CW-LSB','CW-R','CWR','CW-L']:
+            if self.flrig_active:
+                if self.rig_type2 == 'FT991a':
+                    mode='CW-L'
+                else:
+                    mode='CW-R'
             else:
                 mode='CWR'
         print('FLDIGI_IO - SET_MODE: mode=',mode,self.v4)

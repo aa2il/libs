@@ -933,7 +933,8 @@ class hamlib_connect(direct_connect):
             val = buf[3]=='1'
 
         else:
-            print('HAMLIB_IO: Recorder - Not available for this rig',self.rig_type2)
+            if VERBOSITY>0:
+                print('HAMLIB_IO: Recorder - Not available for this rig',self.rig_type2)
             val=False
 
         return val
