@@ -116,7 +116,10 @@ class SimpleServer(object):
             
             # Save these if we need to respond to this packet,e.g. highlight color
             self.addr_port = addr_port
-            self.wsjtx_id  = the_packet.wsjtx_id
+            try:
+                self.wsjtx_id  = the_packet.wsjtx_id
+            except:
+                pass
 
             if type(the_packet) == pywsjtx.HeartBeatPacket:
                 print('\n',the_packet)

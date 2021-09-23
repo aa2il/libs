@@ -94,13 +94,18 @@ def parse_simple_log(fn,args):
 #######################################################################################
 
 # Function to read list of qsos from input file
-def parse_adif(fn,line=None):
+def parse_adif(fn,line=None,upper_case=False,verbosity=0):
     logbook =[]
-    
+
+    if verbosity>0:
+        print('PARSE_ADIF - Reading',fn,'...')
+
     try:
         if line==None:
             #raw = re.split('<eor>|<eoh>(?i)',open(fn).read() )
-            raw1 = re.split('<eoh>(?i)',open(fn).read() )
+            fp=open(fn)
+            raw1 = re.split('<eoh>(?i)',fp.read() )
+            fp.close()
         else:
             raw1 = re.split('<eoh>(?i)',line )
     except Exception as e:
@@ -116,18 +121,22 @@ def parse_adif(fn,line=None):
     #raw.pop()   #remove last empty item
 
     for record in raw:
-        #print(record,len(record))
+        if verbosity>0:
+            print(record,len(record))
         if len(record)<=1:
             continue
         
         qso = {}
         tags = re.findall('<(.*?):(\d+).*?>([^<]+)',record.replace('<RST> <CNTR>','A AA2IL 78 CA'))
-#        print tags
+
         for tag in tags:
-            qso[tag[0].lower()] = tag[2][:int(tag[1])]
-        if 'call' in qso:
+            if upper_case:
+                qso[tag[0].upper()] = tag[2][:int(tag[1])]
+            else:
+                qso[tag[0].lower()] = tag[2][:int(tag[1])]
+        if 'call' in qso or 'CALL' in qso:
             logbook.append(qso)
-#        sys.exit(0)
+
     return logbook
 
 
@@ -195,6 +204,8 @@ def write_adif_record(fp,rec,P,long=False):
         #print('WRITE_ADIF_RECORD:',fld,val)
         if fld=='SAT_NAME':
             if val!='None':
+                if val=='ISS':
+                    val='ARISS'
                 fp.write('<%s:%d>%s%s' % (fld,len(val),val,NL) )
                 fld2='PROP_MODE'
                 val2='SAT'
