@@ -231,10 +231,12 @@ CQ_ZONES = {'CT' : 5 , \
 # Put this here as both sat9.py and pyKeyer.py reference it.
 # Need the 'None' entry for list box in pyKeyer
 # SK sats: AO-85,91,92, FO-99, CAS-6?, EO-88?
-SATELLITE_LIST = ['None','ISS','PO-101','SO-50','AO-27',\
-                  'CAS-4A','CAS-4B','LILACSAT-2', \
-                  'XW-2A','XW-2C','XW-2D','XW-2F','RS-44',\
-                  'AO-7','FO-29','AO-73','AO-91','AO-92','CAS-6']
+SATELLITE_LIST = ['None','ISS','PO-101','SO-50','AO-27', \
+                  'AO-91','AO-92', \
+                  'CAS-4A','CAS-4B','CAS-6', \
+                  'XW-2A','XW-2C','XW-2D','XW-2F','RS-44', \
+                  'AO-7',\
+                  'LILACSAT-2','FO-29','AO-73']
 
 ############################################################################################
 
