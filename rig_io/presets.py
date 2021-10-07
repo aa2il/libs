@@ -808,6 +808,7 @@ def write_mem_icom(self,grp,lab,ch,frq,mode,pl,frq2,inverting):
             self.Quit()
             sys.exit(0)
             
+        self.sock.sat_mode(0)                # Take rig out of sat mode
         return
         
     elif not SATELLITE and True:

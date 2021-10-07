@@ -110,6 +110,7 @@ def parse_adif(fn,line=None,upper_case=False,verbosity=0):
             raw1 = re.split('<eoh>(?i)',line )
     except Exception as e:
         print('*** Unable to open file or other error in PARSE_ADIF ***')
+        print('fn=',fn)
         print('Error msg:\t',getattr(e, 'message', repr(e)))
         return logbook
         

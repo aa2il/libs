@@ -57,9 +57,10 @@ SERIAL_PORT6 = '/dev/serial/by-id/usb-RT_Systems_CT-69_Radio_Cable_RTWC054-if00-
 # Port for ICOM 706 MKII
 SERIAL_PORT7 = '/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_AK06USTH-if00-port0'
 
-# Ports for ICOM 9700
-SERIAL_PORT9  = '/dev/serial/by-id/usb-Silicon_Labs_CP2102N_USB_to_UART_Bridge_Controller_IC-9700_12002627_A-if00-port0'
-SERIAL_PORT10 = '/dev/serial/by-id/usb-Silicon_Labs_CP2102N_USB_to_UART_Bridge_Controller_IC-9700_12002627_B-if00-port0'
+# Ports for ICOM 9700 - these are rig-dependent so eventually, we need to come up with a scheme to
+# detect anything that satifies base description
+SERIAL_PORT9  = '/dev/serial/by-id/usb-Silicon_Labs_CP2102N_USB_to_UART_Bridge_Controller_IC-9700_12007709_A-if00-port0'
+SERIAL_PORT10 = '/dev/serial/by-id/usb-Silicon_Labs_CP2102N_USB_to_UART_Bridge_Controller_IC-9700_12007709_B-if00-port0'
 
 # Port for Nano IO keyer interface
 SERIAL_NANO_IO = '/dev/serial/by-id/usb-1a86_USB2.0-Ser_-if00-port0'

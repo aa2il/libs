@@ -43,7 +43,8 @@ def bcd2int(x,ireverse=0):
     mult= 1
     val = 0
     if ireverse:
-        x.reverse()
+        #x.reverse()
+        x=x[::-1];
     for xx in x:
         xxx = xx.replace('0x','')
         val  += mult*int(xxx)

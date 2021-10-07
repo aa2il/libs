@@ -32,6 +32,7 @@ from .icom_io import icom_civ
 import threading
 from datetime import timedelta,datetime
 from pytz import timezone
+from .icom_io import show_hex
 
 ############################################################################################
 

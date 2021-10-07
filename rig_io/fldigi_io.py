@@ -38,6 +38,7 @@ from .util import *
 import socket
 from .ft_tables import DELAY, Decode_Mode, modes
 import re
+from .icom_io import icom_civ
 
 ################################################################################################
 
@@ -147,6 +148,11 @@ class fldigi_xlmrpc(direct_connect):
                 self.rig_type1 = 'Yaesu'
                 if self.rig_type2 == "FT-991A":
                     self.rig_type2 = "FT991a"
+            elif self.rig_type2[:2]=='IC':
+                self.rig_type1 = 'Icom'
+                if self.rig_type2 == "IC-9700":
+                    self.rig_type2 = "IC9700"
+                self.civ = icom_civ(self.rig_type2)            
             else:
                 print('Unknown rig type')
                 sys.exit(0)
@@ -293,8 +299,18 @@ class fldigi_xlmrpc(direct_connect):
                     x=float( self.s.rig.get_vfoA() )
                 elif VFO=='B':
                     x=float( self.s.rig.get_vfoB() )
+                elif VFO=='M':
+                    #self.s.rig.set_verify_AB('A')
+                    self.set_vfo('A')            # A or M ?
+                    x=float( self.s.rig.get_vfoA() )
+                    time.sleep(DELAY)
+                elif VFO=='S':
+                    #self.s.rig.set_verify_AB('B')
+                    self.set_vfo('B')            # B or S ?
+                    x=float( self.s.rig.get_vfoB() )
+                    time.sleep(DELAY)
                 else:
-                    print('FLDIGI_IO GET_FREQ - Invalid VFO')
+                    print('FLDIGI_IO GET_FREQ - Invalid VFO:',VFO)
                     x=0
             except Exception as e: 
                 print('FLDIGI_IO GET FREQ - Unexpected error')
@@ -310,7 +326,9 @@ class fldigi_xlmrpc(direct_connect):
 
     # Function to set rig freq 
     def set_freq(self,frq_KHz,VFO='A'):
-        print('FLDIGI SET_FREQ:',frq_KHz,VFO)
+        if VERBOSITY>0:
+            print('FLDIGI SET_FREQ:',frq_KHz,VFO)
+            
         f=float( 1000*frq_KHz )
         if self.fldigi_active:
             if VFO=='A':
@@ -324,8 +342,21 @@ class fldigi_xlmrpc(direct_connect):
             self.lock.acquire()
             if VFO=='A':
                 self.s.rig.set_vfoA(f)
-            else:
+            elif VFO=='B':
                 self.s.rig.set_vfoB(f)
+            elif VFO=='M':
+                self.s.rig.set_AB('A')
+                time.sleep(DELAY)
+                self.s.rig.set_vfoA(f)
+                time.sleep(DELAY)
+            elif VFO=='S':
+                self.s.rig.set_AB('B')
+                time.sleep(DELAY)
+                self.s.rig.set_vfoB(f)
+                time.sleep(DELAY)
+            else:
+                print('FLDIGI_IO GET_FREQ - Invalid VFO:',VFO)
+                x=0
             self.lock.release()
             #cmd='F'+VFO+str(int(f)).zfill(8)+';'
             #self.send(cmd)
@@ -413,7 +444,9 @@ class fldigi_xlmrpc(direct_connect):
             return 'AA'
     
     def set_vfo(self,rx=None,tx=None):
-        print('FLDIGI_IO - SET_VFO:',rx,tx)
+        if VERBOSITY>0:
+            print('FLDIGI_IO - SET_VFO:',rx,tx)
+            
         if self.flrig_active:
             if rx:
                 try:
@@ -493,9 +526,19 @@ class fldigi_xlmrpc(direct_connect):
                 if VFO=='A':
                     print('FLDIGI_IO: Setting VFO A to',mode)
                     self.s.rig.set_modeA(mode)
-                else:
+                elif VFO=='B':
                     print('FLDIGI_IO: Setting VFO B to',mode)
                     self.s.rig.set_modeB(mode)
+                elif VFO=='M':
+                    print('FLDIGI_IO: Setting VFO M (A) to',mode)
+                    self.s.rig.set_modeA(mode)
+                    time.sleep(DELAY)
+                elif VFO=='S':
+                    print('FLDIGI_IO: Setting VFO S (B) to',mode)
+                    self.s.rig.set_modeB(mode)
+                    time.sleep(DELAY)
+                else:
+                    print('FLDIGI_IO: SET_MODE - Invalid VFO:',VFO,mode)
                 mout=mode
             else:
                 print('*** FLDIGI_IO: Warning - unable to read modem name ***')

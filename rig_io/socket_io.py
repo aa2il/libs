@@ -325,7 +325,7 @@ def get_status(self):
     s=self.sock
     print("\n++++++++++++++++++ Reading status ... ",s.connection,s.rig_type,s.rig_type1,s.rig_type2)
 
-    if s.rig_type=='Hamlib' or s.rig_type=='FLDIGI':
+    if s.rig_type=='Hamlib' or s.rig_type=='FLDIGI' or s.rig_type=='FLRIG':
 
         frq  = s.get_freq() * 1e-3
         mode = s.get_mode()
@@ -452,10 +452,21 @@ def get_status(self):
 
 # Function to manipulate VFO
 def SetVFO(self,cmd):
+    s=self.sock
+    print('SetVFO - cmd=',cmd,'\t',s.rig_type,'\t',s.rig_type1)
+    
     if cmd=='A':
-        self.sock.get_response("BY;FR0;FT2;")
+        if s.rig_type1=='Icom':
+            print('SetVFO - Select A')
+            s.set_vfo('A')
+        else:
+            s.get_response("BY;FR0;FT2;")
     elif cmd=='B':
-        self.sock.get_response("BY;FR4;FT3;")
+        if s.rig_type1=='Icom':
+            print('SetVFO - Select A')
+            s.set_vfo('B')
+        else:
+            s.get_response("BY;FR4;FT3;")
     elif cmd=='A->B':
         self.sock.get_response("BY;AB;")
     elif cmd=='B->A':
