@@ -1189,7 +1189,7 @@ class direct_connect:
             t=None
             z=None
             
-            return d,t,z
+        return d,t,z
 
 
     # Routine to set date & time 
@@ -1293,7 +1293,7 @@ class direct_connect:
         else:
 
             if VERBOSITY>0:
-            print('SAT_MODE: Invalid rig',self.rig_type2)
+                print('SAT_MODE: Invalid rig',self.rig_type2)
             return -1
     
     
@@ -1660,7 +1660,7 @@ class direct_connect:
         if VERBOSITY>0:
             print('DIRECT_IO - GET_MONITOR_GAIN: buf=',buf,'\t',buf[3:6])
         try:
-        return int( buf[3:6] )
+            return int( buf[3:6] )
         except:
             print('DIRECT_IO - Error in GET_MONITOR_GAIN: buf=',buf)
             return 0
