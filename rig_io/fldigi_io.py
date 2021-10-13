@@ -38,7 +38,7 @@ from .util import *
 import socket
 from .ft_tables import DELAY, Decode_Mode, modes
 import re
-from .icom_io import icom_civ
+from .icom_io import icom_civ, show_hex
 
 ################################################################################################
 
@@ -468,11 +468,12 @@ class fldigi_xlmrpc(direct_connect):
             # Dummied up for now
             print('SET_VFO not available yet for FLDIGI - assumes A')
             
-        return 
-    
+        return
+
+
     # Function to set rig mode - return old mode
     def set_mode(self,mode,VFO='A',Filter=None):
-        VERBOSITY=1
+        #VERBOSITY=1
         if VERBOSITY>0:
             print("FLDIGI_IO - SET_MODE mode=",mode,'\tVFO=',VFO,self.v4)
         mode2=mode       # Fldigi mode needs to match rig mode
@@ -501,7 +502,8 @@ class fldigi_xlmrpc(direct_connect):
                     mode='CW-R'
             else:
                 mode='CWR'
-        print('FLDIGI_IO - SET_MODE: mode=',mode,self.v4)
+        if VERBOSITY>0:
+            print('FLDIGI_IO - SET_MODE: mode=',mode,self.v4)
 
         # Translate fldigi mode into something fldigi understands
         if mode2=='DIGITAL' or mode2.find('JT')>=0 or mode2=='FT8':
@@ -510,7 +512,8 @@ class fldigi_xlmrpc(direct_connect):
             mode2='SSB'
         elif mode2=='PSK':
             mode2='BPSK31'
-        print('FLDIGI_IO: mode2=',mode2)
+        if VERBOSITY>0:
+            print('FLDIGI_IO: mode2=',mode2)
 
         if VFO=='A' or self.flrig_active:
             #print('FLDIGI_IO - SET_MODE: Using xlmrpc mode=',mode)
@@ -524,17 +527,17 @@ class fldigi_xlmrpc(direct_connect):
             elif self.flrig_active:
                 #print('FLDIGI_IO - SET_MODE: Using xlmrpc for FLRIG vfo/mode=',VFO,mode)
                 if VFO=='A':
-                    print('FLDIGI_IO: Setting VFO A to',mode)
+                    #print('FLDIGI_IO: Setting VFO A to',mode)
                     self.s.rig.set_modeA(mode)
                 elif VFO=='B':
-                    print('FLDIGI_IO: Setting VFO B to',mode)
+                    #print('FLDIGI_IO: Setting VFO B to',mode)
                     self.s.rig.set_modeB(mode)
                 elif VFO=='M':
-                    print('FLDIGI_IO: Setting VFO M (A) to',mode)
+                    #print('FLDIGI_IO: Setting VFO M (A) to',mode)
                     self.s.rig.set_modeA(mode)
                     time.sleep(DELAY)
                 elif VFO=='S':
-                    print('FLDIGI_IO: Setting VFO S (B) to',mode)
+                    #print('FLDIGI_IO: Setting VFO S (B) to',mode)
                     self.s.rig.set_modeB(mode)
                     time.sleep(DELAY)
                 else:
@@ -544,11 +547,25 @@ class fldigi_xlmrpc(direct_connect):
                 print('*** FLDIGI_IO: Warning - unable to read modem name ***')
                 mout=self.s.rig.get_mode()
             self.lock.release()
-            print("FLDIGI_IO SET_MODE: mout=",mout)
+            if VERBOSITY>0:
+                print("FLDIGI_IO SET_MODE: mout=",mout)
 
+            if Filter=='Wide':
+                if VERBOSITY>0:
+                    print("FLDIGI_IO SET_MODE: Setting filter to ",Filter)
+                time.sleep(DELAY)
+                self.s.rig.set_bandwidth(2000)
+                if VERBOSITY>0:
+                    print("FLDIGI_IO SET_MODE: Filter Set")                
+                    time.sleep(DELAY)
+                    print(self.s.rig.get_bw())
+                    print(self.s.rig.get_bwA())
+                    print(self.s.rig.get_bwB())
+                
         else:
             try:
-                print('FLDIGI_IO - SET_MODE: Trying direct approach',mode)
+                if VERBOSITY>0:
+                    print('FLDIGI_IO - SET_MODE: Trying direct approach',mode)
                 c = modes[mode]["Code"]
                 self.send('FR4;MD'+c+';')
                 time.sleep(DELAY)
@@ -558,7 +575,9 @@ class fldigi_xlmrpc(direct_connect):
                 print('FLDIGI_IO SET_MODE: Unable to set mode =',mode)
                 return mode
 
-        print("FLDIGI_IO: SET MODE Done.\n")
+        if VERBOSITY>0:
+            print("FLDIGI_IO: SET MODE Done.\n")
+            
         return mout
 
     # Function to set call 
@@ -647,11 +666,21 @@ class fldigi_xlmrpc(direct_connect):
             #print 'SEND: REPLY=',self.reply
         elif self.flrig_active:
             try:
-                #print "FLDIGI SEND:",cmd
-                self.reply = self.s.rig.cat_string(cmd)
-                #print 'SEND: REPLY=',self.reply
-            except:
-                print("**** FLDIGI SEND FAILURE cmd=",cmd)
+                if self.rig_type1 == "Icom":
+                    cmd2=' '.join( show_hex(cmd) )
+                else:
+                    cmd2=cmd
+                #print("FLDIGI SEND: cmd=",cmd2)
+                reply = self.s.rig.cat_string(cmd2)
+                #print('SEND: reply=',reply)
+                if self.rig_type2 == "IC9700":
+                    self.reply = [int(i,16) for i in reply.split(' ')]
+                else:
+                    self.reply = reply
+                #print('SEND: reply=',self.reply)
+            except Exception as e: 
+                print("**** FLDIGI SEND FAILURE cmd=",cmd2)
+                print(e)
                 self.reply = ''
         else:
             self.reply = ''
@@ -678,6 +707,7 @@ class fldigi_xlmrpc(direct_connect):
         return 0
 
     def get_response(self,cmd):
+        #VERBOSITY=0
         if VERBOSITY>0:
             print('FLDIGI GET_RESPONSE: Sending CMD ... ',cmd)
         #print('Waiting for lock')
@@ -685,7 +715,10 @@ class fldigi_xlmrpc(direct_connect):
         self.send(cmd)
         if VERBOSITY>0:
             print('Waiting for response ...')
-        buf = self.recv(1024).rstrip()
+        if self.rig_type1 == "Icom":
+            buf = self.recv(1024)
+        else:
+            buf = self.recv(1024).rstrip()
         if VERBOSITY>0:
             print('...Got it',buf)
 

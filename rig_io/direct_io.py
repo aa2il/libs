@@ -81,6 +81,7 @@ def try_port(port,baud,verbosity):
             if verbosity>=1:
                 print('TRY_PORT: Reading...')
             if ICOM:
+                time.sleep(DELAY)
                 x = self.s.read(256)
                 if verbosity>=1:
                     print('\tx=',x)
@@ -100,12 +101,14 @@ def try_port(port,baud,verbosity):
                         if verbosity>=1:
                             print('TRY_PORT: Found IC9700')
                         return ['Icom','IC9700',self]
+                else:
+                    buf=''
             else:
                 buf = self.s.read(256).decode("utf-8")
                 
             #print('buf=',buf)
             if verbosity>=1:
-                print('TRY_PORT: cmd=%s \t response=%s',(cmd,buf))
+                print('TRY_PORT: cmd=%s \t response=%s' % (cmd,buf))
                 
             if buf=='ID0460;':
                 self.rig_type  = 'Yaesu'
@@ -142,7 +145,6 @@ def try_port(port,baud,verbosity):
 # Routine to test connection to a particular rig
 def try_rig(self,type1,type2,port,baud):
     try:
-        print('\nTRY_RIG: Trying %s %s\nport=%s ...' % (type1,type2,port) )
         if baud==0:
             if type2=='TS850':
                 baud = 4800
@@ -154,6 +156,10 @@ def try_rig(self,type1,type2,port,baud):
             TimeOut=1
         else:
             TimeOut=0.1
+
+        print('\nTRY_RIG: Trying %s %s\nport=%s\tbaud=%d ...' %
+              (type1,type2,port,baud) )
+            
         self.s = serial.Serial(port,baud,timeout=TimeOut)
         self.rig_type  = type1
         self.rig_type2 = type2
@@ -637,10 +643,11 @@ class direct_connect:
 
     # Function to set active VFO
     def select_vfo(self,VFO):
+        #VERBOSITY=1
         if VERBOSITY>0:
-            print('DIRECT SELECT_VFO:',VFO)
+            print('DIRECT SELECT_VFO:',VFO,self.rig_type,self.rig_type1)
             
-        if self.rig_type=='Icom':
+        if self.rig_type=='Icom' or  self.rig_type1=='Icom':
             if VFO=='A':
                 sub=0x00
                 sub=0xD0            # Use Main, not VFO A
@@ -1259,7 +1266,7 @@ class direct_connect:
     def sat_mode(self,opt):
         #VERBOSITY=1
         if VERBOSITY>0:
-            print('DIRECT - SAT_MODE:',opt)
+            print('DIRECT - SAT_MODE: opt=',opt,self.rig_type2)
 
         if self.rig_type2=='IC9700':
         
@@ -1294,7 +1301,7 @@ class direct_connect:
 
             if VERBOSITY>0:
                 print('SAT_MODE: Invalid rig',self.rig_type2)
-            return -1
+                return -1
     
     
 
@@ -1480,7 +1487,7 @@ class direct_connect:
                 wpm=0
                 
         elif self.rig_type2=='IC9700':
-            if self.rig_type=='FLRIG':
+            if self.rig_type=='FLRIG' and False:
                 print('DIRECT READ_SPEED - Not available yet until we get ability to execute direct commands for ICOM under FLRIG')
                 return 0
                 
@@ -1535,7 +1542,7 @@ class direct_connect:
             buf = self.get_response(cmd)
                 
         elif self.rig_type2=='IC9700':
-            if self.rig_type=='FLRIG':
+            if self.rig_type=='FLRIG' and False:
                 print('DIRECT SET_SPEED - Not available yet until we get ability to execute direct commands for ICOM under FLRIG')
                 return
                 

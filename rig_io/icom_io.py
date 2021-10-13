@@ -150,9 +150,10 @@ class icom_civ:
             eom = [cmd[-1]]
             valid = valid and (preamble==self.ICOM_PREAMBLE2) and (eom==self.ICOM_EOM)
             if not valid:
+                print('N,N2=',N,N2)
                 print('Preamble and EOM ok:\t',valid,(preamble==self.ICOM_PREAMBLE2),(eom==self.ICOM_EOM))
-                print('preamble  =',preamble)
-                print('preamble2 =', self.ICOM_PREAMBLE2)
+                print('preamble  =',show_hex(preamble))
+                print('preamble2 =', show_hex(self.ICOM_PREAMBLE2))
             
             # Check that this is the reponse to the proper command
             #print('cmd4=',cmd[4])
