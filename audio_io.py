@@ -57,7 +57,9 @@ class WaveRecorder(object):
 
     # Use a stream with a callback in non-blocking mode
     def start_recording(self,index=0):
-        print('Recording started ...',index,self.channels,self.rate,self.frames_per_buffer)
+        print('WaveRecorder - START_RECORDING - Recording started ...' \
+              '\n\tDevice index=',index,'\tnchan=',self.channels,\
+              '\tfs=',self.rate,'\tframes/buf=',self.frames_per_buffer)
         self._stream = self._pa.open(format=pyaudio.paInt16,
                                      channels=self.channels,
                                      rate=self.rate,
@@ -66,6 +68,7 @@ class WaveRecorder(object):
                                      frames_per_buffer=self.frames_per_buffer,
                                      stream_callback=self.get_callback())
         self._stream.start_stream()
+        self.nframes=0
         return self
 
     def stop_recording(self):
@@ -118,10 +121,14 @@ class WaveRecorder(object):
 
             # Write out to file
             if self.rb2:
-                data = np.column_stack((left,right))   # .tostring()
+                data = np.column_stack((left,right)) 
             else:
-                data = left       # .tostring()
+                data = left  
             self.wavefile.writeframes(data)
+
+            self.nframes+=1
+            if self.nframes==1:
+                print('First frame of wave data (left chan):',left)
 
             return in_data, pyaudio.paContinue
         

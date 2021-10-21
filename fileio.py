@@ -23,6 +23,8 @@ import sys
 import os
 import re
 from rig_io.ft_tables import *
+import csv
+from collections import OrderedDict
 
 #######################################################################################
 
@@ -33,6 +35,19 @@ def parse_file_name(fname):
     n, e = os.path.splitext(f)
 
     return (p,n,e)
+
+#######################################################################################
+
+def sort_keys(KEYS):
+    KEYS=sorted( list(KEYS) )
+    #print('Keys=',KEYS)
+    KEYS.remove('call')
+    keys1=['srx_string','qth','name']
+    for key in keys1:
+        if key in KEYS:
+            KEYS.remove(key)
+    KEYS2=['call']+KEYS+keys1
+    return KEYS2
 
 #######################################################################################
 
@@ -93,6 +108,38 @@ def parse_simple_log(fn,args):
 
 #######################################################################################
 
+
+# This is an experimental routine
+import codecs
+def read_adif(fname):
+    logbook =[]
+    #fp=open(fn)
+    #lines = []
+    
+    #with open(fname) as f:
+    with codecs.open(fname, 'r', encoding='utf-8',
+                 errors='ignore') as f:
+        lines = f.readlines()
+
+        #line = f.readline()
+        #while line:
+        #    line = f.readline()
+        #    print(line)
+
+    # Find end of header
+    cnt=0
+    for line in lines:
+        if line.strip()=='<eoh>':
+            print('Found end of header at line',cnt)
+        cnt+=1
+
+    # Find 
+    done=False
+    
+            
+    print(len(lines))
+    sys.exit(0)
+
 # Function to read list of qsos from input file
 def parse_adif(fn,line=None,upper_case=False,verbosity=0):
     logbook =[]
@@ -102,10 +149,15 @@ def parse_adif(fn,line=None,upper_case=False,verbosity=0):
 
     try:
         if line==None:
-            #raw = re.split('<eor>|<eoh>(?i)',open(fn).read() )
-            fp=open(fn)
-            raw1 = re.split('<eoh>(?i)',fp.read() )
-            fp.close()
+            if False:
+                fp=open(fn)
+                raw1 = re.split('<eoh>(?i)',fp.read() )
+                fp.close()
+            else:
+                with codecs.open(fn, 'r', encoding='utf-8',
+                                 errors='ignore') as fp:
+                    raw1 = re.split('<eoh>(?i)',fp.read() )
+            
         else:
             raw1 = re.split('<eoh>(?i)',line )
     except Exception as e:
@@ -148,7 +200,7 @@ def parse_adif(fn,line=None,upper_case=False,verbosity=0):
 
 
 # Function to create entire ADIF record and write it to a file
-def write_adif_record(fp,rec,P,long=False):
+def write_adif_record(fp,rec,P,long=False,sort=True):
     VERBOSITY=0
 
     contest = P.contest_name
@@ -198,8 +250,9 @@ def write_adif_record(fp,rec,P,long=False):
         qso['QTH']  = exch[1]
         
     fields = list(qso.keys())
+    if sort:
+        fields.sort()
     #print('keys=',fields)
-    fields.sort()
     for fld in fields:
         val = qso[fld]
         #print('WRITE_ADIF_RECORD:',fld,val)
@@ -216,7 +269,9 @@ def write_adif_record(fp,rec,P,long=False):
         else:
             if fld=='FREQ' and len(val)>8:
                 val=val[0:8]
-            fp.write('<%s:%d>%s%s' % (fld,len(val),val,NL) )
+            #print(fld,val)
+            if len(val)>0:
+                fp.write('<%s:%d>%s%s' % (fld,len(val),val,NL) )
     fp.write('<EOR>\n')
     fp.flush()
 
@@ -224,16 +279,28 @@ def write_adif_record(fp,rec,P,long=False):
 # Function to write out an ADIF file 
 #FIELDS=['FREQ','CALL','MODE','NAME','QSO_DATE','QSO_DATE_OFF','TIME_OFF','TIME_ON','QTH','RST_RCVD','RST_SENT','BAND', \
 #        'COUNTRY','SRX_STRING','STATION_CALLSIGN','MY_GRIDSQUARE','MY_CITY'
-def write_adif_log(qsos,fname,contest=''):
+def write_adif_log(qsos,fname,P):
+    VERBOSITY=0
+    
     fname2 = fname.replace('.LOG','.adif')
     print("WRITE_ADIF_LOG: ADIF file name=",fname2)
     fp = open(fname2, 'w')
     fp.write('Simple Log Export<eoh>\n')
 
     for qso in qsos:
-        qso['freq'] = str( 1e-3*float( qso['freq'] ) )
-        qso2 =  {key.upper(): val for key, val in list(qso.items())}
-        write_adif_record(fp,qso2,contest)
+        keys=sort_keys(qso.keys())
+        if VERBOSITY>0:
+            print('\nqso=',qso,'\nkeys=',keys)
+        qso2=OrderedDict()
+        for key in keys:
+            if VERBOSITY>0:
+                print('key=',key)
+            if key in qso:
+                qso2[key.upper()] = qso[key]
+        if VERBOSITY>0:
+            print(qso2)
+        
+        write_adif_record(fp,qso2,P,sort=False)
         
     fp.close()
             
@@ -249,3 +316,59 @@ def qso_time(rec):
 
     dt = 3600.*( int(toff[0:2]) - int(ton[0:2]) ) + 60.*(int(toff[2:4]) - int(ton[2:4])) + 1.*( int(toff[4:6]) - int(ton[4:6]) )
     return dt
+
+
+
+
+def read_csv_file(fname):
+
+    QSOs=[]
+    with open(fname) as f:
+        rows = csv.reader(f)
+
+        n=0
+        for row in rows:
+            if n==0:
+                keys=row
+                #print(keys)
+            else:
+                qso={}
+                for key,val in zip(keys,row):
+                    qso[key]=val
+                #print(qso)
+                QSOs.append(qso)
+            n+=1
+
+    return QSOs
+
+
+
+def write_csv_file(fname,keys,qsos):
+    fp = open(fname, "w")
+    #print('keys=',keys)
+
+    # Write header
+    sep=','
+    for key in keys:
+        #print(key)
+        if key==keys[-1]:
+            sep='\n'
+        fp.write(str(key)+sep)
+
+    # Write list of q's
+    for qso in qsos:
+        sep=','
+        for key in keys:
+            if key==keys[-1]:
+                sep='\n'
+            try:
+                item = str( qso[key] )
+                if ',' in item:
+                    item='"'+item+'"'
+            except:
+                item=''
+            fp.write(item+sep)
+    
+    #fp.flush()
+    fp.close()
+
