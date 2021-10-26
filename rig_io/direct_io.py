@@ -1502,7 +1502,7 @@ class direct_connect:
             if VERBOSITY>0:
                 print('READ SPEED: cmd=',show_hex(cmd))
                 print('x=',x)
-            print('y=',y,val,wpm)
+                print('y=',y,val,wpm )
 
         elif self.rig_type=='Kenwood':
             print('DIRECT_IO - READ_SPEED - Not supported on Kenwood rigs')
@@ -1684,7 +1684,8 @@ class direct_connect:
     
     # Need to fill this out
     def recorder(self,on_off=None):
-        print('DIRECT_IO RECORDER: Ignoring call')
+        if False:
+            print('DIRECT_IO RECORDER: Ignoring call')
         return False
 
     # Read rotor position - if at first we don't succeed, try try again

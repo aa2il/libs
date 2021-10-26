@@ -269,6 +269,8 @@ def write_adif_record(fp,rec,P,long=False,sort=True):
         else:
             if fld=='FREQ' and len(val)>8:
                 val=val[0:8]
+            elif fld[:4]=='TIME' and len(val)>0 and len(val)!=6:
+                val=str(val).zfill(6)
             #print(fld,val)
             if len(val)>0:
                 fp.write('<%s:%d>%s%s' % (fld,len(val),val,NL) )
@@ -362,12 +364,15 @@ def write_csv_file(fname,keys,qsos):
             if key==keys[-1]:
                 sep='\n'
             try:
-                item = str( qso[key] )
-                if ',' in item:
-                    item='"'+item+'"'
+                val = str( qso[key] )
+                #if key[:4]=='time' and len(val)>0 and len(val)!=6:
+                #    val='"'+str(val).zfill(6)+'"'
+                #elif ',' in val or val[0]=='0':
+                if ',' in val:
+                    val='"'+val+'"'
             except:
-                item=''
-            fp.write(item+sep)
+                val=''
+            fp.write(val+sep)
     
     #fp.flush()
     fp.close()
