@@ -747,23 +747,52 @@ class hamlib_connect(direct_connect):
             
     # Set rotor position
     def set_position(self,pos):
+        VERBOSITY=1
         if VERBOSITY>0:
-            print('\nHAMLIB - SET_POSITION:',pos)
+            print('\nHAMLIB - SET_POSITION: pos=',pos)
         if pos[0]==None or pos[1]==None:
             print('\nHAMLIB - SET_POSITION - Invalid position',pos)
             return
-            
+
+        # Make sure az is between 0 and 360-deg ...
         if pos[0]<self.min_az:
             pos[0]+=360
         if pos[0]>self.max_az:
             pos[0]-=360
+
+        # It woul be really nice to have ome code here to keep
+        # from banging against stops at +/-180-deg but I haven't
+        # figure it out yet!
+        #pos[0]=max(-175,min(175,pos[0]))
         #pos[0]=max(0,min(359.9,pos[0]))
+        try:
+            az_prev=self.last_pos[0]
+            print('last az=',az_prev,'\tnew az=',pos[0])
+            #if pos[0]>az_prev and pos[0]>177 and pos[0]<180:
+            if pos[0]>175 and pos[0]<180:
+                pos[0]=175
+                print('Limiting CW movement to 175-deg')
+            #elif pos[0]<az_prev and pos[0]<183 and pos[0]>180:
+            elif pos[0]<185 and pos[0]>180:
+                pos[0]=183
+                print('Limiting CW movement to 185-deg')
+        except:
+            pass
+
+        # ... and that el is between 0 and 180-deg
         pos[1]=max(self.min_el,min(self.max_el,pos[1]))
-        #print('HAMLIB - SET_POSITION:',pos)
+
+        # Form and issue rotor psoitioning comand 
         cmd='P '+str(int(pos[0]))+' '+str(int(pos[1]))
-        #print('cmd=',cmd)
         x = self.get_response(cmd)
-        #print('x=',x)
+
+        self.last_pos=pos
+        
+        if VERBOSITY>0:
+            print('HAMLIB - SET_POSITION: Adjusted pos=',pos)
+            print('cmd=',cmd)
+            print('x=',x)
+            
         return 
 
             

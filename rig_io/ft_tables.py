@@ -138,7 +138,7 @@ XE_STATES=['AGS','BAC','BCS','CAM','CHI','CHH','CMX','COA','COL','DGO','EMX','GT
 
 NA_COUNTRIES=['AK','PR','ZF','VI','HI','XE','V3','TI','8P','DX','KP4','HR','CY9','HP','KP2','HH','DR']
 NAQP_SECS = STATES + PROVINCES + NA_COUNTRIES + ['DC']
-SST_SECS  = STATES + PROVINCES 
+SST_SECS  = STATES + PROVINCES  + ['CWA']
 CQ_STATES = LOWER48 + PROVINCES + ['DC']
 
 RU_SECS = LOWER48 + PROVINCES + ['DC']
@@ -232,10 +232,10 @@ CQ_ZONES = {'CT' : 5 , \
 # Need the 'None' entry for list box in pyKeyer
 # SK sats: AO-85,91,92, FO-99, CAS-6?, EO-88?
 SATELLITE_LIST = ['None','ISS','PO-101','SO-50','AO-27', \
-                  'AO-91','AO-92', \
+                  'AO-91','AO-92','AO-109',  \
                   'CAS-4A','CAS-4B','CAS-6', \
                   'XW-2A','XW-2C','XW-2D','XW-2F','RS-44', \
-                  'AO-7','JO-97',\
+                  'AO-7','JO-97','FS-3', 'UVSQ-SAT', \
                   'LILACSAT-2','FO-29','AO-73']
 
 ############################################################################################
