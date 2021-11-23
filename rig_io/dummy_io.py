@@ -190,5 +190,8 @@ class no_connect:
             logging.info('Ignoring call')
         return 0,0,0
     
+    def set_date_time(self,VERBOSITY=0):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
 
     

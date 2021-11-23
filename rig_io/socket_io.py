@@ -245,40 +245,6 @@ def set_speed_old(sock,wpm):
 
             
     
-# Routine to read keyer speed from radio
-def read_speed_old(sock):
-    wpm=0
-    if VERBOSITY>0:
-        print('Reading keyer speed ...',sock.rig_type,sock.rig_type2)
-
-    if sock.active:
-    
-        if sock.rig_type=='Hamlib':
-            reply = sock.get_response("l KEYSPD")
-            buf = reply
-            
-        elif sock.rig_type=='Yaesu':
-            sock.send('KS;')
-            reply=sock.recv(256)
-            if reply[0:2]=='KS':
-                buf = reply[2:5]
-            else:
-                buf='0'
-            
-        else:
-            print('*** READ_SPEED not yet implemented for rig type',sock.rig_type,sock.rig_type2)
-            reply=''
-            buf=''
-            
-        if VERBOSITY>0:
-            print('read_speed:',reply,buf)
-        try:
-            wpm=int(buf)
-        except:
-            wpm=0
-
-    return wpm
-
 ############################################################################################
 
 # Function to read radio status
@@ -304,7 +270,6 @@ def read_radio_status(sock,verbosity=0):
         sock.mode = sock.get_mode()
         sock.pl_tone = sock.get_PLtone()
         if sock.rig_type=='Yaesu':
-            #wpm = read_speed(sock)
             wpm = sock.read_speed()
             if wpm>0:
                 sock.wpm=wpm

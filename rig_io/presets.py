@@ -672,6 +672,14 @@ def write_mem_icom(self,grp,lab,ch,frq,mode,pl,frq2,inverting):
     elif mode=='IQ':
         mode='USB'
     P6 =[ icom_modes[mode]["Code"] ]         # Mode
+    if inverting:
+        if mode=='CW':
+            mode2='CW-R'
+        elif mode=='USB':
+            mode2='LSB'
+        P62 =[ icom_modes[mode2]["Code"] ]         # Mode2
+    else:
+        P62=P6
     P22=[]
 
     # Check for a satellite
@@ -754,6 +762,7 @@ def write_mem_icom(self,grp,lab,ch,frq,mode,pl,frq2,inverting):
     print('P1 =',P1,ch)
     print('P2 =',show_hex(P2),frq)
     print('P6 =',P6,mode)
+    print('P62 =',P62,mode2)
     print('P8 =',P8)
     print('P9 =',pl,show_hex(P9))
     print('P10=',show_hex(P10),split)
@@ -784,7 +793,7 @@ def write_mem_icom(self,grp,lab,ch,frq,mode,pl,frq2,inverting):
         # Form the command - see page 18 of IC9700 CIV manual
         DOWN=P1+P2+P6+[0x1] + [0x00,0x01,0x00] + 2*P9 + [0x0,0x0,0x23,0x0] + 24*[0x20]
         print('\nDOWN=',show_hex(DOWN),len(DOWN))
-        UP  =  P22+P6+[0x1] + [0x00,0x01,0x00] + 2*P9 + [0x0,0x0,0x23,0x0] + 24*[0x20]
+        UP  =  P22+P62+[0x1] + [0x00,0x01,0x00] + 2*P9 + [0x0,0x0,0x23,0x0] + 24*[0x20]
         print('UP  =',show_hex(UP),len(UP))
         print(len(DOWN)+len(UP)+len(P12),46+44+16,'\n')
 

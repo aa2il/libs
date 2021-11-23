@@ -28,6 +28,34 @@ from collections import OrderedDict
 
 #######################################################################################
 
+# Function to save GPS location info
+def save_gps_coords(loc,fname=None,VERBOSITY=1):
+    if VERBOSITY>0:
+        print('Saving location info ',loc,'...' )
+    if not fname:
+        fname=os.path.expanduser('~/.gpsrc')
+    fp=open(fname,'w')
+    fp.write('%f\n%f\n%f\n%s\n' % loc)
+    fp.close()
+
+# Function to read GPS location info
+def read_gps_coords(fname=None,VERBOSITY=1):
+    if VERBOSITY>0:
+        print('Reading location info ...')
+    if not fname:
+        fname=os.path.expanduser('~/.gpsrc')
+    fp=open(fname,'r')
+    lat=float( fp.readline() )
+    lon=float( fp.readline() )
+    alt=float( fp.readline() )
+    gridsq=fp.readline()
+    if VERBOSITY>0:
+        print('lat=',lat,'\tlon=',lon,'\talt=',alt,'\ngrid=',gridsq)
+    fp.close()
+    return [lat,lon,alt,gridsq]
+
+#######################################################################################
+
 # Function to split a file name into its component parts
 def parse_file_name(fname):
     p, f = os.path.split(fname)

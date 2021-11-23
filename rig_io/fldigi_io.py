@@ -141,8 +141,12 @@ class fldigi_xlmrpc(direct_connect):
         if self.flrig_active :
             info = self.s.rig.get_info()
             a=info.split()
-            print("\nFLRIG active - Rig info: ",info,'\tinfo0=',a[0])
             print('a=',a)
+            if len(a)==0:
+                print('FLDIGI_IO - OPEN: Unknown rig type')
+                sys.exit(0)
+            
+            print("\nFLRIG active - Rig info: ",info,'\tinfo0=',a[0])
             self.rig_type2 = a[0][2:]
             if self.rig_type2[:2]=='FT':
                 self.rig_type1 = 'Yaesu'

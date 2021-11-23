@@ -23,7 +23,8 @@ import numpy as np
 import scipy.signal as signal
 import pyaudio
 import sys
-from fractions import gcd
+#from fractions import gcd
+from math import gcd
 import time
 if sys.version_info[0]==3:
     import queue
