@@ -23,7 +23,7 @@ import numpy as np
 import scipy.signal as signal
 import pyaudio
 import sys
-#from fractions import gcd
+#from fractions import gcd            # No longer available on RPi?
 from math import gcd
 import time
 if sys.version_info[0]==3:
@@ -1236,7 +1236,7 @@ class Demodulator:
 
 # Function to compute re-sampling interpolation and decimation params 
 def up_dn(fs1,fs2):
-    g  = gcd(fs1,fs2)
+    g  = gcd(int(fs1),int(fs2))
     up = int( fs2/g )
     dn = int( fs1/g )
 
