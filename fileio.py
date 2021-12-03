@@ -217,11 +217,18 @@ def parse_adif(fn,line=None,upper_case=False,verbosity=0):
                 qso[tag[0].lower()] = tag[2][:int(tag[1])]
 
         if 'call' in qso or 'CALL' in qso:
-            if 'QSO_DATE_OFF' not in qso:
-                #print('qso=',qso)
-                qso['QSO_DATE_OFF'] = qso['QSO_DATE']
-            if 'TIME_OFF' not in qso:
-                qso['TIME_OFF'] = qso['TIME_ON']
+            if upper_case:
+                if 'QSO_DATE_OFF' not in qso:
+                    #print('qso=',qso)
+                    qso['QSO_DATE_OFF'] = qso['QSO_DATE']
+                if 'TIME_OFF' not in qso:
+                    qso['TIME_OFF'] = qso['TIME_ON']
+            else:
+                if 'qso_date_off' not in qso:
+                    #print('qso=',qso)
+                    qso['qso_date_off'] = qso['qso_date']
+                if 'time_off' not in qso:
+                    qso['time_off'] = qso['time_on']
             logbook.append(qso)
 
     return logbook
