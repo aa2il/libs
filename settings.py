@@ -63,7 +63,7 @@ def read_settings(fname):
 # Structure to contain config params
 class CONFIG_PARAMS:
     def __init__(self,fname):
-        self.SETTINGS=read_settings(fname)
+        self.SETTINGS,self.RCFILE=read_settings(fname)
 
 #########################################################################################
 
