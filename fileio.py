@@ -244,10 +244,16 @@ def parse_adif(fn,line=None,upper_case=False,verbosity=0):
 def write_adif_record(fp,rec,P,long=False,sort=True):
     VERBOSITY=0
 
-    contest = P.contest_name
+    try:
+        contest = P.contest_name
+    except:
+        contest = ''
     MY_CALL = P.SETTINGS['MY_CALL']
     MY_GRID = P.SETTINGS['MY_GRID']
-    MY_CITY = P.SETTINGS['MY_CITY']+', '+P.SETTINGS['MY_STATE']
+    try:
+        MY_CITY = P.SETTINGS['MY_CITY']+', '+P.SETTINGS['MY_STATE']
+    except:
+        MY_CITY = ''
 
     if long:
         NL='\n'
@@ -282,7 +288,7 @@ def write_adif_record(fp,rec,P,long=False,sort=True):
         qso['STATION_CALLSIGN']=MY_CALL
     if 'MY_GRIDSQUARE' not in qso:
         qso['MY_GRIDSQUARE']=MY_GRID
-    if 'MY_CITY' not in qso:
+    if 'MY_CITY' not in qso and len(MY_CITY)>2:
         qso['MY_CITY']=MY_CITY
 
     if contest=='NAQP-CW' or contest=='CW Ops Mini-Test':
@@ -315,7 +321,7 @@ def write_adif_record(fp,rec,P,long=False,sort=True):
             #print(fld,val)
             if len(val)>0:
                 fp.write('<%s:%d>%s%s' % (fld,len(val),val,NL) )
-    fp.write('<EOR>\n')
+    fp.write('<EOR>\n'+NL)
     fp.flush()
 
 

@@ -54,10 +54,46 @@ class no_connect:
         self.tlast      = None
 
     def get_band(self,frq=None,VFO='A'):
+        if frq<0:
+            band=None
+        elif frq<1.7:
+            band='MW'
+        elif frq<3:
+            band=160
+        elif frq<5:
+            band=80
+        elif frq<6:
+            band=60
+        elif frq<9:
+            band=40
+        elif frq<12:
+            band=30
+        elif frq<16:
+            band=20
+        elif frq<20:
+            band=17
+        elif frq<23:
+            band=15
+        elif frq<27:
+            band=12
+        elif frq<40:
+            band=10
+        elif frq<60:
+            band=6
+        elif frq<144:
+            band='AIR'
+        elif frq<200:
+            band=2
+        elif frq<300:
+            band=1.25
+        else:
+            band='70cm'
+            
         if VERBOSITY>0:
-            logging.info('Ignoring call')
-        return 0
-        
+            print("DUMMY: Current rig freq=",frq," MHz --> ",band,"m")
+
+        return band
+
     def set_band(self,b,VFO='A'):
         if VERBOSITY>0:
             logging.info('Ignoring call')
