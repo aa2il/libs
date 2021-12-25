@@ -200,10 +200,17 @@ class SETTINGS_GUI():
         
         row+=1
         button = Button(self.win, text="OK",command=self.Dismiss)
+        button.grid(row=row,column=0,sticky=E+W)
+
+        button = Button(self.win, text="Cancel",command=self.hide)
         button.grid(row=row,column=1,sticky=E+W)
 
-        self.win.update()
-        self.win.deiconify()
+        #self.root.protocol("WM_DELETE_WINDOW", self.Quit)        
+        self.win.protocol("WM_DELETE_WINDOW", self.hide)        
+        
+        #self.win.update()
+        #self.win.deiconify()
+        self.show()
         print('Hey2')
 
     # Cant seem to get this to work :-(
@@ -234,7 +241,15 @@ class SETTINGS_GUI():
         with open(self.P.RCFILE, "w") as outfile:
             json.dump(self.P.SETTINGS, outfile)
         
-        self.win.destroy()
+        #self.win.destroy()
+        self.hide()
         print('Hey4')
 
+    def show(self):
+        print('Show Settings Window ...')
+        self.win.update()
+        self.win.deiconify()
         
+    def hide(self):
+        print('Hide Settings Window ...')
+        self.win.withdraw()

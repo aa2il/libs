@@ -206,12 +206,11 @@ def try_rig(self,type1,type2,port,baud):
 # Routine to search known ports & find a rig
 def find_direct_rig(self,port_in,baud_in,force=False):
 
-    print('FIND_DIRECT_RIG: Looking for any rigs connected to a USB port ...')
+    print('FIND_DIRECT_RIG: Looking for any rigs connected to a USB port - port=',port_in,'\tbaud=',baud_in)
     baud=baud_in
     
     # The GS232 rotor
     if port_in==232:
-        print('Hey!')
         if try_rig(self,'Yaesu','GS232b',SERIAL_ROTOR,baud):
             return True
 
@@ -264,6 +263,7 @@ class direct_connect:
         self.tlast      = None
         self.pl_tone    = 0
 
+        print('DIRECT_CONNECT: Looking for rig - port=',port,'\tbaud=',baud,'...')
         Found = find_direct_rig(self,port,baud,force)
 
         if Found:
@@ -275,8 +275,8 @@ class direct_connect:
             self.keyed=False
         
             self.s.setDTR(False)           # Make sure DTR is not asserted
-            print("\nOpened DIRECT connection to rig via ")
-            print(self.s.name, port,baud)
+            print('DIRECT_CONNECT: Connection to rig via', \
+                  self.s.name,'\tport=',port,'\tbaud=',baud)
             print('Rig type=',self.rig_type,self.rig_type2)
 
             self.connection='DIRECT'
@@ -313,7 +313,7 @@ class direct_connect:
     def send(self,cmd):
         # TODO - add ability to detect or override if we already have the lock
         self.lock.acquire()
-        #print 'Sending',cmd
+        #print('Sending',cmd)
         cnt=self.s.write(cmd.encode())
         self.s.flush()
         self.lock.release()
@@ -330,8 +330,8 @@ class direct_connect:
 
 
     def check_port(self,txt,stop=False):
-        #print txt
-        #print txt,self.s.in_waiting
+        #print('txt=',txt)
+        #print(self.s.in_waiting)
         if self.s.in_waiting:
             buf=self.s.read(1024)
             if len(txt)>0:
@@ -379,7 +379,7 @@ class direct_connect:
             q='?'
 
         #x=self.recv()   # Can't use this bx lock has already been acquired
-        #print 'After read:',self.s.available()
+        #print('After read:',self.s.available())
         if wait:
             #while len(x)==0:
             #while x.find(';')<0:
@@ -395,11 +395,17 @@ class direct_connect:
         return x
 
     def get_ant(self):
+        if VERBOSITY>=1:
+            print('DIRECT GET_ANT ...')
         if self.rig_type2=='FTdx3000':
             buf = self.get_response('AN0;')
-            #print 'DIRECT GET_ANT: buf=',buf
-            ant=int(buf[3])
-            #print('DIRECT GET_ANT: buf=',buf,ant)
+            try:
+                ant=int(buf[3])
+            except:
+                print('DIRECT GET_ANT: Problem reading ant - buf=',buf)
+                ant=1
+            if VERBOSITY>=1:
+                print('DIRECT GET_ANT: buf=',buf,'\tant=',ant)
         else:
             ant=1
         return ant
@@ -428,9 +434,9 @@ class direct_connect:
             cmd = self.civ.icom_form_command([0x16,0x42])                 # See if tone is on or off
             x   = self.get_response(cmd)
             y   = self.civ.icom_response(cmd,x)                        
-            #print 'DIRECT GET_PL_TONE: cmd =',show_hex(cmd)
+            #print('DIRECT GET_PL_TONE: cmd =',show_hex(cmd))
             on_off = int(y[1],16)
-            #print 'DIRECT GET_PL_TONE: y   =',y,on_off
+            #print('DIRECT GET_PL_TONE: y   =',y,on_off)
 
             if on_off==0:
                 return 0
@@ -438,9 +444,9 @@ class direct_connect:
                 cmd = self.civ.icom_form_command([0x1b,0x0])             # Get tone freq
                 x   = self.get_response(cmd)
                 y   = self.civ.icom_response(cmd,x)
-                #print 'DIRECT GET_PL_TONE: cmd =',show_hex(cmd)
+                #print('DIRECT GET_PL_TONE: cmd =',show_hex(cmd))
                 tone = 0.1*bcd2int(y,1)
-                #print 'DIRECT GET_PL_TONE: y=',y,on_off,tone
+                #print('DIRECT GET_PL_TONE: y=',y,on_off,tone)
                 return tone
             
         else:
@@ -489,29 +495,29 @@ class direct_connect:
             if tone==0:
                 cmd = self.civ.icom_form_command([0x16,0x42,0x0])         # Turn off tone
                 buf = self.get_response(cmd)
-                #print 'DIRECT SET_PL_TONE: buf=',buf
+                #print('DIRECT SET_PL_TONE: buf=',buf)
             else:
                 cmd = self.civ.icom_form_command([0x16,0x42,0x1])         # Turn on tone
-                #print 'DIRECT SET_PL_TONE: cmd =',show_hex(cmd)
+                #print('DIRECT SET_PL_TONE: cmd =',show_hex(cmd))
                 buf = self.get_response(cmd)
-                #print 'DIRECT SET_PL_TONE: buf=',show_hex(buf)
+                #print('DIRECT SET_PL_TONE: buf=',show_hex(buf))
 
                 bcd = int2bcd(10*tone,2,1)
-                #print 'DIRECT SET_PL_TONE: bcd=',show_hex(bcd),tone
+                #print('DIRECT SET_PL_TONE: bcd=',show_hex(bcd),tone)
                 cmd = self.civ.icom_form_command([0x1b,0x0]+bcd)          # Set tone freq
-                #print 'DIRECT SET_PL_TONE: cmd =',show_hex(cmd)
+                #print('DIRECT SET_PL_TONE: cmd =',show_hex(cmd))
                 buf = self.get_response(cmd)
-                #print 'DIRECT SET_PL_TONE: buf=',show_hex(buf)
+                #print('DIRECT SET_PL_TONE: buf=',show_hex(buf))
             
         else:
             if tone==0:
                 buf = self.get_response('CT00;')
-                #print 'DIRECT SET_PL_TONE: CT buf=',buf
+                #print('DIRECT SET_PL_TONE: CT buf=',buf)
             else:
                 p3 = str( np.where(PL_TONES==tone)[0][0] ).zfill(3)
                 cmd='CN00'+p3+';CT02;'
                 buf = self.get_response(cmd)
-                #print 'DIRECT SET_PL_TONE: CT buf=',buf
+                #print('DIRECT SET_PL_TONE: CT buf=',buf)
                 
                 
     
@@ -628,7 +634,7 @@ class direct_connect:
             buf = self.get_response(cmd)
         elif self.rig_type2=='FT991a':
             #if VFO!='A':
-            #    print 'DIRECT SET_MODE:',mode,VFO,' ********* Only VFO=A is supported for now ********'
+            #    print('DIRECT SET_MODE:',mode,VFO,' ********* Only VFO=A is supported for now ********'
             if VFO=='A':
                 self.send('MD'+c+';')
             else:
@@ -639,7 +645,7 @@ class direct_connect:
             self.send('FR4;MD'+c+';')
             time.sleep(DELAY)
             self.send('FR0;')
-        #print 'SET_MODE:',buf
+        #print('SET_MODE:',buf)
 
     # Function to set active VFO
     def select_vfo(self,VFO):
@@ -882,7 +888,7 @@ class direct_connect:
             cmd = self.civ.icom_form_command(0x04)   
             buf = self.get_response(cmd)
             y   = self.civ.icom_response(cmd,buf)
-            #print 'y=',y
+            #print('y=',y)
             mode = Icom_Decode_Mode( y[0] )
             return mode
         elif self.rig_type2=='FT991a':

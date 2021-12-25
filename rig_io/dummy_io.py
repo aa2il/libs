@@ -50,11 +50,11 @@ class no_connect:
         self.port=port
         self.rig_type   = None
         self.rig_type1  = None
-        self.rig_type2  = None
+        self.rig_type2  = 'None'
         self.tlast      = None
 
     def get_band(self,frq=None,VFO='A'):
-        if frq<0:
+        if frq==None or frq<0:
             band=None
         elif frq<1.7:
             band='MW'

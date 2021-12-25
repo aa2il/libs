@@ -94,7 +94,8 @@ def find_fldigi_port(host,start,end,tag,required=True):
 def open_rig_connection(connection,host=0,port=0,baud=0,tag='',
                         required=True,rig=None,force=False):
 
-    print('\n*** OPEN_RIG_CONNECTION:',connection,rig,host,port,tag,'...')
+    print('SOCKET_IO: OPEN_RIG_CONNECTION: connection=',connection,'\trig=',rig, \
+          '\thost=',host,'\tport=',port,'\ttag=',tag,'...')
     if connection=='NONE':
         return no_connect(host,port)
 
