@@ -92,10 +92,12 @@ def find_fldigi_port(host,start,end,tag,required=True):
 
 # Top-level routine to open the connection
 def open_rig_connection(connection,host=0,port=0,baud=0,tag='',
-                        required=True,rig=None,force=False):
+                        required=True,rig=None,force=False,quiet=False):
 
-    print('SOCKET_IO: OPEN_RIG_CONNECTION: connection=',connection,'\trig=',rig, \
-          '\thost=',host,'\tport=',port,'\ttag=',tag,'...')
+    if not quiet:
+        print('SOCKET_IO: OPEN_RIG_CONNECTION: connection=',connection,'\trig=',rig, \
+              '\thost=',host,'\tport=',port,'\ttag=',tag,'...')
+        
     if connection=='NONE':
         return no_connect(host,port)
 
@@ -113,6 +115,7 @@ def open_rig_connection(connection,host=0,port=0,baud=0,tag='',
                 sys,exit(0)
 
         else:
+            
             # Use xlmrpc server in FLRIG
             if port==0:
                 port = 12345;

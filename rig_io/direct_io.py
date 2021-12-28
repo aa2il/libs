@@ -816,8 +816,13 @@ class direct_connect:
 
 
     def set_filter(self,filt):
+        #VERBOSITY=1
+        if not type(filt) is list:
+            filt=[filt]
+        
         if VERBOSITY>0:
-            print('DIRECT SET_FILTER:',filt)
+            print('DIRECT SET_FILTER:',filt,len(filt))
+            
         if self.rig_type=='Kenwood':
             c1 = modes[filt[0]]["Filter3"]
             c2 = modes[filt[1]]["Filter3"]
@@ -840,24 +845,25 @@ class direct_connect:
             else:
                 cmd='NA01;'
             buf = self.get_response('BY;'+cmd)
-            #print('DIRECT SET_FILTERS: cmd=',cmd,' - buf=',buf)
-                
-            filt[1]=filt[1].replace(' Hz','')
-            #print('DIRECT SET_FILTER:',filt[1])
+            if VERBOSITY>0:
+                print('DIRECT SET_FILTERS: cmd=',cmd,' - buf=',buf)
 
+            if len(self.mode)==0:
+                self.mode=self.get_mode()
             m=self.mode
-            #print('Mode=',m,filt[0])
-            if m=='RTTY' or m=='PKTUSB':
+            if VERBOSITY>0:
+                print('DIRECT SET_FILTER: Mode=',m,filt[0])
+            if m in ['RTTY','PKTUSB','PSK-U']:
                 if filt[0]=='Wide':                    
                     filts=FT991A_DATA_FILTERS2
                 else:
                     filts=FT991A_DATA_FILTERS1
-            elif m=='USB' or m=='LSB':
+            elif m in ['USB','LSB']:
                 if filt[0]=='Wide':                    
                     filts=FT991A_SSB_FILTERS2
                 else:
                     filts=FT991A_SSB_FILTERS1
-            elif m=='CW':
+            elif m in ['CW','CW-R','CWR']:
                 if filt[0]=='Wide':                    
                     filts=FT991A_CW_FILTERS2
                 else:
@@ -866,13 +872,24 @@ class direct_connect:
                 print('DIRECT SET_FILTER - Unknown mode',m)
                 sys,exit(0)
 
-            #print(filts)
+
+            if len(filt)==1:
+                if filt[0]=='Wide':
+                    filt.append( max(filts) )
+                else:
+                    filt.append( min(filts) )
+            else:
+                filt[1]=filt[1].replace(' Hz','')
+            if VERBOSITY>0:
+                print('DIRECT SET_FILTER: filt1=',filt[1])
+                
+            if VERBOSITY>0:
+                print('DIRECT SET_FILTER: filts=',filts)
             idx=filts.index(int(filt[1]))
-            #print(idx)
             cmd='BY;SH'+str(idx).zfill(3)+';'
-            #print('cmd=',cmd)
             buf = self.get_response(cmd)
-            #print('buf=',buf)
+            if VERBOSITY>0:
+                print('DIRECT SET_FILTER: idx=',idx,'\tcmd=',cmd,'\tbuf=',buf)
             
         return False
 
@@ -1679,11 +1696,11 @@ class direct_connect:
             return 0
     
         
-    # Function to set monitor level
+    # Function to set monitor level and turn on the monitor
     def set_monitor_gain(self,gain):
         if VERBOSITY>0:
             print('DIRECT_IO - SET_MONITOR_GAIN: gain=',gain)
-        cmd  = 'ML1'+str(gain).zfill(3)+';'
+        cmd  = 'ML1'+str(gain).zfill(3)+';ML0001;'
         buf=self.get_response(cmd)
         if VERBOSITY>0:
             print('HAMLIB_IO - SET_MONITOR_GAIN: cmd=',cmd,'\tbuf=',buf)

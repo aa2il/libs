@@ -48,8 +48,6 @@ VERBOSITY=0
 
 class fldigi_xlmrpc(direct_connect):
     def __init__(self,host,port,tag='',MAX_TRYS=10):
-        #        parent.title("Rig Control via FLDIGI")
-        #        print "Rig Control via FLDIGI"
 
         if host==0:
             # HOST = 'localhost'
@@ -116,13 +114,15 @@ class fldigi_xlmrpc(direct_connect):
                 # Look for flrig
                 info = self.s.rig.get_info()
                 self.version = 'flrig'
-                print("Connected to flrig")
                 self.flrig_active=True
                 self.connection = 'FLRIG'
                 self.rig_type   = 'FLRIG'
+                if tag=='PROBE':
+                    return
 
                 # Probe FLRIG interface
                 self.flrig()
+                print("Connected to flrig")
             except:
                 print(tag,": Unable to open FLDIGI/FLRIG")
 
