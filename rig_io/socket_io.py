@@ -307,7 +307,7 @@ def get_status(self):
             pass
         print('Get Status:',frq,mode,ant)
         
-    elif s.rig_type=='Kenwood':
+    elif s.rig_type1=='Kenwood':
         # The Kenwood command set is similar to Yaesu's but not as flush
         buf=self.sock.get_response("IF;",True)
         buf = strip_garbage(buf,'IF')
@@ -316,7 +316,7 @@ def get_status(self):
         mode = Decode_Mode(buf[29])
         ant = 1
 
-    elif s.rig_type=='Icom':
+    elif s.rig_type1=='Icom':
         # Icom's commands are quite different
         #print 'ICOM;;;;;;;;;'
         frq  = s.get_freq() * 1e-3
@@ -449,7 +449,7 @@ def SetVFO(self,cmd):
 def ClarReset(self):
     if VERBOSITY>0:
         print('Clarifier reset ...')
-    if self.sock.rig_type=='Kenwood' or self.sock.rig_type=='Icom':
+    if self.sock.rig_type1=='Kenwood' or self.sock.rig_type1=='Icom':
         print('CLARIFIER RESET not available in',self.sock.rig_type,'command set')
         return
     if self.sock.rig_type=='Hamlib' and True:
@@ -478,7 +478,7 @@ def GetInfo(self):
     if VERBOSITY>0:
         print('GetInfo ...')
 
-    if self.sock.rig_type=='Kenwood' or self.sock.rig_type=='Icom' or \
+    if self.sock.rig_type1=='Kenwood' or self.sock.rig_type1=='Icom' or \
        self.sock.rig_type=='Hamlib' or self.sock.rig_type=='FLDIGI' or \
        self.sock.rig_type=='FLRIG':
         print('GET INFO not (yet) fully implemented for rig type', \
@@ -576,7 +576,7 @@ def SelectBand(self,b=None,m=None,df=0):
 
     print("%%%%%%%%%% Select band: Setting band ... b=",b,"  m=",m,"  df=",df,"%%%%%%%%",s.rig_type)
     
-    if s.rig_type=='Kenwood' or s.rig_type=='Icom' or s.rig_type=='Hamlib':
+    if s.rig_type1=='Kenwood' or s.rig_type1=='Icom' or s.rig_type=='Hamlib':
         # The TS850 command set does not have a band select so we fake it by setting a freq
         # Likewise, our implementation of hamlib is limited.
         if True:
@@ -668,7 +668,7 @@ def SelectMode(self,b=None,m=None):
     elif m=='':
         m = s.get_mode()
 
-    if self.sock.rig_type=='Hamlib' or self.sock.rig_type=='Icom':
+    if self.sock.rig_type=='Hamlib' or self.sock.rig_type1=='Icom':
         split=self.sock.split_mode(-1)
         print("\n=-=-=- Select Mode:",b,m,self.sock.connection,'\tSplit=',split)
         if split:
@@ -697,7 +697,7 @@ def SelectMode(self,b=None,m=None):
         else:
             print('USB')
 
-    if s.rig_type=='Kenwood':
+    if s.rig_type1=='Kenwood':
         cmd  = 'MD'+c[1]+';'
     else:
         cmd  = 'BY;MD'+c+';'
@@ -819,7 +819,7 @@ def set_tx_pwr(self,tx_pwr=None):
         tx_pwr = self.tx_pwr
     print(("SET_TX_PWR: Setting TX Power %s " % tx_pwr))
 
-    if s.rig_type=='Kenwood' or s.rig_type=='Icom':
+    if s.rig_type1=='Kenwood' or s.rig_type1=='Icom':
         print('SET_TX_POWER not available in',s.rig_type,s.rig_type2,'command set')
         return
     
@@ -841,8 +841,7 @@ def set_tx_pwr(self,tx_pwr=None):
     
 def set_mic_gain(self,gain=None):
     s = self.sock
-    #if s.rig_type=='Kenwood' or s.rig_type=='Icom' or s.rig_type=='Hamlib':
-    if s.rig_type=='Kenwood' or s.rig_type=='Icom' or \
+    if s.rig_type1=='Kenwood' or s.rig_type1=='Icom' or \
        (s.rig_type=='Hamlib' and s.rig_type2!='FTdx3000' and s.rig_type2!='FT991a'):
         print('SET_MIC_GAIN not available in',s.rig_type,s.rig_type2,'command set')
         return
@@ -876,7 +875,7 @@ def set_mic_gain(self,gain=None):
     
 def set_mon_level(self,gain=None):
     s = self.sock
-    if s.rig_type=='Kenwood' or s.rig_type=='Icom':
+    if s.rig_type1=='Kenwood' or s.rig_type1=='Icom':
         print('SET_MON_LEVEL not available in',s.rig_type,s.rig_type2,'command set')
         return
     if not gain:
@@ -898,7 +897,7 @@ def set_mon_level(self,gain=None):
 def read_monitor_level(self):
     s = self.sock
     self.mon_level=0
-    if s.rig_type=='Kenwood' or s.rig_type=='Icom':
+    if s.rig_type1=='Kenwood' or s.rig_type1=='Icom':
         print('READ_MONITOR_LEVEL not available in',s.rig_type,s.rig_type2,'command set')
         return self.mon_level
 
@@ -936,8 +935,9 @@ def read_monitor_level(self):
 def read_tx_pwr(self):
     self.tx_pwr = 0
     s = self.sock
-    if s.rig_type2=='TS850' or s.rig_type=='Icom':
-        print('SOCKET_IO: READ_TX_PWR not available in',s.rig_type,'command set')
+    if s.rig_type2=='TS850' or s.rig_type1=='Icom':
+        print('SOCKET_IO: READ_TX_PWR not available in',s.rig_type1,s.rig_type2,
+              'command set')
         return self.tx_pwr
 
     print("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& Reading TX Power ...")
@@ -970,10 +970,8 @@ def read_tx_pwr(self):
 def read_mic_gain(self):
     s = self.sock
     self.gain=0
-    #if s.rig_type=='Kenwood' or s.rig_type=='Icom' or s.rig_type=='Hamlib':
-    if s.rig_type=='Kenwood' or s.rig_type=='Icom' or \
+    if s.rig_type1=='Kenwood' or s.rig_type1=='Icom' or \
        (s.rig_type=='Hamlib' and s.rig_type2!='FTdx3000' and s.rig_type2!='FT991a'):
-    #if s.rig_type=='Kenwood' or s.rig_type=='Icom':
         print('READ_MIC_GAIN not available in',s.rig_type,s.rig_type2,'command set')
         return self.gain
 

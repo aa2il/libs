@@ -96,6 +96,7 @@ class fldigi_xlmrpc(direct_connect):
         # Get version info
         try:
             # Look for fldigi
+            print('Looking for FLDIGI ...')
             self.version = self.s.fldigi.version()
             self.v4 = int( self.version.split('.')[0] ) >=4
             print("fldigi version: ",self.version,self.v4)
@@ -112,6 +113,7 @@ class fldigi_xlmrpc(direct_connect):
 
             try:
                 # Look for flrig
+                print('Looking for FLRIG ...')
                 info = self.s.rig.get_info()
                 self.version = 'flrig'
                 self.flrig_active=True
@@ -123,7 +125,8 @@ class fldigi_xlmrpc(direct_connect):
                 # Probe FLRIG interface
                 self.flrig()
                 print("Connected to flrig")
-            except:
+            except Exception as e: 
+                print( str(e) )
                 print(tag,": Unable to open FLDIGI/FLRIG")
 
         # Determine which rig is on the other end
@@ -249,8 +252,8 @@ class fldigi_xlmrpc(direct_connect):
         for m in methods:
             print(m['name'],'\t',m)
 
-        if True:
-            print("\nRig info: ",self.s.rig.get_info())
+        print("\nRig info: ",self.s.rig.get_info())
+        if self.fldigi_active:
             print("FA:   ",self.s.rig.send_command("FA;"))
             print("FB:   ",self.s.rig.send_command("FB;"))
             print("FB:   ",self.s.rig.send_command("FB14080000;"))
@@ -455,6 +458,7 @@ class fldigi_xlmrpc(direct_connect):
             if rx:
                 try:
                     self.s.rig.set_AB(rx)
+                    time.sleep(DELAY)
                 except Exception as e: 
                     print('***ERROR *** FLDIGI_IO - SET_VFO - Problem setting RX vfo:',rx,tx)
                     print(e)
@@ -467,6 +471,7 @@ class fldigi_xlmrpc(direct_connect):
                 else:
                     opt=1
                 self.s.rig.set_split(opt)
+                time.sleep(DELAY)
 
         else:
             # Dummied up for now
@@ -745,20 +750,45 @@ class fldigi_xlmrpc(direct_connect):
         if self.flrig_active and True:
 
             # Need to test this pathway out but it shows promise
-            print('FLDIGI_IO PTT - Using flrig - on/off, vfo=:',\
-                  on_off,VFO)
+            print('FLDIGI_IO PTT - Using flrig - on/off=',on_off, \
+                  '\tvfo=',VFO)
             self.lock.acquire()
             if on_off:
                 # Need to set both TX&RX VFOs to get ant correct if
                 # monitoring different bands
-                self.s.rig.set_verify_AB(VFO)
-                #self.s.rig.set_split(1)          # Doesn't work
-                time.sleep(DELAY)
+                ntries=0
+                while ntries<5:
+                    ntries+=1
+                    self.s.rig.set_verify_AB(VFO)
+                    #self.s.rig.set_split(1)          # Doesn't work
+                    time.sleep(DELAY)
+                
+                    vfo2=self.get_vfo()
+                    if vfo2!=VFO:
+                        print('FLDIGI PTT - Houston, we have a problem!',VFO,vfo2,ntries)
+                    else:
+                        break
+                    
                 self.s.rig.set_ptt(1)
+                
             else:
+                
                 self.s.rig.set_ptt(0)
-                self.s.rig.set_verify_AB('A')
-                #self.s.rig.set_split(0)
+                time.sleep(DELAY)
+                
+                ntries=0
+                while ntries<5:
+                    ntries+=1
+                    self.s.rig.set_verify_AB('A')
+                    #self.s.rig.set_split(0)
+                    time.sleep(DELAY)
+                
+                    vfo2=self.get_vfo()
+                    if vfo2!='A':
+                        print('FLDIGI PTT - Houston, we have another problem!','A',vfo2)
+                    else:
+                        break
+                    
             self.lock.release()
             
         elif VFO=='A':
@@ -825,18 +855,6 @@ class fldigi_xlmrpc(direct_connect):
             return -1
             
 
-    # Function to effect pressing of TUNE button
-    def tuner(self,opt):
-        if VERBOSITY>0:
-            print('FLDIGI_IO - TUNER - Not available: opt=',opt)
-        return 0
-
-        #if opt==-1:
-        #elif opt==0 or opt==1:
-        #elif opt==2:
-        #else:
-        #    print('HAMLIB TUNER - Invalid option:',opt)
-
     def mic_setting(self,m,iopt,src=None,lvl=None,prt=None):
         if VERBOSITY>0:
             print('FLDIGI_IO MIC_SETTING:',iopt,src,lvl,prt)
@@ -875,7 +893,7 @@ class fldigi_xlmrpc(direct_connect):
         
         #print('buf=',buf)
         self.lock.release()
-        return buf
+        return int(buf)
             
 
 ################################################################################################

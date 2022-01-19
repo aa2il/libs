@@ -96,6 +96,7 @@ def try_port(port,baud,verbosity):
                             print('TRY_PORT: No Good')
                     else:
                         self.rig_type  = 'Icom'
+                        self.rig_type1 = 'Icom'
                         self.rig_type2 = 'IC9700'
                         self.lock      = threading.Lock() 
                         if verbosity>=1:
@@ -157,11 +158,36 @@ def try_rig(self,type1,type2,port,baud):
         else:
             TimeOut=0.1
 
-        print('\nTRY_RIG: Trying %s %s\nport=%s\tbaud=%d ...' %
+        print('\nTRY_RIG: Trying %s %s\nport=%s\nbaud=%d ...' %
               (type1,type2,port,baud) )
+
+        # Attempting to reest usb device - not working yet
+        if False:
+            print('Hey 11')
+            fp0 = open(port, 'r', os.O_WRONLY)
+            print('Hey 22')
+            fcntl.ioctl(fp0, USBDEVFS_RESET, 0)
+            print('Hey 33')
+
+        # This doesn't d it either
+        if False:
+            print('Hey 11')
+            import termios
+            print('Hey 22')
+            port = '/dev/ttyUSB0'
+            f = open(port)
+            print('Hey 33')
+            attrs = termios.tcgetattr(f)
+            attrs[2] = attrs[2] & ~termios.HUPCL
+            print('Hey 44')
+            termios.tcsetattr(f, termios.TCSAFLUSH, attrs)
+            print('Hey 55')
+            f.close()
+            print('Hey 66')
             
         self.s = serial.Serial(port,baud,timeout=TimeOut)
         self.rig_type  = type1
+        self.rig_type1  = type1
         self.rig_type2 = type2
 
         if type1=='Icom':
@@ -190,8 +216,8 @@ def try_rig(self,type1,type2,port,baud):
                 print("See comments at top of icom_io.py for necessary settings")
 
     except Exception as e: 
+        print("\n... Can't find %s %s ..." % (type1,type2))
         print(e)
-        print("... Can't find %s %s ..." % (type1,type2))
         if self.lock.locked():
             self.lock.release()      # Still might have lock if bombed in get_freq
 
@@ -294,7 +320,7 @@ class direct_connect:
                 print('DIRECT INIT - put test here!')
                 return
 
-            if self.rig_type=='Icom':
+            if self.rig_type1=='Icom':
 
                 # Read freq
                 freq = self.get_freq()
@@ -349,7 +375,7 @@ class direct_connect:
 
     def get_response(self,cmd,wait=False):
         if VERBOSITY>0:
-            if self.rig_type=='Icom':
+            if self.rig_type1=='Icom':
                 print('DIRECT GET RESPONSE cmd=',show_hex(cmd))
             else:
                 print('DIRECT GET RESPONSE cmd=',cmd)
@@ -362,12 +388,12 @@ class direct_connect:
         #print('GET_RESPONSE: cmd=',cmd)
         #print('cmd=',' '.join(show_hex(cmd)))
 
-        if self.rig_type=='Icom':
+        if self.rig_type1=='Icom':
             txt=' '.join( show_hex(cmd) )
         else:
             txt=str(cmd)
         self.check_port('GET_RESPONSE:  writing '+txt,True)
-        if self.rig_type=='Icom':
+        if self.rig_type1=='Icom':
             cnt=self.s.write(cmd)
             self.s.flush()
             x=self.s.read(1024)
@@ -430,7 +456,7 @@ class direct_connect:
             print('GET_PLtone: Function not yet implemented for Kenwood rigs')
             return 0
             
-        elif self.rig_type=='Icom':
+        elif self.rig_type1=='Icom':
             cmd = self.civ.icom_form_command([0x16,0x42])                 # See if tone is on or off
             x   = self.get_response(cmd)
             y   = self.civ.icom_response(cmd,x)                        
@@ -491,7 +517,7 @@ class direct_connect:
             print('SET_PLtone: Function not yet implemented for Kenwood rigs')
             return 0
 
-        elif self.rig_type=='Icom':
+        elif self.rig_type1=='Icom':
             if tone==0:
                 cmd = self.civ.icom_form_command([0x16,0x42,0x0])         # Turn off tone
                 buf = self.get_response(cmd)
@@ -526,7 +552,7 @@ class direct_connect:
         if VERBOSITY>0:
             print('DIRECT Get Freq - vfo=',VFO,'...')
             
-        if self.rig_type=='Icom':
+        if self.rig_type1=='Icom':
             #vfo=self.get_vfo()
             #print('vfo=',vfo)
             self.select_vfo(VFO)          # Not sure why this was here
@@ -574,7 +600,7 @@ class direct_connect:
         frq=int(frq_KHz*1000)
         if self.rig_type=='Kenwood':
             cmd = 'FA'+str(frq).zfill(11)+';'           # Tune to lower sub-band edge
-        elif self.rig_type=='Icom':
+        elif self.rig_type1=='Icom':
             self.select_vfo(VFO)
             if self.rig_type2=='IC706':
                 y2  = int2bcd(frq,5)
@@ -593,7 +619,7 @@ class direct_connect:
         if VERBOSITY>0:
             print('SET_FREQ: cmd=',cmd)
             print('SET_FREQ: buf=',buf)
-            if self.rig_type=='Icom':
+            if self.rig_type1=='Icom':
                 print('buf=',show_hex(buf))
                 y=self.civ.icom_response(cmd,buf)
                 print('y=',y)
@@ -625,7 +651,7 @@ class direct_connect:
             self.send('MD'+c[1]+';')
             if VFO!='A':
                 print('DIRECT SET_MODE:',mode,VFO,' ********* Only VFO=A is supported for now ********')
-        elif self.rig_type=='Icom':
+        elif self.rig_type1=='Icom':
             #print('DIRECT SET_MODE Icom',VFO)
             self.select_vfo(VFO)
             c = icom_modes[mode]["Code"]
@@ -653,7 +679,7 @@ class direct_connect:
         if VERBOSITY>0:
             print('DIRECT SELECT_VFO:',VFO,self.rig_type,self.rig_type1)
             
-        if self.rig_type=='Icom' or  self.rig_type1=='Icom':
+        if self.rig_type1=='Icom':
             if VFO=='A':
                 sub=0x00
                 sub=0xD0            # Use Main, not VFO A
@@ -685,7 +711,7 @@ class direct_connect:
         #VERBOSITY=1
         if VERBOSITY>0:
             print('DIRECT SET_VFO:',rx,tx)
-        if self.rig_type=='Icom':
+        if self.rig_type1=='Icom':
             
             print('DIRECT SET_VFO Command not yet implemented for ICOM rigs')
             return
@@ -736,12 +762,11 @@ class direct_connect:
         if VERBOSITY>0:
             print('\nDIRECT GET_VFO...')
             
-        #if self.rig_type=='Kenwood' or self.rig_type=='Icom':
-        if self.rig_type=='Kenwood':
+        if self.rig_type1=='Kenwood':
             print('GET_VFO not available yet for',self.rig_type,self.rig_type2,' - need some more code')
             return 'AA'
 
-        elif self.rig_type=='Icom':
+        elif self.rig_type1=='Icom':
             print('GET_VFO not available yet for',self.rig_type,self.rig_type2,' - need some more code')
             return 'AA'
 
@@ -785,9 +810,7 @@ class direct_connect:
         if VERBOSITY>0 or False:
             print('DIRECT GET_FILTERS:')
             
-        #if self.rig_type=='Icom' or self.rig_type=='Hamlib':
-        #    print('DIRECT_IO: Get Filters - not yet supported for Icom Rigs or Hamlib')
-        if self.rig_type=='Icom' or self.rig_type2=='IC9700' or self.rig_type2=='IC706' or \
+        if self.rig_type1=='Icom' or self.rig_type2=='IC9700' or self.rig_type2=='IC706' or \
            self.rig_type2=='Dummy':
             print('DIRECT_IO: Get Filters - not yet supported for Icom Rigs')
             return [None,None]
@@ -853,7 +876,7 @@ class direct_connect:
             m=self.mode
             if VERBOSITY>0:
                 print('DIRECT SET_FILTER: Mode=',m,filt[0])
-            if m in ['RTTY','PKTUSB','PSK-U']:
+            if m in ['RTTY','PKTUSB','PSK-U','DATA-U']:
                 if filt[0]=='Wide':                    
                     filts=FT991A_DATA_FILTERS2
                 else:
@@ -901,7 +924,7 @@ class direct_connect:
         if self.rig_type=='Kenwood':
             cmd = 'IF;'
             idx = 29
-        elif self.rig_type=='Icom':
+        elif self.rig_type1=='Icom':
             cmd = self.civ.icom_form_command(0x04)   
             buf = self.get_response(cmd)
             y   = self.civ.icom_response(cmd,buf)
@@ -1003,7 +1026,7 @@ class direct_connect:
         if VERBOSITY>0:
             print('DIRECT SET_POWER: p=',p)
 
-        if self.rig_type=='Kenwood' or self.rig_type=='Icom':
+        if self.rig_type1=='Kenwood' or self.rig_type1=='Icom':
             print('DIRECT_IO: SET_POWER not support yet for Kenwood/Icom rigs')
             return 0            
             
@@ -1015,7 +1038,7 @@ class direct_connect:
         if VERBOSITY>0:
             print('DIRECT SET_BAND: band=',b)
             
-        if self.rig_type=='Kenwood' or self.rig_type=='Icom':
+        if self.rig_type1=='Kenwood' or self.rig_type1=='Icom':
             print('DIRECT_IO: SET_BAND not support yet for Kenwood/Icom rigs')
             return 0            
                         
@@ -1102,18 +1125,20 @@ class direct_connect:
 
     # Function to effect pressing of TUNE button
     def tuner(self,opt):
+        #VERBOSITY=1
         if VERBOSITY>0:
             print('DIRECT TUNER:',opt)
-        if self.rig_type=='Kenwood' or self.rig_type=='Icom':
+        if self.rig_type1=='Kenwood' or self.rig_type1=='Icom':
             print('DIRECT_IO: TUNER not support yet for Kenwood/Icom rigs')
             return 0
             
         if opt==-1:
             buf=self.get_response('AC;')
-            print('TUNER: buf=',buf)
+            print('DIRECT TUNER: buf=',buf)
             return int(buf[4])
         elif opt>=0 and opt<=2:
             buf=self.get_response('BY;AC00'+str(opt)+';')
+            print('DIRECT TUNER: buf=',buf)
         else:
             print('DIRECT TUNER - Invalid option:',opt)
 
@@ -1457,36 +1482,36 @@ class direct_connect:
             x=self.get_response(cmd)
             y=self.civ.icom_response(cmd,x)
             if VERBOSITY>0:
-                print('Full QSK: cmd=',show_hex(cmd))
+                print('DIRECT INIT_KEYER: Full QSK: cmd=',show_hex(cmd))
                 print('x=',x)
-            print('y=',y)
+                print('y=',y)
 
             # Turn off DTR for SEND
             cmd =  self.civ.icom_form_command([0x1a,0x05,0x01,0x20,0x00])  
             x=self.get_response(cmd)
             y=self.civ.icom_response(cmd,x)
             if VERBOSITY>0:
-                print('DTR off SEND: cmd=',show_hex(cmd))
+                print('DIRECT INIT_KEYER: DTR off SEND: cmd=',show_hex(cmd))
                 print('x=',x)
-            print('y=',y)
+                print('y=',y)
             
             # Turn on DTR for CW
             cmd =  self.civ.icom_form_command([0x1a,0x05,0x01,0x21,0x03])  
             x=self.get_response(cmd)
             y=self.civ.icom_response(cmd,x)
             if VERBOSITY>0:
-                print('DTR on CW: cmd=',show_hex(cmd))
+                print('DIRECT INIT_KEYER: DTR on CW: cmd=',show_hex(cmd))
                 print('x=',x)
-            print('y=',y)
+                print('y=',y)
 
             # Turn off DTR for RTTY
             cmd =  self.civ.icom_form_command([0x1a,0x05,0x01,0x22,0x00])  
             x=self.get_response(cmd)
             y=self.civ.icom_response(cmd,x)
             if VERBOSITY>0:
-                print('DTR off RTTY: cmd=',show_hex(cmd))
+                print('DIRECT INIT_KEYER: DTR off RTTY: cmd=',show_hex(cmd))
                 print('x=',x)
-            print('y=',y)            
+                print('y=',y)            
             
         else:
 
@@ -1519,15 +1544,20 @@ class direct_connect:
             y=self.civ.icom_response(cmd,x)
 
             # The 9700 uses a goofy mapping:  0000->6wpm through 0255->48wpm
-            val=bcd2int(y[1:],1)
-            wpm=int( (48.-6.)/(255.-0)*val + 6 +0.5 )
+            try:
+                val=bcd2int(y[1:],1)
+                wpm=int( (48.-6.)/(255.-0)*val + 6 +0.5 )
+            except Exception as e: 
+                print(e)
+                print('DIRECT READ_SPEED: Problem reading Rig CW Speed')
+                wpm=0
 
-            if VERBOSITY>0:
-                print('READ SPEED: cmd=',show_hex(cmd))
+                #if VERBOSITY>0:
+                print('DIRECT READ SPEED: cmd=',show_hex(cmd))
                 print('x=',x)
-                print('y=',y,val,wpm )
+                print('y=',y)    # ,val,wpm )
 
-        elif self.rig_type=='Kenwood':
+        elif self.rig_type1=='Kenwood':
             print('DIRECT_IO - READ_SPEED - Not supported on Kenwood rigs')
             wpm=0
             
@@ -1539,7 +1569,7 @@ class direct_connect:
     # Set sub-dial function on Yaesu rigs
     def set_sub_dial(self,func='CLAR'):
 
-        if self.rig_type=='Kenwood' or self.rig_type=='Icom':
+        if self.rig_type1=='Kenwood' or self.rig_type1=='Icom':
             print('DIRECT_IO: SET_SUB_DIAL not support yet for Kenwood/Icom rigs')
             return 0            
             
@@ -1589,11 +1619,12 @@ class direct_connect:
             
 
     def read_meter(self,meter):
+        #VERBOSITY=1
+        if VERBOSITY>0:
+            print('DIRECT READ_METER ...',meter)
 
         idx=3
-        #if self.rig_type=='Icom' or  self.rig_type=='Hamlib':
-        #    print('DIRECT_IO: Read meter not support yet for Icom or Hamlib rigs')
-        if self.rig_type=='Icom' or  self.rig_type2=='Dummy':
+        if self.rig_type1=='Icom' or  self.rig_type2=='Dummy':
             print('DIRECT_IO: Read meter not support yet for Icom rigs')
             return 0
             
@@ -1641,10 +1672,12 @@ class direct_connect:
 
             sc=1.
                 
-        #print('cmd=',cmd,len(cmd))
+        if VERBOSITY>0:
+            print('DIRECT READ_METER cmd=',cmd,len(cmd))
         buf = self.get_response(cmd,True)
-        print('buf=',buf)
-        #print('buf=',buf[idx:-1])
+        if VERBOSITY>0:
+            print('DIRECT READ_METER buf=',buf)
+            #print('buf=',buf[idx:-1])
         meter = sc*int(buf[idx:-1])
         return meter
             
@@ -1655,7 +1688,7 @@ class direct_connect:
         if VERBOSITY>0:
             print('DIRECT RIT:',opt,df,VFO)
             
-        if self.rig_type=='Kenwood' or self.rig_type=='Icom':
+        if self.rig_type1=='Kenwood' or self.rig_type1=='Icom':
             print('SET_PLtone: Function not yet implemented for Kenwood and Icom rigs')
             return 0
 
