@@ -1682,6 +1682,82 @@ class direct_connect:
         return meter
             
 
+    # Function to control front-end reamp & attenuator
+    def frontend(self,opt,pamp=0,atten=0):
+        VERBOSITY=1
+        if VERBOSITY>0:
+            print('DIRECT FRONTEND:',opt,pamp,atten)
+            
+        if self.rig_type1=='Kenwood':     #  or self.rig_type1=='Icom':
+            print('FRONTEND: Function not yet implemented for Kenwood rigs')
+            return [0,0]
+
+        elif self.rig_type1=='Icom':
+
+            # Icom - assumes IC9700
+            if opt==0:
+                # Read current settings - need to test this
+                cmd = self.civ.icom_form_command([0x16,0x02])            # Pre-map
+                x   = self.get_response(cmd)
+                y   = self.civ.icom_response(cmd,x)                        
+                #print('DIRECT GET_PL_TONE: cmd =',show_hex(cmd))
+                on_off1 = int(y[1],16)
+                #print('DIRECT GET_PL_TONE: y   =',y,on_off)
+
+                cmd = self.civ.icom_form_command([0x11])            # Attenautor
+                x   = self.get_response(cmd)
+                y   = self.civ.icom_response(cmd,x)                        
+                #print('DIRECT GET_PL_TONE: cmd =',show_hex(cmd))
+                on_off2 = int(y[1],16)
+                #print('DIRECT GET_PL_TONE: y   =',y,on_off)
+
+                return [on_off1,on_off2]
+
+            elif opt==1:
+                
+                # Set pre-amp and/or attenator
+                if pamp in [0,1]:
+                    cmd = self.civ.icom_form_command([0x16,0x02,pamp])            # Pre-map
+                    x   = self.get_response(cmd)
+                    y   = self.civ.icom_response(cmd,x)                        
+                if atten in [0,1]:         
+                    cmd = self.civ.icom_form_command([0x11,atten*0x10])            # Atten
+                    x   = self.get_response(cmd)
+                    y   = self.civ.icom_response(cmd,x)                        
+
+            else:
+                print('DIRECT FRONTEND: Unknown option',opt)
+            
+
+            
+        else:
+
+            # Assumes Yaesu
+            if opt==0:
+                # Read current settings - need to test this
+                buf1=self.get_response('PA0;')
+                buf2=self.get_response('RA0;')
+                return [buf1,buf2]
+
+            elif opt==1:
+                # Build command to set pre-amp and/or attenator
+                cmd='BY;'
+                if pamp in [0,1,2]:
+                    cmd = cmd+'PA0'+str(pamp)+';'
+                if atten in [0,1,2,3]:         
+                    cmd = cmd+'RA0'+str(atten)+';'
+
+                # Do it
+                buf=self.get_response(cmd)
+                if VERBOSITY>0:
+                    print('DIRECT FRONTEND: cmd=',cmd,'\nresponse=',buf)
+                
+            else:
+                print('DIRECT FRONTEND: Unknown option',opt)
+            
+
+        
+    
     # Function to control RIT
     def rit(self,opt,df=0,VFO='A'):
         #VERBOSITY=1

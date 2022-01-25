@@ -369,26 +369,32 @@ def qso_time(rec):
 
 
 
-def read_csv_file(fname):
+def read_csv_file(fname,delim=','):
 
+    hdr=[]
     QSOs=[]
     with open(fname) as f:
-        rows = csv.reader(f)
+        rows = csv.reader(f,delimiter=delim)
 
-        n=0
+        keys=None
         for row in rows:
-            if n==0:
+            #print('row=',row)
+            #print(row[0][0])
+            if row[0][0]=='#':
+                # Comment
+                hdr.append(row)
+                #print('Comment')
+            elif keys==None:
                 keys=row
-                #print(keys)
+                #print('keys=',keys)
             else:
                 qso={}
                 for key,val in zip(keys,row):
                     qso[key]=val
                 #print(qso)
                 QSOs.append(qso)
-            n+=1
 
-    return QSOs
+    return QSOs,hdr
 
 
 

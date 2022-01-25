@@ -882,6 +882,8 @@ class fldigi_xlmrpc(direct_connect):
 
         self.lock.acquire()
         if meter=='S':
+            # Flrig processes the raw number read from the rigs
+            # It returns the dB above S0. So 0 for S0 and 54 for S9. 
             buf=self.s.rig.get_smeter()
         elif meter=='Power':
             buf=self.s.rig.get_pwrmeter()
