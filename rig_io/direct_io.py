@@ -707,7 +707,7 @@ class direct_connect:
         else:            
             print('DIRECT SELECT_VFO Command not yet implemented for non-ICOM rigs')
 
-    def set_vfo(self,rx=None,tx=None):
+    def set_vfo(self,rx=None,tx=None,op=None):
         #VERBOSITY=1
         if VERBOSITY>0:
             print('DIRECT SET_VFO:',rx,tx)
@@ -716,6 +716,13 @@ class direct_connect:
             print('DIRECT SET_VFO Command not yet implemented for ICOM rigs')
             return
 
+        if op=='A->B':
+            cmd='BY;AB;' 
+        elif op=='B->A':
+            cmd='BY;BA;'
+        elif op=='A<->B':
+            cmd='BY;SV;'
+        
         else:
             
             if self.rig_type2=='FT991a':
@@ -734,12 +741,11 @@ class direct_connect:
             elif tx=='B' or tx=='S':
                 cmd=cmd+'FT3;'
             
-            #self.send(cmd)
-            if VERBOSITY>0:
-                print('DIRECT_SET_VFO: cmd=',cmd)
-            buf = self.get_response(cmd)
-            if VERBOSITY>0:
-                print('DIRECT_SET_VFO: buf=',buf)
+        if VERBOSITY>0:
+            print('DIRECT_SET_VFO: cmd=',cmd)
+        buf = self.get_response(cmd)
+        if VERBOSITY>0:
+            print('DIRECT_SET_VFO: buf=',buf)
 
     def get_info(self):
         print('DIRECT GET_INFO...')

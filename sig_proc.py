@@ -1795,8 +1795,11 @@ class Receiver:
         # Select demodulator
         if P.MODE=='IQ' or P.MODE=='RTTY':
             #am = y
-            am = demod.post_det(y)
-            
+            if P.BFO==0:
+                am = demod.post_det(y)
+            else:
+                am = demod.cw(y)
+                
         elif P.MODE=='AM-Synch':
             am = demod.am_synch(y)
 

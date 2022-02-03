@@ -83,7 +83,6 @@ class SETTINGS_GUI():
         self.call.grid(row=row,column=1,sticky=E+W)
         #self.call.delete(0, END)
         try:
-            #self.call.insert(0,P.MY_CALL)
             self.call.insert(0,P.SETTINGS['MY_CALL'])
         except:
             pass
@@ -93,7 +92,6 @@ class SETTINGS_GUI():
         self.name = Entry(self.win)
         self.name.grid(row=row,column=1,sticky=E+W)
         try:
-            #self.name.insert(0,P.MY_NAME)
             self.name.insert(0,P.SETTINGS['MY_NAME'])
         except:
             pass
@@ -103,7 +101,6 @@ class SETTINGS_GUI():
         self.state = Entry(self.win)
         self.state.grid(row=row,column=1,sticky=E+W)
         try:
-            #self.state.insert(0,P.MY_STATE)
             self.state.insert(0,P.SETTINGS['MY_STATE'])
         except:
             pass
@@ -113,7 +110,6 @@ class SETTINGS_GUI():
         self.sec = Entry(self.win)
         self.sec.grid(row=row,column=1,sticky=E+W)
         try:
-            #self.sec.insert(0,P.MY_SEC)
             self.sec.insert(0,P.SETTINGS['MY_SEC'])
         except:
             pass
@@ -123,7 +119,6 @@ class SETTINGS_GUI():
         self.cat = Entry(self.win)
         self.cat.grid(row=row,column=1,sticky=E+W)
         try:
-            #self.cat.insert(0,P.MY_CAT)
             self.cat.insert(0,P.SETTINGS['MY_CAT'])
         except:
             pass
@@ -133,7 +128,6 @@ class SETTINGS_GUI():
         self.gridsq = Entry(self.win)
         self.gridsq.grid(row=row,column=1,sticky=E+W)
         try:
-            #self.gridsq.insert(0,P.MY_GRID)
             self.gridsq.insert(0,P.SETTINGS['MY_GRID'])
         except:
             pass
@@ -143,7 +137,6 @@ class SETTINGS_GUI():
         self.city = Entry(self.win)
         self.city.grid(row=row,column=1,sticky=E+W)
         try:
-            #self.city.insert(0,P.MY_CITY)
             self.city.insert(0,P.SETTINGS['MY_CITY'])
         except:
             pass
@@ -153,7 +146,6 @@ class SETTINGS_GUI():
         self.county = Entry(self.win)
         self.county.grid(row=row,column=1,sticky=E+W)
         try:
-            #self.county.insert(0,P.MY_COUNTY)
             self.county.insert(0,P.SETTINGS['MY_COUNTY'])
         except:
             pass
@@ -163,7 +155,6 @@ class SETTINGS_GUI():
         self.cqz = Entry(self.win)
         self.cqz.grid(row=row,column=1,sticky=E+W)
         try:
-            #self.cqz.insert(0,P.MY_CQ_ZONE)
             self.cqz.insert(0,P.SETTINGS['MY_CQ_ZONE'])
         except:
             pass
@@ -173,7 +164,6 @@ class SETTINGS_GUI():
         self.ituz = Entry(self.win)
         self.ituz.grid(row=row,column=1,sticky=E+W)
         try:
-            #self.ituz.insert(0,P.MY_ITU_ZONE)
             self.ituz.insert(0,P.SETTINGS['MY_ITU_ZONE'])
         except:
             pass
@@ -183,7 +173,6 @@ class SETTINGS_GUI():
         self.prec = Entry(self.win)
         self.prec.grid(row=row,column=1,sticky=E+W)
         try:
-            #self.prec.insert(0,P.MY_PREC)
             self.prec.insert(0,P.SETTINGS['MY_PREC'])
         except:
             pass
@@ -193,7 +182,6 @@ class SETTINGS_GUI():
         self.check = Entry(self.win)
         self.check.grid(row=row,column=1,sticky=E+W)
         try:
-            #self.check.insert(0,P.MY_CHECK)
             self.check.insert(0,P.SETTINGS['MY_CHECK'])
         except:
             pass

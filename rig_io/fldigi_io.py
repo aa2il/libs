@@ -450,7 +450,7 @@ class fldigi_xlmrpc(direct_connect):
             print('FLDIGI_IO: GET_VFO not available yet for FLDIGI - assumes A')
             return 'AA'
     
-    def set_vfo(self,rx=None,tx=None):
+    def set_vfo(self,rx=None,tx=None,op=None):
         if VERBOSITY>0:
             print('FLDIGI_IO - SET_VFO:',rx,tx)
             
