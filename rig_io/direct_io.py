@@ -708,7 +708,7 @@ class direct_connect:
             print('DIRECT SELECT_VFO Command not yet implemented for non-ICOM rigs')
 
     def set_vfo(self,rx=None,tx=None,op=None):
-        #VERBOSITY=1
+        VERBOSITY=1
         if VERBOSITY>0:
             print('DIRECT SET_VFO:',rx,tx)
         if self.rig_type1=='Icom':
@@ -1589,6 +1589,35 @@ class direct_connect:
         
         buf = self.get_response(cmd)
         return
+
+
+    # Function to read the clarifier
+    def read_clarifier(self):
+        if VERBOSITY>0:
+            print('DIRECT_IO: READ_CLARIFIER ...')
+        
+        if self.rig_type1=='Kenwood' or self.rig_type1=='Icom':
+            print('DIRECT_IO: READ_CLARIFIER not support yet for Kenwood/Icom rigs')
+            return 0            
+
+        buf = self.get_response('IF;')
+
+        p3=buf[13:18]
+        p4=buf[18]
+        p5=buf[19]
+
+        shift=int(p3)
+        rx=int(p4)*shift
+        tx=int(p5)*shift
+        
+        if VERBOSITY>0:
+            print('buf=',buf)
+            print('p3=',p3)
+            print('p4=',p4)
+            print('p5=',p5)
+            print('rx=',rx,'\ttx=',tx,'\tshift=',shift)
+        
+        return rx,tx    #,shift
         
     
     def set_speed(self,wpm):

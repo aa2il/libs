@@ -429,13 +429,15 @@ def SetVFO(self,cmd):
             print('SetVFO - Select A')
             s.set_vfo('A')
         else:
-            s.get_response("BY;FR0;FT2;")
+            #s.get_response("BY;FR0;FT2;")
+            s.set_vfo('A')
     elif cmd=='B':
         if s.rig_type1=='Icom':
             print('SetVFO - Select A')
             s.set_vfo('B')
         else:
-            s.get_response("BY;FR4;FT3;")
+            #s.get_response("BY;FR4;FT3;")
+            s.set_vfo('B')
     elif cmd=='A->B':
         self.sock.get_response("BY;AB;")
     elif cmd=='B->A':
@@ -472,6 +474,13 @@ def SetTXSplit(self,df_kHz):
     cmd = 'BY;RC;RT0;XT1;RU'+str(df).zfill(4)+';'
     print('CLARSPLIT:',df,cmd)
     self.sock.get_response(cmd)
+
+# Function to get split settings (clarifier)
+#def GetSplit(self,df_kHz):
+#    df=int( df_kHz*1000 )
+#    cmd = 'BY;RC;RT0;XT1;RU'+str(df).zfill(4)+';'
+#    print('CLARSPLIT:',df,cmd)
+#    self.sock.get_response(cmd)
 
 # Function to get rig info
 def GetInfo(self):

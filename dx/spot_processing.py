@@ -745,6 +745,32 @@ class Spot(object):
                 return(band, mode)
                 
         def __process_spot(self, raw_string):
+                # Fix-up history spots so they can be parsed also
+                if raw_string.strip()[0:5]!='DX de':
+                    try:
+                        a=raw_string.strip().split(' ')
+                        #print('a=',a)
+                        self.frequency = float(a[0])
+
+                        self.spotter_call = a[-1].replace('<','').replace('>','')
+                                
+                        self.dx_call = a[2]
+                        self.comment = a[12]
+                        time_temp = a[10]
+                        #print('time_temp=',time_temp)
+                        self.utc=time_temp
+                        self.time = datetime.utcnow().replace(hour=int(time_temp[0:2]), \
+                                                              minute=int(time_temp[2:4]), second=0, \
+                                                              microsecond = 0, tzinfo=UTC)
+                        self.locator = ''
+                        self.band, self.mode = self.convert_freq_to_band(self.frequency)
+                        
+                        #print('Pre-pending ...')
+                        #raw_string='DX de HISTO:'+raw_string
+                        return(True)
+                    except:
+                        pass
+                    
                 """Chop Line from DX-Cluster into pieces and return a dict with the spot data"""
                 try:
                         spotter_call_temp = re.match('[A-Za-z0-9\/]+[:$]', raw_string[6:15])

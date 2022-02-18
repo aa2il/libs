@@ -63,6 +63,7 @@ class fldigi_xlmrpc(direct_connect):
         self.freq       = 0
         self.band       = ''
         self.mode       = ''
+        self.dead       = False
 
         self.rig_type  = 'UNKNOWN'
         self.rig_type1 = 'UNKNOWN'
@@ -72,9 +73,12 @@ class fldigi_xlmrpc(direct_connect):
         for i in range(max(MAX_TRYS,1)):
             if i>0:
                 time.sleep(5)
+                print('Try Try Try again ...')
             self.open(host,port,tag)
             if self.fldigi_active or self.flrig_active:
                 self.active=True
+                break
+            elif self.dead:
                 break
         else:
             self.active=False
@@ -252,7 +256,16 @@ class fldigi_xlmrpc(direct_connect):
         for m in methods:
             print(m['name'],'\t',m)
 
-        print("\nRig info: ",self.s.rig.get_info())
+        info = self.s.rig.get_info()
+        a=info.split()
+        print("\nRig info: ",a,'\t-',a[2],'-')
+        if a[2]=='FA:0' and False:
+            print('Looks like a dead connection')
+            self.fldigi_active = False
+            self.flrig_active  = False
+            self.active        = False
+            self.dead          = True
+        
         if self.fldigi_active:
             print("FA:   ",self.s.rig.send_command("FA;"))
             print("FB:   ",self.s.rig.send_command("FB;"))
@@ -436,10 +449,15 @@ class fldigi_xlmrpc(direct_connect):
         return m
 
     def get_vfo(self):
+        #VERBOSITY=1
+        if VERBOSITY>0:
+            print('FLDIGI_IO - GET_VFO:')
+            
         if self.flrig_active:
             try:
                 vfo=self.s.rig.get_AB()
-                print('FLDIGI_IO: GET_VFO ',vfo)
+                if VERBOSITY>0:
+                    print('FLDIGI_IO: GET_VFO ',vfo)
                 return vfo
             except Exception as e: 
                 print('*** ERROR *** FLDIGI_IO - GET_VFO - Problem getting vfo')
@@ -451,6 +469,7 @@ class fldigi_xlmrpc(direct_connect):
             return 'AA'
     
     def set_vfo(self,rx=None,tx=None,op=None):
+        VERBOSITY=1
         if VERBOSITY>0:
             print('FLDIGI_IO - SET_VFO:',rx,tx)
             
@@ -472,6 +491,17 @@ class fldigi_xlmrpc(direct_connect):
                     opt=1
                 self.s.rig.set_split(opt)
                 time.sleep(DELAY)
+
+            if op:
+                if op=='A->B':
+                    cmd='BY;AB;' 
+                    self.s.rig.vfoA2B()
+                elif op=='B->A':
+                    cmd='BY;BA;'
+                elif op=='A<->B':
+                    cmd='BY;SV;'
+                    self.s.rig.swap()
+        
 
         else:
             # Dummied up for now

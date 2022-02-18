@@ -230,4 +230,8 @@ class no_connect:
         if VERBOSITY>0:
             logging.info('Ignoring call')
 
+    def get_vfo(self):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
+        return 'A'
     

@@ -107,6 +107,8 @@ def connection(TEST_MODE,CLUSTER,MY_CALL,fname=None,ip_addr=None,port=None):
             tn.write(b"SET/FT8\n")            # Enable ft8 spots - there are a bunch of other things we can do also
             time.sleep(.1)
             tn.write(b"SET/FT4\n")            # Enable ft4 spots also
+            time.sleep(.1)
+            tn.write(b"SHOW/DX\n")            # Get last N spots to start populating the map
             break
 
     return tn
