@@ -108,7 +108,11 @@ def open_rig_connection(connection,host=0,port=0,baud=0,tag='',
 
     if connection=='FLRIG' or connection=='ANY':
         pid = get_PIDs('flrig')
+        print('pids=',pid)
         if len(pid)==0:
+            time.sleep(1)
+            pid2 = get_PIDs('flrig')
+            print('pids2=',pid2)
             print('\n*** FLRIG does not appear to be running ***')
             if connection=='FLRIG':
                 print('*** Connection to FLRIG required - exiting ***\n')
@@ -490,8 +494,8 @@ def GetInfo(self):
     if self.sock.rig_type1=='Kenwood' or self.sock.rig_type1=='Icom' or \
        self.sock.rig_type=='Hamlib' or self.sock.rig_type=='FLDIGI' or \
        self.sock.rig_type=='FLRIG':
-        print('GET INFO not (yet) fully implemented for rig type', \
-            self.sock.rig_type)
+        #print('GET INFO not (yet) fully implemented for rig type', \
+        #    self.sock.rig_type)
         try:
             frx = 1e-3*self.sock.get_freq()
         except:

@@ -187,6 +187,15 @@ class SETTINGS_GUI():
             pass
         
         row+=1
+        Label(self.win, text='My SKCC No.:').grid(row=row, column=0)
+        self.skcc = Entry(self.win)
+        self.skcc.grid(row=row,column=1,sticky=E+W)
+        try:
+            self.skcc.insert(0,P.SETTINGS['MY_SKCC'])
+        except:
+            pass
+        
+        row+=1
         button = Button(self.win, text="OK",command=self.Dismiss)
         button.grid(row=row,column=0,sticky=E+W)
 
@@ -215,14 +224,15 @@ class SETTINGS_GUI():
                            'MY_NAME'     : self.name.get().upper(),   \
                            'MY_STATE'    : self.state.get().upper(),  \
                            'MY_GRID'     : self.gridsq.get().upper(), \
-                           'MY_CITY'     : self.city.get().upper(), \
+                           'MY_CITY'     : self.city.get().upper(),   \
                            'MY_COUNTY'   : self.county.get().upper(), \
                            'MY_SEC'      : self.sec.get().upper(),    \
                            'MY_CAT'      : self.cat.get().upper(),    \
                            'MY_PREC'     : self.prec.get().upper(),   \
                            'MY_CHECK'    : self.check.get().upper(),  \
                            'MY_CQ_ZONE'  : self.cqz.get().upper(),    \
-                           'MY_ITU_ZONE' : self.ituz.get().upper()    }
+                           'MY_ITU_ZONE' : self.ituz.get().upper(),   \
+                           'MY_SKCC'     : self.ituz.get().upper()    }
                            
         print('Writing settings to',self.P.RCFILE,'...')
         print(self.P.SETTINGS)

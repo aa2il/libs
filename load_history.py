@@ -51,7 +51,7 @@ def load_history(history,DEBUG_CALL=None):
         return HIST
 
     ALL_FIELDS=['name','state','sec','check','county','cwops', \
-                'fdcat','fdsec','ituz','cqz','grid']
+                'fdcat','fdsec','ituz','cqz','grid','skccnr','city']
 
     # Open logger file used by spot_processing routines
     rootlogger = "dxcsucker"
@@ -105,17 +105,11 @@ def load_history(history,DEBUG_CALL=None):
                     state=''
 
                 HIST[call] = OrderedDict()
+                for field in ALL_FIELDS:
+                    HIST[call][field]=''
                 HIST[call]['name']   = name.upper()
-                HIST[call]['sec']    = ''
                 HIST[call]['state']  = state.upper()
-                HIST[call]['check']  = ''
-                HIST[call]['county'] = ''
                 HIST[call]['cwops']  = str( int(number) )
-                HIST[call]['fdcat']  = ''
-                HIST[call]['fdsec']  = ''
-                HIST[call]['ituz']   = ''
-                HIST[call]['cqz']    = ''
-                HIST[call]['grid']   = ''
 
                 if call==DEBUG_CALL:
                     print(call)
@@ -140,15 +134,23 @@ def load_history(history,DEBUG_CALL=None):
     #with open(history,'r',errors='replace') as csvfile:       # So does this
     #with open(history,'r',newline='',encoding='utf-8') as csvfile:  # This does not
         #csvfile = open(history, 'r') 
-        hist = csv.reader(csvfile, delimiter=',', quotechar='|')
+        if 'skcc' in history:
+            hist = csv.reader(csvfile, delimiter='|')
+        else:
+            hist = csv.reader(csvfile, delimiter=',', quotechar='|')
 
         #print(hist)
 
+        n=0
         for row in hist:
+            n+=1
+
+            #if 'skcc' in history:
+            #    print(n,row)
             
             if len(row)>0:
 
-                if row[0][0]=='!':
+                if row[0][0]=='!' or ('skcc' in history and n==1):
                     #print('Howdy Ho!')
                     KEYS=[]
                     print('row=',row)
@@ -164,46 +166,61 @@ def load_history(history,DEBUG_CALL=None):
                                     key='fdcat'
                                 elif key=='sec':
                                     key='fdsec'
-                            elif fname[:7]=='QSOP_CA':
-                                if key=='exch1':
-                                    key='qth'
+                            elif fname[:7]=='QSOP_CA' and key=='exch1':
+                                key='qth'
                             elif fname[:6]=='CWOPS_' and key=='exch1':
                                 key='cwops'
                             elif fname[:8]=='K1USNSST' and key=='exch1':
                                 key='state'
-                            elif fname[:7]=='ARRLVHF' and key=='loc1':
+                            elif key=='loc1':
                                 key='grid'
                             KEYS.append( key )
                     print('KEYS=',KEYS)
-                    #sys.exit(0)
+                    #if 'skcc' in history:
+                    #    sys.exit(0)
 
                 elif row[0][0] not in COMMENT_CHARS:
 
                     #print('KEYS=',KEYS)
                     #print('row=',row)
+
+                    # Find the call & init struct for this call
+                    idx=KEYS.index("call")
+                    call=row[idx]
+                    HIST[call] = OrderedDict()
+                    for field in ALL_FIELDS:
+                        HIST[call][field]=''
+                    #print('call=',call)
+                    #print('Hist=',HIST[call])
+                    #sys.exit(0)
+
+                    # Disect the data for this call
                     for i in range(len(KEYS)):
-                        if i==0:
-                            call=row[0]
-                            HIST[call] = OrderedDict()
-                            for field in ALL_FIELDS:
-                                HIST[call][field]=''
+                        key=KEYS[i].strip()
+                        if len(row)>i:
+                            val = row[i].upper()
                         else:
-                            key=KEYS[i]
-                            if len(row)>i:
-                                val = row[i].upper()
+                            val = ''
+
+                        if key=='loc1':
+                            key='grid'    
+                        elif fname[:7]=='QSOP_CA' and key=='qth':
+                            if val in NAQP_SECS:
+                                key='state'
+                            elif len(val)==4:
+                                key='county'
                             else:
-                                val = ''
-                            if key=='qth':
-                                if val in NAQP_SECS:
-                                    key='state'
-                                elif len(val)==4:
-                                    key='county'
-                            if key in ALL_FIELDS:
-                                HIST[call][key] = val
-                            elif key!='usertext' and len(val)>0:
-                                print(row)
-                                print('key/val=',key,row[i])
-                                #sys.exit(0)
+                                print('Warning - skipping key',key)
+                                print('row=',row)
+                                key=''
+                                
+                        if key in ALL_FIELDS:
+                            HIST[call][key] = val
+                        elif key not in ['',' ','call','usertext','ccnr','mbrdate']:
+                            print('LOAD_HISTORY: Unknown field ...')
+                            print('row=',row)
+                            print('key/val=',key,row[i])
+                            sys.exit(0)
 
                     if call==DEBUG_CALL:
                         print('row=',row)

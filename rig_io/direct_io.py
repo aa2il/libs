@@ -708,7 +708,7 @@ class direct_connect:
             print('DIRECT SELECT_VFO Command not yet implemented for non-ICOM rigs')
 
     def set_vfo(self,rx=None,tx=None,op=None):
-        VERBOSITY=1
+        #VERBOSITY=1
         if VERBOSITY>0:
             print('DIRECT SET_VFO:',rx,tx)
         if self.rig_type1=='Icom':
