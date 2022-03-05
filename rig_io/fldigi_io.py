@@ -256,10 +256,23 @@ class fldigi_xlmrpc(direct_connect):
         for m in methods:
             print(m['name'],'\t',m)
 
-        info = self.s.rig.get_info()
-        a=info.split()
-        print("\nRig info: ",a,'\t-',a[2],'-')
-        if a[2]=='FA:0' and False:
+        # JBA - looking for some indicator of whether ths rig is really runing
+        # Best I found was to issue a direct cat command
+        info = self.s.rig.get_info().split()
+        print('info=',info)
+
+        if info[0] in ['R:FTdx3000']:
+            self.rig_type1='Yaesu'            
+        print('rig_type1=',self.rig_type1)
+        if  self.rig_type1 in ['Yaesu','Kenwood']:
+            cat = self.s.rig.cat_string('FA;')
+            print('cat=',cat)
+        else:
+            cat=''
+            print('FLRIG PROBE - Need a little more code for this rig')
+
+        # JBA - Is the radio really attached or is this just a left over version of flrig
+        if cat[:11]=='No response' and True:
             print('Looks like a dead connection')
             self.fldigi_active = False
             self.flrig_active  = False
