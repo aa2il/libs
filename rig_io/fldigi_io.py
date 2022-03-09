@@ -533,7 +533,7 @@ class fldigi_xlmrpc(direct_connect):
         # Translate rig mode into something rig understands
         if mode==None or mode=='IQ':
             return
-        if mode in ['PKTUSB','RTTY','DIGITAL','FT8'] or mode.find('PSK')>=0 or mode.find('JT')>=0:
+        if mode in ['PKTUSB','RTTY','DIGITA','DIGITAL','FT8','FT4'] or mode.find('PSK')>=0 or mode.find('JT')>=0:
             if not self.v4 or self.flrig_active:
                 mode='PSK-U'           # For some reason, this was changed in version 4
             else:
@@ -558,7 +558,7 @@ class fldigi_xlmrpc(direct_connect):
             print('FLDIGI_IO - SET_MODE: mode=',mode,self.v4)
 
         # Translate fldigi mode into something fldigi understands
-        if mode2=='DIGITAL' or mode2.find('JT')>=0 or mode2=='FT8':
+        if mode2 in ['DIGITAL','DIGITA','FT8','FT4'] or mode2.find('JT')>=0 or mode2=='FT8':
             mode2='RTTY'
         elif mode2=='USB' or mode2=='LSB' or mode2=='AM':
             mode2='SSB'
@@ -626,6 +626,10 @@ class fldigi_xlmrpc(direct_connect):
             except:
                 print('FLDIGI_IO SET_MODE: Unable to set mode =',mode)
                 return mode
+
+
+        if Filter=='Auto':
+            self.set_filter(Filter,mode=mout)
 
         if VERBOSITY>0:
             print("FLDIGI_IO: SET MODE Done.\n")

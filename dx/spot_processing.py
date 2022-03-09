@@ -47,25 +47,22 @@ class ChallengeData:
             self.dxccs.append( self.sheet1.cell(i, 0).value )
         #print 'DXCCs:',self.dxccs
         self.bands=[]
-        for j in range(1, 12):
+        NCOLS=20
+        for j in range(1, NCOLS):
             #self.bands.append( str( self.sheet1.cell(0, j).value ) )
             val = self.sheet1.cell(0, j).value 
             if isinstance(val, float):
                 val=int(val)
             val = str( val )
-            #if val=='2019.0':
-            #    val='2019'
-            #elif val=='0.0':
-            #    val=''
             self.bands.append(val)
-        #print 'BANDS:',self.bands
+        print('CHALLENGE DATA - BANDS=',self.bands)
 
         self.slots=[]
         for i in range(1, self.sheet1.nrows):
             calls = []
-            for j in range(1, 12):
+            for j in range(1,NCOLS):
                 #calls.append( unidecode( self.sheet1.cell(i, j).value ) )
-                #print 'i,j=',i,j,self.sheet1.cell(i, j).value
+                #print('i,j=',i,j,'\tval=',self.sheet1.cell(i, j).value)
                 val = self.sheet1.cell(i, j).value
                 if isinstance(val,float):
                     if val==0.0:
@@ -79,20 +76,16 @@ class ChallengeData:
     # Work through Challenge sheet
     def needed_challenge(self,dxcc,band,verbosity):
         band=str(band)
-        if dxcc is None or band=='60M':
+        if dxcc is None or band=='60M' or band=='Unknown':
             return False
         else:
             dxcc=dxcc.upper().replace('ST.','SAINT')
             if dxcc=='UNITED STATES':           # This helps to speed things up
                 return False
 
-        if 'MARTIN' in dxcc and False:
-            print('NEEDED_CHALLENGE: dxcc=',dxcc,'\tband=',band)
-            verbosity=1
-
         # Its probably better to fix the names rather than have this
         # special treatment.  The problem with St. Martin is that
-        # MARTIN is aslo in Martinique.  Try fixing these as they come up.
+        # MARTIN is also in Martinique.  Try fixing these as they come up.
         # The "St."'s should be easy but I left it like this for now to
         # minimize potential issues.
         #special = ['VIET','GERMANY','NEVIS','LUCIA','EUSTATIUS','FIJI', \
@@ -115,7 +108,7 @@ class ChallengeData:
             if band!='ALL':
                 print('CHALLENGE_NEEDED: Band',band,'not in band list')
                 print('BANDS:',self.bands)
-        #print 'NEEDED_CHALLENGE:',dxcc,band,jj
+        #print('NEEDED_CHALLENGE: dxcc=',dxcc,'\tattribute=',band,'\tjj=',jj)
 
         for i in range(1, self.sheet1.nrows):
             cell = self.dxccs[i-1]
@@ -130,12 +123,13 @@ class ChallengeData:
 
                 if jj>0:
                     #print 'jj=',jj
-                    call = self.slots[i-1][jj].strip()
+                    call = str(self.slots[i-1][jj]).strip()
                     #if isinstance(call,float):
                     #    call = str(call)
-                    #print 'CHALLENGE_NEEDED:',dxcc,i,jj,call,call=='',len(call)
+                    #print('CHALLENGE_NEEDED: dxcc=',dxcc,'\ti=',i,'\jj=',jj,'\tcall=',call,
+                    #      '\tval=',self.slots[i-1][jj])
                     needed= call=='' or call=='PAPER'
-                    if verbosity>0:
+                    if verbosity>0 or band=='Phone99':
                         print('CHALLENGE_NEEDED: band=',band,'\tdxcc=',dxcc,\
                               '\tfound=',found,'\ti=',i,'\tjj=',jj,\
                               '\tcall=',call,'\tneeded=',needed)

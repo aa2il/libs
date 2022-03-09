@@ -673,6 +673,7 @@ class direct_connect:
             self.send('FR0;')
         #print('SET_MODE:',buf)
 
+
     # Function to set active VFO
     def select_vfo(self,VFO):
         #VERBOSITY=1
@@ -844,13 +845,23 @@ class direct_connect:
         return [filt1,filt2]
 
 
-    def set_filter(self,filt):
+    def set_filter(self,filt,mode=None):
         #VERBOSITY=1
+        if filt=='Auto':
+            if mode in ['USB','SSB','LSB']:
+                filt=['Wide','2400']
+            elif mode in ['CW','CW-R']:
+                filt=['Narrow','200']
+            elif mode in ['RTTY','DATA']:
+                filt=['Wide','3000']
+            else:
+                filt=['Wide']
+                
         if not type(filt) is list:
             filt=[filt]
         
         if VERBOSITY>0:
-            print('DIRECT SET_FILTER:',filt,len(filt))
+            print('\nDIRECT SET_FILTER: filt=',filt,'\tmode=',mode)
             
         if self.rig_type=='Kenwood':
             c1 = modes[filt[0]]["Filter3"]
@@ -875,14 +886,19 @@ class direct_connect:
                 cmd='NA01;'
             buf = self.get_response('BY;'+cmd)
             if VERBOSITY>0:
-                print('DIRECT SET_FILTERS: cmd=',cmd,' - buf=',buf)
+                print('DIRECT SET_FILTERS = Setting wide/narrow: cmd=',
+                      cmd,' - buf=',buf)
 
-            if len(self.mode)==0:
-                self.mode=self.get_mode()
-            m=self.mode
+            if mode:
+                m=mode
+            else:
+                if len(self.mode)==0:
+                    self.mode=self.get_mode()
+                m=self.mode
             if VERBOSITY>0:
                 print('DIRECT SET_FILTER: Mode=',m,filt[0])
-            if m in ['RTTY','PKTUSB','PSK-U','DATA-U']:
+                
+            if m in ['RTTY','PKTUSB','PSK-U','DATA-U','DIGITA']:
                 if filt[0]=='Wide':                    
                     filts=FT991A_DATA_FILTERS2
                 else:
