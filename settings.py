@@ -67,6 +67,10 @@ class CONFIG_PARAMS:
 
 #########################################################################################
 
+ATTRIBUTES = ['Call','Name','State','Sec','Cat','Grid','City','County',
+              'CQ Zone','ITU Zone','Prec','Check','SKCC','Rig','Ant','Age','Ham Age',
+              'Occupation']
+
 class SETTINGS_GUI():
     def __init__(self,root,P):
         self.P = P
@@ -77,123 +81,21 @@ class SETTINGS_GUI():
             self.win = Tk()
         self.win.title("Settings")
 
-        row=0
-        Label(self.win, text='My Call:').grid(row=row, column=0)
-        self.call = Entry(self.win)
-        self.call.grid(row=row,column=1,sticky=E+W)
-        #self.call.delete(0, END)
-        try:
-            self.call.insert(0,P.SETTINGS['MY_CALL'])
-        except:
-            pass
-
-        row+=1
-        Label(self.win, text='My Name:').grid(row=row, column=0)
-        self.name = Entry(self.win)
-        self.name.grid(row=row,column=1,sticky=E+W)
-        try:
-            self.name.insert(0,P.SETTINGS['MY_NAME'])
-        except:
-            pass
-        
-        row+=1
-        Label(self.win, text='My State:').grid(row=row, column=0)
-        self.state = Entry(self.win)
-        self.state.grid(row=row,column=1,sticky=E+W)
-        try:
-            self.state.insert(0,P.SETTINGS['MY_STATE'])
-        except:
-            pass
-        
-        row+=1
-        Label(self.win, text='My Section:').grid(row=row, column=0)
-        self.sec = Entry(self.win)
-        self.sec.grid(row=row,column=1,sticky=E+W)
-        try:
-            self.sec.insert(0,P.SETTINGS['MY_SEC'])
-        except:
-            pass
-
-        row+=1
-        Label(self.win, text='My Category:').grid(row=row, column=0)
-        self.cat = Entry(self.win)
-        self.cat.grid(row=row,column=1,sticky=E+W)
-        try:
-            self.cat.insert(0,P.SETTINGS['MY_CAT'])
-        except:
-            pass
-
-        row+=1
-        Label(self.win, text='My Grid:').grid(row=row, column=0)
-        self.gridsq = Entry(self.win)
-        self.gridsq.grid(row=row,column=1,sticky=E+W)
-        try:
-            self.gridsq.insert(0,P.SETTINGS['MY_GRID'])
-        except:
-            pass
-
-        row+=1
-        Label(self.win, text='My City:').grid(row=row, column=0)
-        self.city = Entry(self.win)
-        self.city.grid(row=row,column=1,sticky=E+W)
-        try:
-            self.city.insert(0,P.SETTINGS['MY_CITY'])
-        except:
-            pass
-
-        row+=1
-        Label(self.win, text='My County:').grid(row=row, column=0)
-        self.county = Entry(self.win)
-        self.county.grid(row=row,column=1,sticky=E+W)
-        try:
-            self.county.insert(0,P.SETTINGS['MY_COUNTY'])
-        except:
-            pass
-
-        row+=1
-        Label(self.win, text='My CQ Zone:').grid(row=row, column=0)
-        self.cqz = Entry(self.win)
-        self.cqz.grid(row=row,column=1,sticky=E+W)
-        try:
-            self.cqz.insert(0,P.SETTINGS['MY_CQ_ZONE'])
-        except:
-            pass
-        
-        row+=1
-        Label(self.win, text='My ITU Zone:').grid(row=row, column=0)
-        self.ituz = Entry(self.win)
-        self.ituz.grid(row=row,column=1,sticky=E+W)
-        try:
-            self.ituz.insert(0,P.SETTINGS['MY_ITU_ZONE'])
-        except:
-            pass
-
-        row+=1
-        Label(self.win, text='My Prec:').grid(row=row, column=0)
-        self.prec = Entry(self.win)
-        self.prec.grid(row=row,column=1,sticky=E+W)
-        try:
-            self.prec.insert(0,P.SETTINGS['MY_PREC'])
-        except:
-            pass
-
-        row+=1
-        Label(self.win, text='My Check:').grid(row=row, column=0)
-        self.check = Entry(self.win)
-        self.check.grid(row=row,column=1,sticky=E+W)
-        try:
-            self.check.insert(0,P.SETTINGS['MY_CHECK'])
-        except:
-            pass
-        
-        row+=1
-        Label(self.win, text='My SKCC No.:').grid(row=row, column=0)
-        self.skcc = Entry(self.win)
-        self.skcc.grid(row=row,column=1,sticky=E+W)
-        try:
-            self.skcc.insert(0,P.SETTINGS['MY_SKCC'])
-        except:
-            pass
+        row=-1
+        self.boxes=[]
+        for attr in ATTRIBUTES:
+            row+=1
+            txt='My '+attr
+            Label(self.win, text=txt+':').grid(row=row, column=0)
+            box = Entry(self.win)
+            box.grid(row=row,column=1,sticky=E+W)
+            #box.delete(0, END)  
+            self.boxes.append(box)
+            try:
+                attr2=txt.upper().replace(' ','_')
+                box.insert(0,P.SETTINGS[attr2])
+            except:
+                pass
         
         row+=1
         button = Button(self.win, text="OK",command=self.Dismiss)
@@ -210,29 +112,12 @@ class SETTINGS_GUI():
         self.show()
         print('Hey2')
 
-    # Cant seem to get this to work :-(
-    def call_changed(self):
-        print('Call change:')
-        call=self.call.get()
-        print('Call change:',call)
-        #station = Station(call)
-        #print(station)
-        #pprint(vars(station))
 
     def Dismiss(self):
-        self.P.SETTINGS = {'MY_CALL'     : self.call.get().upper(),   \
-                           'MY_NAME'     : self.name.get().upper(),   \
-                           'MY_STATE'    : self.state.get().upper(),  \
-                           'MY_GRID'     : self.gridsq.get().upper(), \
-                           'MY_CITY'     : self.city.get().upper(),   \
-                           'MY_COUNTY'   : self.county.get().upper(), \
-                           'MY_SEC'      : self.sec.get().upper(),    \
-                           'MY_CAT'      : self.cat.get().upper(),    \
-                           'MY_PREC'     : self.prec.get().upper(),   \
-                           'MY_CHECK'    : self.check.get().upper(),  \
-                           'MY_CQ_ZONE'  : self.cqz.get().upper(),    \
-                           'MY_ITU_ZONE' : self.ituz.get().upper(),   \
-                           'MY_SKCC'     : self.ituz.get().upper()    }
+        self.P.SETTINGS = {}
+        for attr,box in zip(ATTRIBUTES,self.boxes):
+            attr2='MY_'+attr.upper()
+            self.P.SETTINGS[attr2] = box.get().upper()
                            
         print('Writing settings to',self.P.RCFILE,'...')
         print(self.P.SETTINGS)
