@@ -437,3 +437,19 @@ def write_csv_file(fname,keys,qsos):
     #fp.flush()
     fp.close()
 
+
+
+
+
+# Function to read a simple text file
+def read_text_file(fname):
+
+    with open(fname) as f:
+        lines = f.readlines()
+
+    for i in range(0,len(lines)):
+        lines[i]=lines[i].strip()
+
+    return lines
+
+    
