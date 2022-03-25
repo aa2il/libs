@@ -19,7 +19,8 @@ READ_ALL_TXT=False
 if READ_ALL_TXT:
     from .wsjt_helper import *
 else:
-    import pywsjtx
+    #import pywsjtx
+    from pywsjtx.simple_server import SimpleServer 
 
 ################################################################################
 
@@ -49,7 +50,8 @@ def connection(TEST_MODE,CLUSTER,MY_CALL,fname=None,ip_addr=None,port=None):
             tn.find_recent_spots(5.)
         else:
             print('Opening WSJT UDP Server ...')
-            tn = pywsjtx.simple_server.SimpleServer(ip_addr,port,timeout=1.0)
+            #tn = pywsjtx.simple_server.SimpleServer(ip_addr,port,timeout=1.0)
+            tn = SimpleServer(ip_addr,port,timeout=1.0)
             
     else:
         while True:
