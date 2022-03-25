@@ -37,22 +37,36 @@ from unidecode import unidecode
 from dx.spot_processing import Station
 from dx.cluster_connections import get_logger
 from pprint import pprint
-
+import glob 
 from rig_io.ft_tables import NAQP_SECS
 
 ###################################################################
 
 # Function to load history file
 def load_history(history,DEBUG_CALL=None):
-    
+
+    # Init
     COMMENT_CHARS=['#','!']
     HIST = OrderedDict()
-    if history=='':
-        return HIST
-
     ALL_FIELDS=['name','state','sec','check','county','cwops', \
                 'fdcat','fdsec','ituz','cqz','grid','skccnr','city']
 
+    # If no history file, we're done
+    if history=='':
+        return HIST
+    elif '*' in history:
+
+        # Expand wildcards and only keep the most recent history file
+        files=[]
+        for fname in glob.glob(history):
+            files.append(fname)
+        files.sort()
+        #print('file=',files)
+        history=files[-1]
+        #print(files[-1]) 
+        #sys.exit(0)
+    print('LOAD_HISTORY: History=',history)
+     
     # Open logger file used by spot_processing routines
     rootlogger = "dxcsucker"
     logger = get_logger(rootlogger)

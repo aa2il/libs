@@ -135,7 +135,7 @@ class no_connect:
             #print('Ignoring call to SET_FREQ')
         return 0
 
-    def set_vfo(self,rx=None,tx=None):
+    def set_vfo(self,rx=None,tx=None,op=None):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return
@@ -234,4 +234,9 @@ class no_connect:
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 'A'
+    
+    def set_sub_dial(self,func='CLAR'):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
+        return 
     
