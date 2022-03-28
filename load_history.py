@@ -49,7 +49,7 @@ def load_history(history,DEBUG_CALL=None):
     COMMENT_CHARS=['#','!']
     HIST = OrderedDict()
     ALL_FIELDS=['name','state','sec','check','county','cwops', \
-                'fdcat','fdsec','ituz','cqz','grid','skccnr','city']
+                'fdcat','fdsec','ituz','cqz','grid','skccnr','city','fistsnr']
 
     # If no history file, we're done
     if history=='':
@@ -164,7 +164,8 @@ def load_history(history,DEBUG_CALL=None):
             
             if len(row)>0:
 
-                if row[0][0]=='!' or ('skcc' in history and n==1):
+                if row[0][0]=='!' or \
+                   (n==1 and ('skcc' in history or 'fists' in history)):
                     #print('Howdy Ho!')
                     KEYS=[]
                     print('row=',row)
@@ -188,6 +189,12 @@ def load_history(history,DEBUG_CALL=None):
                                 key='state'
                             elif key=='loc1':
                                 key='grid'
+                            elif key=='callsign':
+                                key='call'
+                            elif key=='member number':
+                                key='fistsnr'
+                            elif 'fists' in fname and item==row[-1]:
+                                key=''
                             KEYS.append( key )
                     print('KEYS=',KEYS)
                     #if 'skcc' in history:
