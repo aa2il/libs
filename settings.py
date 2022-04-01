@@ -52,9 +52,13 @@ def read_settings(fname):
                 s.win.update()
             except:
                 pass
-            time.sleep(.01)
+            SETTINGS=s.SETTINGS
+            time.sleep(.1)
         print('Settings:',SETTINGS)
-
+        print('Writing settings to',RCFILE,'...')
+        with open(RCFILE, "w") as outfile:
+            json.dump(SETTINGS, outfile)
+        
     #sys,exit(0)
     return SETTINGS,RCFILE
 
@@ -74,6 +78,10 @@ ATTRIBUTES = ['Call','Name','State','Sec','Cat','Grid','City','County',
 class SETTINGS_GUI():
     def __init__(self,root,P):
         self.P = P
+        if P:
+            self.SETTINGS=self.P.SETTINGS
+        else:
+            self.SETTINGS=None
         
         if root:
             self.win=Toplevel(root)
@@ -114,15 +122,18 @@ class SETTINGS_GUI():
 
 
     def Dismiss(self):
-        self.P.SETTINGS = {}
+        print('DISMISS: P=',self.P)
+        self.SETTINGS = {}
         for attr,box in zip(ATTRIBUTES,self.boxes):
             attr2='MY_'+attr.upper()
-            self.P.SETTINGS[attr2] = box.get().upper()
-                           
-        print('Writing settings to',self.P.RCFILE,'...')
-        print(self.P.SETTINGS)
-        with open(self.P.RCFILE, "w") as outfile:
-            json.dump(self.P.SETTINGS, outfile)
+            self.SETTINGS[attr2] = box.get().upper()
+
+        if self.P:
+            self.P.SETTINGS=self.SETTINGS
+            print('Writing settings to',self.P.RCFILE,'...')
+            print(self.P.SETTINGS)
+            with open(self.P.RCFILE, "w") as outfile:
+                json.dump(self.P.SETTINGS, outfile)
         
         #self.win.destroy()
         self.hide()

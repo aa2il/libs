@@ -1191,8 +1191,9 @@ class Demodulator:
     def check_filter(self,CMPLX):
 
         # Check that we have the proper filter in place
-        if (self.filt_num != self.P.AF_FILTER_NUM) or \
-           (CMPLX != self.last_type):
+        if self.filt_num and  \
+           ((self.filt_num != self.P.AF_FILTER_NUM) or \
+           (CMPLX != self.last_type)):
             self.filt_num = self.P.AF_FILTER_NUM
             if CMPLX:
                 self.lpf_post.h = self.filter_bank_cmpx[self.filt_num]

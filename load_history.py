@@ -140,37 +140,46 @@ def load_history(history,DEBUG_CALL=None):
         #print HIST['AA3B']
         return HIST
 
-
+    # There seems to be a lot of issues trying to use csv reader or pandas to
+    # read these files so we'll do it our selves!!!
     print('LOAD HISTORY:',history)
-    with open(history,'r') as csvfile:   # This was ok under 2.7 but sometimes not 3
-    # In FD.txt, it doesn't like the e' in VE2CVN
-    #with open(history,'r',errors='ISO-8859-1') as csvfile:   # This used to work
-    #with open(history,'r',errors='replace') as csvfile:       # So does this
-    #with open(history,'r',newline='',encoding='utf-8') as csvfile:  # This does not
-        #csvfile = open(history, 'r') 
+    with open(history,'r',encoding='utf-8') as csvfile:
         if 'skcc' in history:
-            hist = csv.reader(csvfile, delimiter='|')
+            delim='|'
         else:
-            hist = csv.reader(csvfile, delimiter=',', quotechar='|')
+            delim=','
+
+        hist = csvfile.read()
+        hist = hist.split("\n")
+        csvfile.close()
+        nrows=len(hist)
+
+        """
+        print(nrows)
+        for i in range(10):
+            #row=hist.iloc[i].tolist()
+            row=hist[i].split(delim)
+            print(i,row)
+        print(type(row))
+        sys.exit(0)
+        """
 
         #print(hist)
 
-        n=0
-        for row in hist:
-            n+=1
+        for n in range(nrows):
+            row=hist[n].split(delim)
 
-            #if 'skcc' in history:
-            #    print(n,row)
-            
-            if len(row)>0:
+            if len(row)>0 and len(row[0])>0:
 
                 if row[0][0]=='!' or \
-                   (n==1 and ('skcc' in history or 'fists' in history)):
+                   (n==0 and ('skcc' in history or 'fists' in history)):
                     #print('Howdy Ho!')
                     KEYS=[]
-                    print('row=',row)
+                    #print('row=',row)
                     for item in row:
-                        if len(item)>0 and item[0] not in COMMENT_CHARS:
+                        #print(item)
+                        #if not pandas.isna(item) and len(item)>0 and \
+                        if len(item)>0 and item[0] not in COMMENT_CHARS and item!='nan':
                             key = item.strip().lower()
                             if key=='sect':
                                 key='sec'
@@ -219,9 +228,12 @@ def load_history(history,DEBUG_CALL=None):
                     for i in range(len(KEYS)):
                         key=KEYS[i].strip()
                         if len(row)>i:
-                            val = row[i].upper()
+                            val = row[i].replace(',',' ').upper()
+                            val = val.encode('ascii',errors='ignore').decode()
                         else:
                             val = ''
+                        if val=='NAN':
+                            val=''
 
                         if key=='loc1':
                             key='grid'    
