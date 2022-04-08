@@ -72,8 +72,8 @@ class CONFIG_PARAMS:
 #########################################################################################
 
 ATTRIBUTES = ['Call','Name','State','Sec','Cat','Grid','City','County',
-              'CQ Zone','ITU Zone','Prec','Check','SKCC','Rig','Ant','Age','Ham Age',
-              'Occupation']
+              'CQ Zone','ITU Zone','Prec','Check','SKCC','FISTS','CWops',
+              'Rig','Ant','Age','Ham Age','Occupation']
 
 class SETTINGS_GUI():
     def __init__(self,root,P):

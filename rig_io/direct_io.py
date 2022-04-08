@@ -113,12 +113,16 @@ def try_port(port,baud,verbosity):
                 
             if buf=='ID0460;':
                 self.rig_type  = 'Yaesu'
+                self.rig_type1 = 'Yaesu'
                 self.rig_type2 = 'FTdx3000'
+                self.mode      = ''
                 self.lock      = threading.Lock() 
                 return ['Yaesu','FTdx3000',self]
             elif buf=='ID0670;':
                 self.rig_type  = 'Yaesu'
+                self.rig_type1 = 'Yaesu'
                 self.rig_type2 = 'FT991a'
+                self.mode      = ''
                 self.lock      = threading.Lock() 
                 return ['Yaesu','FT991a',self]
             elif buf=='ID009;':
@@ -399,9 +403,12 @@ class direct_connect:
             x=self.s.read(1024)
             q=b'?'
         else:
+            #print('DIRECT GET_RESPONSE: cmd=',cmd)
             cnt=self.s.write(cmd.encode())
             self.s.flush()
+            #time.sleep(DELAY)
             x=self.s.read(1024).decode("utf-8")
+            #print('DIRECT GET_RESPONSE: x=',x)
             q='?'
 
         #x=self.recv()   # Can't use this bx lock has already been acquired
@@ -414,7 +421,8 @@ class direct_connect:
                 #x = x + self.recv()
 
         if x.find(q)>0:
-            print('*** DIRECT GET_RESPONSE *** Unrecognized command',cmd,'\tresponse=',x)
+            print('DIRECT GET_RESPONSE: Unrecognized command',cmd,\
+                  '\n\tresponse=',x)
 
         self.lock.release()
         #print('Lock released')
@@ -923,13 +931,15 @@ class direct_connect:
                     filt.append( max(filts) )
                 else:
                     filt.append( min(filts) )
+                if self.rig_type2 == 'FTdx3000' and filt[1]>300:
+                    filt[1]=2400
             else:
                 filt[1]=filt[1].replace(' Hz','')
             if VERBOSITY>0:
                 print('DIRECT SET_FILTER: filt1=',filt[1])
                 
             if VERBOSITY>0:
-                print('DIRECT SET_FILTER: filts=',filts)
+                print('DIRECT SET_FILTER: filts=',filts,len(filts))
             idx=filts.index(int(filt[1]))
             cmd='BY;SH'+str(idx).zfill(3)+';'
             buf = self.get_response(cmd)
@@ -1156,11 +1166,13 @@ class direct_connect:
             
         if opt==-1:
             buf=self.get_response('AC;')
-            print('DIRECT TUNER: buf=',buf)
+            if VERBOSITY>0:
+                print('DIRECT TUNER: buf=',buf)
             return int(buf[4])
         elif opt>=0 and opt<=2:
             buf=self.get_response('BY;AC00'+str(opt)+';')
-            print('DIRECT TUNER: buf=',buf)
+            if VERBOSITY>0:
+                print('DIRECT TUNER: buf=',buf)
         else:
             print('DIRECT TUNER - Invalid option:',opt)
 
