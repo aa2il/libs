@@ -216,7 +216,13 @@ def load_history(history,DEBUG_CALL=None):
 
                     # Find the call & init struct for this call
                     idx=KEYS.index("call")
-                    call=row[idx]
+                    call=row[idx].upper()
+
+                    if call in ['WAKL','F61112']:
+                        print('Skipping invalid call',call)
+                        sys.exit(0)
+                        continue
+                    
                     HIST[call] = OrderedDict()
                     for field in ALL_FIELDS:
                         HIST[call][field]=''
