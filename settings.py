@@ -58,7 +58,9 @@ def read_settings(fname):
         print('Writing settings to',RCFILE,'...')
         with open(RCFILE, "w") as outfile:
             json.dump(SETTINGS, outfile)
-        
+
+    SETTINGS['MY_QTH']=SETTINGS['MY_CITY']+', '+SETTINGS['MY_STATE']
+            
     #sys,exit(0)
     return SETTINGS,RCFILE
 
@@ -125,10 +127,12 @@ class SETTINGS_GUI():
         print('DISMISS: P=',self.P)
         self.SETTINGS = {}
         for attr,box in zip(ATTRIBUTES,self.boxes):
-            attr2='MY_'+attr.upper()
+            attr2='MY_'+attr.upper().replace(' ','_')
             self.SETTINGS[attr2] = box.get().upper()
 
         if self.P:
+            self.SETTINGS['MY_QTH']=self.SETTINGS['MY_CITY']+', ' \
+                +self.SETTINGS['MY_STATE']
             self.P.SETTINGS=self.SETTINGS
             print('Writing settings to',self.P.RCFILE,'...')
             print(self.P.SETTINGS)

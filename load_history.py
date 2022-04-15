@@ -220,7 +220,7 @@ def load_history(history,DEBUG_CALL=None):
 
                     if call in ['WAKL','F61112']:
                         print('Skipping invalid call',call)
-                        sys.exit(0)
+                        #sys.exit(0)
                         continue
                     
                     HIST[call] = OrderedDict()
