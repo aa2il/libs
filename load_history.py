@@ -72,6 +72,7 @@ def load_history(history,DEBUG_CALL=None):
     logger = get_logger(rootlogger)
      
     # Get file extension
+    #history=os.path.expanduser(history)
     fname=os.path.basename(history)
     ext=os.path.splitext(history)[1]
     print('\nHistory file=',history,fname,ext)

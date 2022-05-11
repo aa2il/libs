@@ -124,10 +124,11 @@ def open_rig_connection(connection,host=0,port=0,baud=0,tag='',
             if port==0:
                 port = 12345;
             sock = fldigi_xlmrpc(host,port,tag)
-            if connection=='FLRIG' and not sock.flrig_active and True:
-                print('SOCKET_IO: Unable to activate FLRIG connection - aborting')
+            if sock.flrig_active:
+                return sock
+            elif connection=='FLRIG':
+                print('SOCKET_IO: Unable to activate required FLRIG connection - aborting')
                 sys.exit(0)
-            return sock
 
     if connection=='FLDIGI' or connection=='ANY':
         pids = check_app('fldigi')
@@ -1094,6 +1095,7 @@ def SetSubBand(self,iopt):
 
 # Adjust mic gain level
 def Auto_Adjust_Mic_Gain(self,sock=None):
+    print('\nSOCKET_IO -> AUTO_ADJUST_MIC_GAIN ...')
     if not sock:
         s=self.sock
     else:
@@ -1105,7 +1107,7 @@ def Auto_Adjust_Mic_Gain(self,sock=None):
     except:
         s1=None
 
-    print("\nSOCKET_IO: Auto adjusting mic gain ...",s.connection,s1)
+    print("SOCKET_IO: Auto adjusting mic gain ...",s.connection,s1)
             
     # Try to key the radio
     NTRYS=10
@@ -1117,8 +1119,8 @@ def Auto_Adjust_Mic_Gain(self,sock=None):
         elif s1:
             s1.tune(True)
         else:
+            print('*** PTT ON ...')
             s.ptt(True)
-        #time.sleep(DELAY)
         time.sleep(.1)
 
         # Check if in tune mode by reading power meter
@@ -1128,14 +1130,20 @@ def Auto_Adjust_Mic_Gain(self,sock=None):
             print("*** TUNE command did not appear to work ***",ntry)
         else:
             break
-    else:
+        
+    else:     
+
+        # Never got a valid power reading - give up
         print("*** Need to press TUNE button ***\n")
         if s.connection=='FLDIGI':
             s.tune(False)
         elif s1:
             s1.tune(False)
         else:
+            print('*** PTT OFF ...')
             s.ptt(False)
+
+        print('*** Giving up ***')
         return
 
     swr = Read_Meter(self,6)

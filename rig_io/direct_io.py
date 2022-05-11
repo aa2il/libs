@@ -1649,7 +1649,7 @@ class direct_connect:
         
     
     def set_speed(self,wpm):
-        #VERBOSITY=1
+        VERBOSITY=1
         if VERBOSITY>0:
             print('DIRECT SETting keyer SPEED ...',self.rig_type,self.rig_type2,wpm)
 

@@ -240,3 +240,12 @@ class no_connect:
             logging.info('Ignoring call')
         return 
     
+    def get_monitor_gain(self):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
+        return 0
+    
+    def set_monitor_gain(self,gain):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
+        return 

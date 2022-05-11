@@ -85,7 +85,11 @@ DEFAULT_PORTS["HAMLIB"] = {'KEYER'   : 4540,
 
 CONNECTIONS = ['FLDIGI','FLRIG','DIRECT','HAMLIB','ANY']
 RIGS        = ['FTdx3000','FT991a','TS850','IC9700','IC706']
+ACCESSORIES = ['nanoIO']
 SAT_RIGS    = ['FT991a','IC9700','pySDR']
+
+DEVICE_IDs={'nanoIO'   : '1A86' ,
+             'FTdx3000' : 'SER=AH046H3M120067'}
 
 ############################################################################################
 
@@ -138,7 +142,7 @@ XE_STATES=['AGS','BAC','BCS','CAM','CHI','CHH','CMX','COA','COL','DGO','EMX','GT
 
 NA_COUNTRIES=['AK','PR','ZF','VI','HI','XE','V3','TI','8P','DX','KP4','HR','CY9','HP','KP2','HH','DR']
 NAQP_SECS = STATES + PROVINCES + NA_COUNTRIES + ['DC']
-SST_SECS  = STATES + PROVINCES  + ['CWA']
+SST_SECS  = STATES + PROVINCES  + ['CWA','DX','AUS']
 CQ_STATES = LOWER48 + PROVINCES + ['DC']
 
 RU_SECS = LOWER48 + PROVINCES + ['DC']

@@ -128,13 +128,19 @@ class fldigi_xlmrpc(direct_connect):
 
                 # Probe FLRIG interface
                 self.flrig()
-                print("Connected to flrig")
+                if self.flrig_active:
+                    print("Connected to FLRIG")
             except Exception as e: 
                 print( str(e) )
                 print(tag,": Unable to open FLDIGI/FLRIG")
 
         # Determine which rig is on the other end
         self.active = self.fldigi_active or self.flrig_active
+        if not self.active:
+            self.s=None
+            self.rig_type  = 'UNKNOWN'
+            self.rig_type1 = 'UNKNOWN'
+            self.rig_type2 = 'UNKNOWN'
 
         if False:
             # This doesn't work for the FT991a
@@ -793,8 +799,11 @@ class fldigi_xlmrpc(direct_connect):
 
     # Function to turn PTT on and off
     def ptt(self,on_off,VFO='A'):
-        #print('FLDIGI_IO PTT:',on_off,VFO)
-        if self.flrig_active and True:
+        #VERBOSITY=1
+        if VERBOSITY>0:
+            print('FLDIGI_IO PTT:',on_off,VFO)
+            
+        if self.flrig_active:
 
             # Need to test this pathway out but it shows promise
             print('FLDIGI_IO PTT - Using flrig - on/off=',on_off, \
@@ -840,8 +849,9 @@ class fldigi_xlmrpc(direct_connect):
             
         elif VFO=='A':
 
-            print('FLDIGI_IO PTT - Using fl - on/off, vfo=:',\
-                  on_off,VFO,self.fldigi_active)
+            if VERBOSITY>0:
+                print('FLDIGI_IO PTT - Using fl - on/off, vfo=:',\
+                      on_off,VFO,self.fldigi_active)
             
             self.lock.acquire()
             if on_off:
@@ -860,7 +870,8 @@ class fldigi_xlmrpc(direct_connect):
 
         else:
 
-            print('FLDIGI_IO PTT - Using direct - on/off, vfo=:',on_off,VFO)
+            if VERBOSITY>0:
+                print('FLDIGI_IO PTT - Using direct - on/off, vfo=:',on_off,VFO)
             if on_off:
                 self.send('FT3;TX1;')
             else:
