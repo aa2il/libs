@@ -193,6 +193,8 @@ def load_history(history,DEBUG_CALL=None):
                                     key='fdsec'
                             elif fname[:7]=='QSOP_CA' and key=='exch1':
                                 key='qth'
+                            elif fname[:7]=='13COLON' and key=='exch1':
+                                key='state'
                             elif fname[:6]=='CWOPS_' and key=='exch1':
                                 key='cwops'
                             elif fname[:8]=='K1USNSST' and key=='exch1':
@@ -256,10 +258,10 @@ def load_history(history,DEBUG_CALL=None):
                                 
                         if key in ALL_FIELDS:
                             HIST[call][key] = val
-                        elif key not in ['',' ','call','usertext','ccnr','mbrdate']:
-                            print('LOAD_HISTORY: Unknown field ...')
+                        elif key not in ['',' ','call','usertext','misc','ccnr','mbrdate']:
+                            print('\nLOAD_HISTORY: Unknown field ...')
                             print('row=',row)
-                            print('key/val=',key,row[i])
+                            print('key=',key,'\tval=',row[i],'\n')
                             sys.exit(0)
 
                     if call==DEBUG_CALL:

@@ -23,9 +23,14 @@ import sys
 import numpy as np
 import time
 
+VERBOSITY=0
+
 ############################################################################
 
 def cut_numbers(n,ndigits=-3,ALL=False):
+
+    if VERBOSITY>0:
+        print('CUT_NUMBERS:',n,ndigits,ALL)
 
     n=int(n)
 
@@ -69,10 +74,12 @@ def cut_numbers(n,ndigits=-3,ALL=False):
                 ndigits=2
         
         txt = '{:d}'.format(n)
-        #print('Cut Numbers: n=',n,'\tndigits=',ndigits,'\ttxt=',txt,'\tlen=',len(txt))
+        if VERBOSITY>0:
+            print('CUT NUMBERS B4: n=',n,'\tndigits=',ndigits,'\ttxt=',txt,'\tlen=',len(txt))
         while len(txt)<ndigits:
             txt = 'T'+txt
-        #print('Cut Numbers: n=',n,'\tndigits=',ndigits,'\ttxt=',txt,'\tlen=',len(txt))
+        if VERBOSITY>0:
+            print('CUT NUMBERS AFTER: n=',n,'\tndigits=',ndigits,'\ttxt=',txt,'\tlen=',len(txt))
         
     return txt
     
