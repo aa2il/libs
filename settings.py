@@ -120,7 +120,6 @@ class SETTINGS_GUI():
         #self.win.update()
         #self.win.deiconify()
         self.show()
-        print('Hey2')
 
 
     def Dismiss(self):

@@ -185,7 +185,7 @@ def bpf(flow,fhigh,fs,n):
 
 # Lowpass filter design
 def lpf(bw,fs,n):
-    #print 'LPF:',bw,fs,n
+    #print('LPF: bw=',bw,'\tfs=',fs,'\tn=',n)
 
     fn=bw/float(fs/2.)                  # Normalized LPF cutoff freq - Nyquist is 1
     #    h = signal.firwin(n, fn)       # Default window is hamming
@@ -1189,11 +1189,14 @@ class Demodulator:
     
     # Function to handle filter changes
     def check_filter(self,CMPLX):
+        #print('CHECK_FITLER in: filt_num=',
+        #      self.filt_num,self.P.AF_FILTER_NUM,
+        #      '\tCMPLX=',CMPLX,self.last_type)
 
         # Check that we have the proper filter in place
-        if self.filt_num and  \
-           ((self.filt_num != self.P.AF_FILTER_NUM) or \
-           (CMPLX != self.last_type)):
+        #if self.filt_num and  \
+        if ( (self.filt_num != self.P.AF_FILTER_NUM) or \
+             (CMPLX != self.last_type)):
             self.filt_num = self.P.AF_FILTER_NUM
             if CMPLX:
                 self.lpf_post.h = self.filter_bank_cmpx[self.filt_num]
@@ -1227,6 +1230,8 @@ class Demodulator:
         else:
             self.check_filter(np.iscomplexobj(x))
 
+        #print('POST_DET: Calling fast convolver - filt num=',
+        #      self.filt_num,self.P.AF_FILTER_NUM)
         y = self.lpf_post.convolve_fast( x )
         #print 'TYPES:',x.dtype,y.dtype,this_type
         return y
@@ -1882,6 +1887,7 @@ class Receiver:
 
         # Up sample rate to desired output rate
         if self.FAST_SCHEME and True:
+            #print('DEMOD_DATA - Calling fast resampler ...')
             am2 = self.dec2.resample_fast(am)
             return am2
 

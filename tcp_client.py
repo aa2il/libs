@@ -38,15 +38,23 @@ class TCP_Client(Thread):
         self.host=host
         self.port=port
         self.BUFFER_SIZE = BUFFER_SIZE = 1024
+        self.running=False
         
         print('TCP Client:',host,port)
 
-        self.tcpClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-        self.tcpClient.connect((host, port))
         self.Stopper = Event()
+        self.StartClient()
 
-        self.socks = [self.tcpClient]        
- 
+    def StartClient(self):
+        print('TCP_CLIENT StartClient Starting ...')
+        if self.running:
+            self.tcpClient.close()
+            #self.socks.remove(self.tcpClient)
+        self.tcpClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+        self.tcpClient.connect((self.host, self.port))
+        self.socks = [self.tcpClient]
+        self.running=True
+        
     # Function to listener for new connections and/or data from clients
     def Listener(self): 
         print('Listener Client ...')
