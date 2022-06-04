@@ -64,13 +64,15 @@ class TCP_Client(Thread):
             time.sleep(1)
 
             # Get list of sockets 
-            #print('Getting list')
+            #print('Getting list ...')
             #readable,writeable,inerror = select.select(self.socks,self.socks,self.socks,0)
             readable,writeable,inerror = select.select(self.socks,[],[],0)
-            #print('readable=',readable,'\twriteable=',writeable,'\tinerror=',inerror)
+            #print('TCP_CLIENT->LISTENER: readable=',readable,
+            #       '\twriteable=',writeable,'\tinerror=',inerror)
+            if len(readable)==0 and False:
+                print('TCP_CLIENT->LISTENER: No open sockets')
             
             # iterate through readable sockets
-            #i=0
             for sock in readable:
                 # read from server
                 data = sock.recv(self.BUFFER_SIZE)
@@ -82,20 +84,28 @@ class TCP_Client(Thread):
                 else:
                     print('\r{}:'.format(sock.getpeername()),data)
                         
-            # a simple spinner to show activity
-            #i += 1
-            #print('/-\|'[i%4]+'\r',end='',flush=True)
-
         # Close socket
         self.tcpClient.close()
         print('Listerner: Bye bye!')
 
     def Send(self,msg):
 
+        readable,writeable,inerror = select.select([],self.socks,[],0)
+        #print('TCP_CLIENT->SEND: readable=',readable,
+        #      '\twriteable=',writeable,'\tinerror=',inerror)
+        if len(writeable)==0:
+            print('TCP_CLIENT->SEND: No open sockets')                
+                
+        for sock in writeable:
+            addr = sock.getsockname()
+            print('TCP_CLIENT->SEND: Sending msg',msg,'to addr',addr,'...')
+            sock.send(msg.encode())
+
+        return
+            
         sock = self.tcpClient
-        addr = sock.getsockname()
-        print('Sending',msg,'to',addr,'...')
         try:
+            addr = sock.getsockname()
             sock.send(msg.encode())
         except:
             print('Send: Problem with socket')

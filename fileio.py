@@ -442,7 +442,7 @@ def write_csv_file(fname,keys,qsos):
 
 
 # Function to read a simple text file
-def read_text_file(fname,KEEP_BLANKS=True):
+def read_text_file(fname,KEEP_BLANKS=True,UPPER=False):
 
     if False:
         # Old way
@@ -464,6 +464,8 @@ def read_text_file(fname,KEEP_BLANKS=True):
                     Done=True
                 else:
                     line=line.strip()
+                    if UPPER:
+                        line=line.upper()
                     if KEEP_BLANKS or len(line)>0:
                         lines.append(line)
 

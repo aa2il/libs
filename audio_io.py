@@ -127,7 +127,7 @@ class WaveRecorder(object):
             self.wavefile.writeframes(data)
 
             self.nframes+=1
-            if self.nframes==1:
+            if self.nframes==1 and False:
                 print('First frame of wave data (left chan):',left)
 
             return in_data, pyaudio.paContinue
