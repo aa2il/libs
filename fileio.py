@@ -322,10 +322,13 @@ def write_adif_record(fp,rec,P,long=False,sort=True):
             if len(val)>0:
                 fp.write('<%s:%d>%s%s' % (fld,len(val),val,NL) )
 
-    val=P.CONTEST_ID
-    if len(val)>0:
-        fld='CONTEST_ID'
-        fp.write('<%s:%d>%s%s' % (fld,len(val),val,NL) )
+    try:
+        val=P.CONTEST_ID
+        if len(val)>0:
+            fld='CONTEST_ID'
+            fp.write('<%s:%d>%s%s' % (fld,len(val),val,NL) )
+    except:
+        pass
         
     #fp.write('<EOR>\n'+NL)
     fp.write('<EOR>\n\n')

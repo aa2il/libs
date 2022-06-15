@@ -44,6 +44,7 @@ def read_settings(fname):
     try:
         with open(RCFILE) as json_data_file:
             SETTINGS = json.load(json_data_file)
+        #print('Settings:',SETTINGS)
     except:
         print(RCFILE,' not found!\n')
         s=SETTINGS_GUI(None,None)
@@ -70,6 +71,8 @@ def read_settings(fname):
 class CONFIG_PARAMS:
     def __init__(self,fname):
         self.SETTINGS,self.RCFILE=read_settings(fname)
+        #print('Settings:',self.SETTINGS)
+        #print('RCfile:',self.RCFILE)
 
 #########################################################################################
 

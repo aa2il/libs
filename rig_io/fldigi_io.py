@@ -117,7 +117,7 @@ class fldigi_xlmrpc(direct_connect):
 
             try:
                 # Look for flrig
-                print('Looking for FLRIG ...')
+                print('... no FLDIG - Looking for FLRIG ...')
                 info = self.s.rig.get_info()
                 self.version = 'flrig'
                 self.flrig_active=True
