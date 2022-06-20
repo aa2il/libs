@@ -899,8 +899,10 @@ class AudioIO():
                 print("Too few samples to start Playback...")
                 return False
 
-        print("\nStarting audio play back @",self.fs," Hz ... tag=",
-              self.rb.tag,'\tnsamps=',self.rb.nsamps,'\tdevice=',self.device)
+        print("\nStarting audio play back @",self.fs,"Hz\ttag=",self.rb.tag,
+              '\n\tnsamps=',self.rb.nsamps,'\tdevice=',self.device)
+        #time.sleep(5)
+        #sys.exit(0)
 
         self.stream = self.p.open(output_device_index=self.device,
                                   format=pyaudio.paFloat32,
