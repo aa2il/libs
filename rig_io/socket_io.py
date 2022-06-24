@@ -110,6 +110,7 @@ def open_rig_connection(connection,host=0,port=0,baud=0,tag='',
         pid = get_PIDs('flrig')
         print('pids=',pid)
         if len(pid)==0:
+            
             time.sleep(1)
             pid2 = get_PIDs('flrig')
             print('pids2=',pid2)
