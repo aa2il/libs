@@ -28,8 +28,6 @@ if sys.version_info[0]==3:
 else:
     from Tkinter import *
     import tkFont
-from dx.cluster_connections import get_logger
-from dx.spot_processing import Station
 import time
 
 #########################################################################################
