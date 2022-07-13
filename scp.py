@@ -52,6 +52,7 @@ class SUPER_CHECK_PARTIAL:
                 matches.append(c)
 
         matches = [x for _, x in sorted(zip(dist,matches))]
+        print('SCP: call=',call,'-',matches)
                 
         return matches
         
