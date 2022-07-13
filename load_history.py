@@ -183,7 +183,10 @@ def load_history(history,DEBUG_CALL=None):
                         if len(item)>0 and item[0] not in COMMENT_CHARS and item!='nan':
                             key = item.strip().lower()
                             if key=='sect':
-                                key='sec'
+                                if fname[:4]=='IARU':
+                                    key='ituz'
+                                else:
+                                    key='sec'
                             elif key=='ck':
                                 key='check'
                             elif fname[:5]=='FD_20':

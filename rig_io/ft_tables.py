@@ -24,8 +24,6 @@ import os
 import sys
 import csv
 import numpy as np
-#import xlrd
-#from unidecode import unidecode
 
 ############################################################################################
 
@@ -142,7 +140,7 @@ XE_STATES=['AGS','BAC','BCS','CAM','CHI','CHH','CMX','COA','COL','DGO','EMX','GT
 
 NA_COUNTRIES=['AK','PR','ZF','VI','HI','XE','V3','TI','8P','DX','KP4','HR','CY9','HP','KP2','HH','DR']
 NAQP_SECS = STATES + PROVINCES + NA_COUNTRIES + ['DC']
-SST_SECS  = STATES + PROVINCES  + ['CWA','DX','AUS','NT']
+SST_SECS  = STATES + PROVINCES  + ['CWA','DX','AUS','NT','DC']
 CQ_STATES = LOWER48 + PROVINCES + ['DC']
 
 RU_SECS = LOWER48 + PROVINCES + ['DC']
