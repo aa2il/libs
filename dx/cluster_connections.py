@@ -106,11 +106,19 @@ def connection(TEST_MODE,CLUSTER,MY_CALL,fname=None,ip_addr=None,port=None):
             tn.write( bytes(MY_CALL+"\n",'utf-8') )              # send the callsign
             print("--- Connected to DXCluster ---")
             time.sleep(.1)
-            tn.write(b"SET/FT8\n")            # Enable ft8 spots - there are a bunch of other things we can do also
+            tn.write(b"Set DX Filter Skimmer AND SpotterCont = NA\n")            # Enable CW Skimmer & only spots from north america
+            #tn.write(b"Set DX Filter Skimmer\n")            # Enable CW Skimmer 
             time.sleep(.1)
-            tn.write(b"SET/FT4\n")            # Enable ft4 spots also
-            time.sleep(.1)
-            tn.write(b"SHOW/DX\n")            # Get last N spots to start populating the map
+            #tn.write(b"Set DX Filter SpotterCont = NA\n")            # Enable CW Skimmer & only spots from north america
+            #time.sleep(.1)
+            if False:
+                tn.write(b"SET/DX/FILTER/SKIMMER\n")            # Enable CW Skimmer
+                time.sleep(.1)
+                tn.write(b"SET/FT8\n")            # Enable ft8 spots - there are a bunch of other things we can do also
+                time.sleep(.1)
+                tn.write(b"SET/FT4\n")            # Enable ft4 spots also
+                time.sleep(.1)
+                tn.write(b"SHOW/DX\n")            # Get last N spots to start populating the map
             break
 
     return tn

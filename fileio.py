@@ -447,30 +447,21 @@ def write_csv_file(fname,keys,qsos):
 # Function to read a simple text file
 def read_text_file(fname,KEEP_BLANKS=True,UPPER=False):
 
-    if False:
-        # Old way
-        with open(fname) as f:
-            lines = f.readlines()
-
-        for i in range(0,len(lines)):
-            lines[i]=lines[i].strip()
-
-    else:
-
         # Line by line so we can do some better filtering
         lines=[]
-        Done=False
-        with open(fname) as f:
-            while not Done:
-                line = f.readline()
-                if not line:
-                    Done=True
-                else:
-                    line=line.strip()
-                    if UPPER:
-                        line=line.upper()
-                    if KEEP_BLANKS or len(line)>0:
-                        lines.append(line)
+        if os.path.exists(fname):
+            Done=False
+            with open(fname) as f:
+                while not Done:
+                    line = f.readline()
+                    if not line:
+                        Done=True
+                    else:
+                        line=line.strip()
+                        if UPPER:
+                            line=line.upper()
+                        if KEEP_BLANKS or len(line)>0:
+                            lines.append(line)
 
     return lines
 

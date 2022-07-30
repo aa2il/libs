@@ -24,6 +24,7 @@
 #########################################################################################
 
 import sys
+import numpy as np
 
 #########################################################################################
 
@@ -75,13 +76,16 @@ def latlon2maidenhead(lat,lon,nchar):
 def maidenhead2latlon(gridsq):
 
     # Error checking
-    if len(gridsq)%2:
-        print('ERROR - length of grid square must be event - gridsq=',gridsq)
-        sys.exit(-1)
+    valid=True
+    if len(gridsq)==0 or len(gridsq)%2:
+        print('MAIDENHEAD2LATLON ERROR - length of grid square must be >=2 and even:',gridsq)
+        valid=False
+        return np.nan,np.nan
+        #sys.exit(-1)
     
-    A=ord('A');                  # Ascii 65
-    lonch = gridsq[0::2]         # Pull out chars related to longitude
-    latch = gridsq[1::2]         # Pull out chars related to latitude
+    A=ord('A');                    # Ascii 65
+    lonch = gridsq[0::2].upper()   # Pull out chars related to longitude
+    latch = gridsq[1::2].upper()   # Pull out chars related to latitude
 
     # Convert lat and lon locators into lat & lon in degrees
     step=10*24                   # At the coursest level, there are 24 10-deg lat squares
@@ -91,20 +95,55 @@ def maidenhead2latlon(gridsq):
     for i in range(len(lonch)):
         if i%2:
             # The odd chars are numbers 0-9
+            valid=valid and lonch[i]>='0' and lonch[i]<='9' and \
+                latch[i]>='0' and latch[i]<='9'
             x=int( lonch[i] )
             y=int( latch[i] )
             step/=10
         else:
             # The even chars are letters A-X
+            valid=valid and lonch[i]>='A' and lonch[i]<='X' and \
+                latch[i]>='A' and latch[i]<='X'
             x=ord( lonch[i] )-A
             y=ord( latch[i] )-A
             step/=24
         
-        lon+=x*step*2              # Lon squares in deg. are twice as big as lat
-        lat+=y*step
-        #print(x,lon_step,lon)
+        if not valid:
+            print('MAIDENHEAD2LATLON ERROR - Invalid grid square:',gridsq)
+            return np.nan,np.nan
+        else:
+            lon+=x*step*2              # Lon squares in deg. are twice as big as lat
+            lat+=y*step
+            #print(x,lon_step,lon)
 
+    #print(gridsq,len(gridsq),lat,lon,valid)
     return lat,lon
+
+
+def distance_maidenhead(grid1,grid2):
+    #R = 6378  # km
+    R = 3963  # miles
+
+    lat1,lon1=maidenhead2latlon(grid1)
+    lat2,lon2=maidenhead2latlon(grid2)
+    
+    lat1 = np.radians( lat1 )
+    lon1 = np.radians( lon1 )
+    lat2 = np.radians( lat2 )
+    lon2 = np.radians( lon2 )
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+
+    a = np.sin(dlat / 2)**2 + np.cos(lat1) * np.cos(lat2) * np.sin(dlon / 2)**2
+    if a<0:
+        print('\na=',a)
+        print(grid1,lat1,lon1)
+        print(grid2,lat2,lon2)
+        print(dlon,dlat)
+    c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1-a))
+    distance = R * c
+    return distance
+
 
 
 ################################################################################
