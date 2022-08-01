@@ -25,6 +25,8 @@ import re
 from rig_io.ft_tables import *
 import csv
 from collections import OrderedDict
+from zipfile import ZipFile
+from io import TextIOWrapper
 
 #######################################################################################
 
@@ -381,28 +383,48 @@ def qso_time(rec):
 
 def read_csv_file(fname,delim=','):
 
+    name=os.path.splitext(fname)[0]
+    ext=os.path.splitext(fname)[1]
+    print('name=',name,'\text=',ext)
+
     hdr=[]
     QSOs=[]
-    with open(fname) as f:
-        rows = csv.reader(f,delimiter=delim)
+    keys=None
+    if ext=='.zip':
 
-        keys=None
-        for row in rows:
-            #print('row=',row)
-            #print(row[0][0])
-            if row[0][0]=='#':
-                # Comment
-                hdr.append(row)
-                #print('Comment')
-            elif keys==None:
-                keys=row
-                #print('keys=',keys)
-            else:
-                qso={}
-                for key,val in zip(keys,row):
-                    qso[key]=val
-                #print(qso)
-                QSOs.append(qso)
+        # Added this to handle zipped csv files from the RBN
+        with ZipFile(fname, 'r') as zip:
+            with zip.open(name+'.csv', 'r') as f:
+                rows = csv.reader(TextIOWrapper(f, 'utf-8'),delimiter=delim)
+
+                for row in rows:
+                    #print(row)
+                    if row[0][0]=='#':
+                        hdr.append(row)
+                    elif keys==None:
+                        keys=row
+                    else:
+                        qso={}
+                        for i in range(len(row)):
+                            qso[keys[i]]=row[i]
+                        QSOs.append(qso)
+                
+    else:
+
+        # Normal csv text file
+        with open(fname) as f:
+            rows = csv.reader(f,delimiter=delim)
+
+            for row in rows:
+                if row[0][0]=='#':
+                    hdr.append(row)
+                elif keys==None:
+                    keys=row
+                else:
+                    qso={}
+                    for key,val in zip(keys,row):
+                        qso[key]=val
+                    QSOs.append(qso)
 
     return QSOs,hdr
 
@@ -447,21 +469,21 @@ def write_csv_file(fname,keys,qsos):
 # Function to read a simple text file
 def read_text_file(fname,KEEP_BLANKS=True,UPPER=False):
 
-        # Line by line so we can do some better filtering
-        lines=[]
-        if os.path.exists(fname):
-            Done=False
-            with open(fname) as f:
-                while not Done:
-                    line = f.readline()
-                    if not line:
-                        Done=True
-                    else:
-                        line=line.strip()
-                        if UPPER:
-                            line=line.upper()
-                        if KEEP_BLANKS or len(line)>0:
-                            lines.append(line)
+    # Line by line so we can do some better filtering
+    lines=[]
+    if os.path.exists(fname):
+        Done=False
+        with open(fname) as f:
+            while not Done:
+                line = f.readline()
+                if not line:
+                    Done=True
+                else:
+                    line=line.strip()
+                    if UPPER:
+                        line=line.upper()
+                    if KEEP_BLANKS or len(line)>0:
+                        lines.append(line)
 
     return lines
 

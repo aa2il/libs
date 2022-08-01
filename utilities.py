@@ -105,3 +105,44 @@ def reverse_cut_numbers(x,n=0):
 
     return out
 
+
+
+def freq2band(frq):
+
+    if frq<0:
+        band=None
+    elif frq<1.7:
+        band='MW'
+    elif frq<3:
+        band='160m'
+    elif frq<5:
+        band='80m'
+    elif frq<6:
+        band='60m'
+    elif frq<9:
+        band='40m'
+    elif frq<12:
+        band='30m'
+    elif frq<16:
+        band='20m'
+    elif frq<20:
+        band='17m'
+    elif frq<23:
+        band='15m'
+    elif frq<27:
+        band='12m'
+    elif frq<40:
+        band='10m'
+    elif frq<60:
+        band='6m'
+    elif frq<144:
+        band='AIR'
+    elif frq<200:
+        band='2m'
+    elif frq<300:
+        band='1.25m'
+    else:
+        band='70cm'
+            
+    return band
+
