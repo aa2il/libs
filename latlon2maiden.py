@@ -120,9 +120,11 @@ def maidenhead2latlon(gridsq):
     return lat,lon
 
 
-def distance_maidenhead(grid1,grid2):
-    #R = 6378  # km
-    R = 3963  # miles
+def distance_maidenhead(grid1,grid2,miles=True):
+    if miles:
+        R = 3963  # miles
+    else:
+        R = 6378  # km
 
     lat1,lon1=maidenhead2latlon(grid1)
     lat2,lon2=maidenhead2latlon(grid2)
