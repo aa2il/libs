@@ -514,6 +514,7 @@ class Spot(object):
                 self.comment = ""
                 self.mode = None
                 self.snr = ''
+                self.wpm = None
                 self.band = None
                 self.locator = None
                 #                print "HEY 1"
@@ -536,8 +537,15 @@ class Spot(object):
                 mode=self.mode
                 snr=''
                 df=''
+                wpm=''
                 if "CW" in comment.upper(): 
                         mode="CW"
+                        idx1 = comment.find('WPM')
+                        if idx1>0:
+                            wpm = comment[(idx1-3):(idx1-1)]
+                        idx1 = comment.find('dB')
+                        if idx1>0:
+                            snr = comment[(idx1-3):(idx1-1)]
                 elif "RTTY" in comment.upper(): 
                         mode="RTTY"
                 elif "PSK31" in comment.upper(): 
@@ -602,6 +610,7 @@ class Spot(object):
                 self.mode=mode
                 #                print "mode=",mode
                 self.snr = snr
+                self.wpm = wpm
                 self.df  = df
 
 

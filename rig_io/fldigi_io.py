@@ -719,9 +719,12 @@ class fldigi_xlmrpc(direct_connect):
 
     # Functions to send a command directly to the rig & get the response
     def send(self,cmd):
-        #print 'SEND: Waiting for LOCK...'
+        #VERBOSITY=1
+        if VERBOSITY>0:
+            print('FLDIGI SEND: Waiting for LOCK...')
         self.lock.acquire()
-        #print 'SEND: Got LOCK...'
+        if VERBOSITY>0:
+            print('FLDIGI SEND: ... Got LOCK...')
         if self.fldigi_active:
             #print "FLDIGI SEND:",cmd
             self.reply = self.s.rig.send_command(cmd,100)
@@ -732,9 +735,9 @@ class fldigi_xlmrpc(direct_connect):
                     cmd2=' '.join( show_hex(cmd) )
                 else:
                     cmd2=cmd
-                #print("FLDIGI SEND: cmd=",cmd2)
                 reply = self.s.rig.cat_string(cmd2)
-                #print('SEND: reply=',reply)
+                if VERBOSITY>0:
+                    print("FLDIGI SEND: cmd=",cmd2,'\treply=',reply)
                 if self.rig_type2 == "IC9700":
                     self.reply = [int(i,16) for i in reply.split(' ')]
                 else:
@@ -769,7 +772,7 @@ class fldigi_xlmrpc(direct_connect):
         return 0
 
     def get_response(self,cmd):
-        #VERBOSITY=0
+        #VERBOSITY=1
         if VERBOSITY>0:
             print('FLDIGI GET_RESPONSE: Sending CMD ... ',cmd)
         #print('Waiting for lock')

@@ -103,13 +103,18 @@ def connection(TEST_MODE,CLUSTER,MY_CALL,fname=None,ip_addr=None,port=None):
                         else:
                             line=line+ch
 
-            tn.write( bytes(MY_CALL+"\n",'utf-8') )              # send the callsign
+            tn.write( bytes(MY_CALL+"\n",'utf-8'))              # send the callsign
             print("--- Connected to DXCluster ---")
             time.sleep(.1)
-            tn.write(b"Set DX Filter Skimmer AND SpotterCont = NA\n")            # Enable CW Skimmer & only spots from north america
-            #tn.write(b"Set DX Filter Skimmer\n")            # Enable CW Skimmer 
+            #print("Default Settings:\n")
+            tn.write( bytes("Show DX Options\n",'utf-8'))   
             time.sleep(.1)
-            #tn.write(b"Set DX Filter SpotterCont = NA\n")            # Enable CW Skimmer & only spots from north america
+            tn.write(bytes("Set DX Filter Skimmer AND SpotterCont = NA\n",'utf-8'))            # Enable CW Skimmer & only spots from north america
+            time.sleep(.1)
+            tn.write( bytes("Set DX Mode Open\n",'utf-8'))   
+            time.sleep(.1)
+            #print("Current Settings:\n")
+            tn.write( bytes("Show DX Options\n",'utf-8'))   
             #time.sleep(.1)
             if False:
                 tn.write(b"SET/DX/FILTER/SKIMMER\n")            # Enable CW Skimmer

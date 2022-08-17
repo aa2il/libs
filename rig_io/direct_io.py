@@ -1856,7 +1856,7 @@ class direct_connect:
 
 
 
-    # Function to get monitor level
+    # Function to get monitor level - see note below on set_mon_gain
     def get_monitor_gain(self):
         buf = self.get_response('ML1;')
         if VERBOSITY>0:
@@ -1869,13 +1869,16 @@ class direct_connect:
     
         
     # Function to set monitor level and turn on the monitor
+    # Note - this seems different than menu item 035 which is General Monitor Level
+    # We acces the latter via EX035xxx command
     def set_monitor_gain(self,gain):
+        #VERBOSITY=1
         if VERBOSITY>0:
             print('DIRECT_IO - SET_MONITOR_GAIN: gain=',gain)
-        cmd  = 'ML1'+str(gain).zfill(3)+';ML0001;'
+        cmd  = 'ML1'+str(gain).zfill(3)+';ML1;'
         buf=self.get_response(cmd)
         if VERBOSITY>0:
-            print('HAMLIB_IO - SET_MONITOR_GAIN: cmd=',cmd,'\tbuf=',buf)
+            print('DIRECT_IO - SET_MONITOR_GAIN: cmd=',cmd,'\tbuf=',buf)
     
     # Need to fill this out
     def recorder(self,on_off=None):

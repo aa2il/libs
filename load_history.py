@@ -49,7 +49,7 @@ def load_history(history,DEBUG_CALL=None):
     COMMENT_CHARS=['#','!']
     HIST = OrderedDict()
     ALL_FIELDS=['name','state','sec','check','county','cwops', \
-                'fdcat','fdsec','ituz','cqz','grid','skccnr','city','fistsnr']
+                'fdcat','fdsec','ituz','cqz','grid','skccnr','city','fistsnr','names']
 
     # If no history file, we're done
     if history=='':
@@ -120,7 +120,10 @@ def load_history(history,DEBUG_CALL=None):
 
                 HIST[call] = OrderedDict()
                 for field in ALL_FIELDS:
-                    HIST[call][field]=''
+                    if field=='names':
+                        HIST[call][field]=[]
+                    else:
+                        HIST[call][field]=''
                 HIST[call]['name']   = name.upper()
                 HIST[call]['state']  = state.upper()
                 HIST[call]['cwops']  = str( int(number) )
@@ -230,7 +233,10 @@ def load_history(history,DEBUG_CALL=None):
                     
                     HIST[call] = OrderedDict()
                     for field in ALL_FIELDS:
-                        HIST[call][field]=''
+                        if field=='names':
+                            HIST[call][field]=[]
+                        else:
+                            HIST[call][field]=''
                     #print('call=',call)
                     #print('Hist=',HIST[call])
                     #sys.exit(0)
@@ -259,7 +265,10 @@ def load_history(history,DEBUG_CALL=None):
                                 key=''
                                 
                         if key in ALL_FIELDS:
-                            HIST[call][key] = val
+                            if key=='names':
+                                HIST[call][key].append(val)
+                            else:
+                                HIST[call][key] = val
                         elif key not in ['',' ','call','usertext','misc','ccnr','mbrdate']:
                             print('\nLOAD_HISTORY: Unknown field ...')
                             print('row=',row)
