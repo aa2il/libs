@@ -393,8 +393,8 @@ def read_csv_file(fname,delim=','):
     if ext=='.zip':
 
         # Added this to handle zipped csv files from the RBN
-        with ZipFile(fname, 'r') as zip:
-            with zip.open(name+'.csv', 'r') as f:
+        with ZipFile(fname, 'r') as zipf:
+            with zipf.open(name+'.csv', 'r') as f:
                 rows = csv.reader(TextIOWrapper(f, 'utf-8'),delimiter=delim)
 
                 for row in rows:
