@@ -680,6 +680,7 @@ def write_mem_icom(self,grp,lab,ch,frq,mode,pl,frq2,inverting):
         P62 =[ icom_modes[mode2]["Code"] ]         # Mode2
     else:
         P62=P6
+        mode2=mode
     P22=[]
 
     # Check for a satellite

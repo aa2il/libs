@@ -1115,9 +1115,15 @@ class direct_connect:
         elif frq<200:
             band=2
         elif frq<300:
-            band=1.25
+            band=125
+        elif frq<500:
+            band=70
+        elif frq<1000:
+            band=33
+        elif frq<1300:
+            band=23
         else:
-            band='70cm'
+            band=0
             
         if VERBOSITY>0:
             print("DIRECT: Current rig freq=",frq," MHz --> ",band,"m")

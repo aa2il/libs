@@ -221,13 +221,11 @@ def parse_adif(fn,line=None,upper_case=False,verbosity=0):
         if 'call' in qso or 'CALL' in qso:
             if upper_case:
                 if 'QSO_DATE_OFF' not in qso:
-                    #print('qso=',qso)
                     qso['QSO_DATE_OFF'] = qso['QSO_DATE']
                 if 'TIME_OFF' not in qso:
                     qso['TIME_OFF'] = qso['TIME_ON']
             else:
                 if 'qso_date_off' not in qso:
-                    #print('qso=',qso)
                     qso['qso_date_off'] = qso['qso_date']
                 if 'time_off' not in qso:
                     qso['time_off'] = qso['time_on']
@@ -306,7 +304,7 @@ def write_adif_record(fp,rec,P,long=False,sort=True):
         val = qso[fld]
         #print('WRITE_ADIF_RECORD:',fld,val)
         if fld=='SAT_NAME':
-            if val!='None':
+            if val!='None' and val!='':
                 if val=='ISS':
                     val='ARISS'
                 fp.write('<%s:%d>%s%s' % (fld,len(val),val,NL) )
@@ -350,14 +348,27 @@ def write_adif_log(qsos,fname,P):
 
     for qso in qsos:
         keys=sort_keys(qso.keys())
+
+        # LoTW requires these fields
+        if 'qso_date' not in keys:
+            keys.append('qso_date')
+        if 'time_on' not in keys:
+            keys.append('time_on')
         if VERBOSITY>0:
             print('\nqso=',qso,'\nkeys=',keys)
+            
         qso2=OrderedDict()
         for key in keys:
             if VERBOSITY>0:
                 print('key=',key)
             if key in qso:
+                # Fill in any missing fields that LoTW requires 
+                if key=='qso_date' and len(qso[key])==0:
+                    qso[key] = qso['qso_date_off']
+                if key=='time_on' and len(qso[key])==0:
+                    qso[key] = qso['time_off']
                 qso2[key.upper()] = qso[key]
+                
         if VERBOSITY>0:
             print(qso2)
         
@@ -385,7 +396,7 @@ def read_csv_file(fname,delim=','):
 
     name=os.path.splitext(fname)[0]
     ext=os.path.splitext(fname)[1]
-    print('name=',name,'\text=',ext)
+    print('READ_CSV_FILE: name=',name,'\text=',ext)
 
     hdr=[]
     QSOs=[]
@@ -416,13 +427,19 @@ def read_csv_file(fname,delim=','):
             rows = csv.reader(f,delimiter=delim)
 
             for row in rows:
-                if row[0][0]=='#':
+                #print(row)
+                if row[0]=='':
+                    print('Skipping row=',row)
+                elif row[0][0]=='#':
                     hdr.append(row)
                 elif keys==None:
                     keys=row
                 else:
                     qso={}
                     for key,val in zip(keys,row):
+                        if key[:4]=='time':
+                            #print(key,'\t',val)
+                            val=val.replace("'","")
                         qso[key]=val
                     QSOs.append(qso)
 
@@ -450,10 +467,14 @@ def write_csv_file(fname,keys,qsos):
                 sep='\n'
             try:
                 val = str( qso[key] )
+                #if key[:4]=='time':
+                #    print(qso[key],'\t',val)
                 #if key[:4]=='time' and len(val)>0 and len(val)!=6:
                 #    val='"'+str(val).zfill(6)+'"'
                 #elif ',' in val or val[0]=='0':
-                if ',' in val:
+                if key[:4]=='time':                    
+                    val="'"+val
+                elif ',' in val:
                     val='"'+val+'"'
             except:
                 val=''

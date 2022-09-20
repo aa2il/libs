@@ -23,6 +23,11 @@ import sys
 import numpy as np
 import time
 
+from subprocess import check_output, CalledProcessError
+import platform
+
+############################################################################
+
 VERBOSITY=0
 
 ############################################################################
@@ -106,6 +111,7 @@ def reverse_cut_numbers(x,n=0):
     return out
 
 
+############################################################################
 
 def freq2band(frq):
 
@@ -141,8 +147,73 @@ def freq2band(frq):
         band='2m'
     elif frq<300:
         band='1.25m'
+    elif frq<500:
+        band='70cm'
+    elif frq<1000:
+        band='33cm'
+    elif frq<1500:
+        band='23cgm'
     else:
         band='70cm'
             
     return band
 
+
+############################################################################
+
+# Routine to get PID of a process by name
+def get_PIDs(name):
+    if platform.system()=='Linux':
+        try:
+            pidlist = list(map(int, check_output(["pidof", name]).split()))
+        except  CalledProcessError:
+            pidlist = []
+    elif platform.system()=='Windows':
+        #name='chrome'
+        name=name+'.exe'
+        #print('GET_PIDs: Windoz')
+        cmd='tasklist /fi "imagename eq '+name
+        #print('GET_PIDs: cmd=',cmd)
+        result = check_output(cmd).decode()
+        #print('GET_PIDs: result=',result)
+        result2=result.strip().split('\r\n')
+        #print('GET_PIDs: result2=',result2)
+        #print(len(result2))
+        pidlist = []
+        for line in result2:
+            if name in line:
+                #print(line)
+                a=line.split()
+                #print(a)
+                pidlist.append(int(a[1]))
+        #sys.exit(0)
+    else:
+        print('GET_PIDs: Unknown OS',platform.system())
+        sys.exit(0)
+
+    #print('GET_PISD: List of PIDs = ',pidlist)
+    #sys.exit(0)
+    return pidlist
+
+"""
+ In windoz, use wmic:
+ C:\>wmic process where "name='chrome.exe'" get ProcessID, ExecutablePath
+
+ In Linux, can also use    pgrep flrig
+
+def process_exists(process_name):
+    call="TASKLIST", '/FI', 'imagename eq %s' % process_name
+    # use buildin check_output right away
+    output = subprocess.check_output(call).decode()
+    # check in last line for process name
+    last_line = output.strip().split('\r\n')[-1]
+    # because Fail message could be translated
+    return last_line.lower().startswith(process_name.lower())
+
+>>> import platform
+>>> platform.system()
+'Linux'
+'Windows' or
+'Darwin'   (Mac)
+
+"""

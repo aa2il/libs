@@ -37,7 +37,7 @@ from .fldigi_io import fldigi_xlmrpc,fllog_xlmrpc
 import serial
 import socket
 from .ft_tables import *
-from .util import *
+from utilities import get_PIDs
 import time
 import numpy as np
 
@@ -100,6 +100,11 @@ def open_rig_connection(connection,host=0,port=0,baud=0,tag='',
         
     if connection=='NONE':
         return no_connect(host,port)
+
+    if rig=='TYT9000d':
+        print('HEY TYT!!!')
+        sock = tyt9000d_connect()
+        return sock
 
     if connection=='TS850' and force:
         #print('HEY',force)

@@ -82,7 +82,7 @@ DEFAULT_PORTS["HAMLIB"] = {'KEYER'   : 4540,
                            'BANDMAP' : 4532 }
 
 CONNECTIONS = ['FLDIGI','FLRIG','DIRECT','HAMLIB','ANY']
-RIGS        = ['FTdx3000','FT991a','TS850','IC9700','IC706']
+RIGS        = ['FTdx3000','FT991a','TS850','IC9700','IC706','TYT9000d']
 ACCESSORIES = ['nanoIO']
 SAT_RIGS    = ['FT991a','IC9700','pySDR']
 

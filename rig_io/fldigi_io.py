@@ -34,7 +34,7 @@ else:
 from .direct_io import direct_connect
 import threading
 import time
-from .util import *
+#from .util import *
 import socket
 from .ft_tables import DELAY, Decode_Mode, modes
 import re

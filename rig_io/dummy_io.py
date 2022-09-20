@@ -55,6 +55,8 @@ class no_connect:
 
     def get_band(self,frq=None,VFO='A'):
         if frq==None or frq<0:
+            if VERBOSITY>0:
+                print('Hey DUMMY GET_BAND: frq=',frq,'\tVFO=',VFO)
             band=None
         elif frq<1.7:
             band='MW'
@@ -116,6 +118,7 @@ class no_connect:
 
     def get_mode(self,VFO='A'):
         if VERBOSITY>0:
+            print('Hey DUMMY GET_MODE: VFO=',VFO)
             logging.info('Ignoring call')
         return 'CW'
         
@@ -126,6 +129,7 @@ class no_connect:
         
     def get_freq(self,VFO='A'):
         if VERBOSITY>0:
+            print('Hey DUMMY GET_FREQ: VFO=',VFO)
             logging.info('Ignoring call')
         return 0
 
@@ -211,6 +215,11 @@ class no_connect:
             logging.info('Ignoring call')
         return 0
     
+    def set_power(self,p):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
+        return 0
+        
     def set_position(self,pos):
         if VERBOSITY>0:
             logging.info('Ignoring call')
@@ -249,3 +258,28 @@ class no_connect:
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 
+
+
+# Dummy for the TYT9000d 220 FM rig so it will return something useful
+class tyt9000d_connect(no_connect):
+
+    def __init__(self):
+        no_connect.__init__(self)
+        self.active     = True
+        self.rig_type   = 'TYT'
+        self.rig_type1  = 'TYT'
+        self.rig_type2  = 'TYT9000d'
+    
+    def get_mode(self,VFO='A'):
+        if VERBOSITY>0:
+            print('Hey TYT GET_MODE: VFO=',VFO)
+            logging.info('TYT9000d GET MODE')
+        return 'FM'
+        
+    def get_freq(self,VFO='A'):
+        if VERBOSITY>0:
+            print('Hey TYT GET_FREQ: VFO=',VFO)
+            logging.info('TYT9000d GET FREQ')
+        return 223.5e6
+
+    
