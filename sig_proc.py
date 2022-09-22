@@ -795,9 +795,10 @@ def tone_gen(fo,N,fs,nchunk):
 # the callback deadline which can lead to underruns.  These in turn peg
 # the CPU, causing the SDR app to fall way behind.  To avoid this,
 #       sudo emacs /etc/pulse/daemon.conf
-# and uncomment the line
+# and un-comment the line
 #       default-fragments = 4
-# Then restart Pulse Audio:    pulseaudio --kill
+# Then restart Pulse Audio:
+#       pulseaudio --kill
 #
 # These websites are helpful in this regard:
 # https://bbs.archlinux.org/viewtopic.php?id=185736
@@ -902,10 +903,13 @@ class AudioIO():
         print("\nStarting audio play back @",self.fs,"Hz\ttag=",self.rb.tag,
               '\n\tnsamps=',self.rb.nsamps,'\tdevice=',self.device)
 
+        msec = 20                            # Set buffer size to about 20ms
+        ifr = int( .001*msec*self.fs )
         self.stream = self.p.open(output_device_index=self.device,
                                   format=pyaudio.paFloat32,
                                   channels=self.nchan,
                                   rate=self.fs,
+                                  frames_per_buffer=ifr,
                                   output=True,
                                   stream_callback=self.callback)
 
@@ -913,7 +917,7 @@ class AudioIO():
         self.Start_Time = time.time()
         self.active=True
         self.idle = False
-        print("Audio playback started ...",self.rb.tag)
+        print("Audio playback started ... tag=",self.rb.tag)
         return True
 
     def restart(self,dfs=0):
@@ -956,22 +960,50 @@ class AudioIO():
     # Callback to retrieve data for a hungry sound card.
     # Finally know how to do this without an external function!!!!
     def AudioPlayCB(self,in_data, frame_count, time_info, status):
-        #print('HEY!!!!')
+
+        DEBUG = 0
 
         rb=self.rb
         N=int(frame_count)
+        if DEBUG>=2:
+            print('\nAUDIO PLAY CallBack: status=',status,'\tN=',N,
+                  '\ttag=',rb.tag,'ZeroFill=',self.ZeroFill)
 
         ##################################################################
         # Handle problems - See comments just above AudioIO class def    #
-        # on how to fix underruns                                        #
+        # on how to fix some underruns.                                  #
+        #                                                                #
+        # Here are the error codes from the pyAudio manual:              #
+        #   PortAudio Callback Flags                                     #
+        #        paInputUnderflow  = 1                                   #
+        #        paInputOverflow   = 2                                   #
+        #        paOutputUnderflow = 4                                   #
+        #        paOutputOverflow  = 8                                   #
+        #        paPrimingOutput   = 16                                  #
+        #                                                                #
         ##################################################################
 
+        if status!=0 and True:
+            if status == pyaudio.paInputUnderflow:
+                err='Input Under Flow'
+            elif status == pyaudio.paInputOverflow:
+                err='Input Over Flow'
+            if status == pyaudio.paOutputUnderflow:
+                err='Output Under Flow'
+            elif status == pyaudio.paOutputOverflow:
+                err='Output Over Flow'
+            elif status == pyaudio.paPrimingOutput:
+                err='Priming Output'
+            print("AudioPlayCB: err=",err,'\ttag=',rb.tag,
+                  '\tframe cnt=',frame_count,'\n\ttime=',time_info,'\tstatus=',status)
+        
         if self.ZeroFill:
             Stopper=True
             if status!=0:
                 print('Warning - AudioPlayCB Non-zero Status')
         else:
             Stopper = (self.P.Stopper and self.P.Stopper.isSet())
+            
         if status!=0 and not Stopper:
             print("AudioPlayCB:",rb.tag,frame_count,time_info,status)
             if status == pyaudio.paOutputUnderflow:
@@ -990,26 +1022,45 @@ class AudioIO():
                 #print("Recharged on ",rb.tag,rb.nsamps,rb.size/2,self.P.RB_SIZE,N)
             
         # First time through, wait for ring buffer to start to fill
-        if self.FirstTime and False:
-            while rb.nsamps <= 4*N:
-                time.sleep(.01)
-                #pass
+        if self.FirstTime:
+            if False:
+                while rb.nsamps <= 4*N:
+                    time.sleep(.01)
+                    #pass
+            if False:
+                N=4*N
         self.FirstTime = False
 
         # Pull next chunk from the ring buffer
         if self.ZeroFill:
             nready = rb.nsamps
-            #print('Available:',nready,N)
-            if nready>=N:
-                x=rb.pull(N)
-            else:
-                #x=rb.pull(nready)
-                #print('Need padding')
-                #x=np.array(N*[0]*self.nchan)
-                x=np.array(N*[0])
+            if DEBUG>=2:
+                print('Available:',nready,N)
+
+            if nready<1024:
+                N2=1024
+                x2=np.array(N2*[0],dtype=np.float32)
+                rb.push(x2)
+                nready = rb.nsamps
+                if DEBUG>=1:
+                    print('Zero Pushed:',rb.tag,N2,x2.dtype,len(x2))
+                    print('Available:',nready,N)
+                    
+            if nready>0:
+                N1=min(N,nready)
+                x=rb.pull(N1)
+                if DEBUG>=2:
+                    print('Pulled:',rb.tag,N1,x.dtype)
+            if nready<N:
+                N2=N-nready
+                x2=np.array(N2*[0.],dtype=x.dtype)
+                x = np.concatenate( (x, x2) )
+                if DEBUG>=1:
+                    print('Zeroed:',rb.tag,N2,x.dtype,len(x))
         else:
             x=rb.pull(N)
-            #print('Pulled',rb.tag,x.dtype,self.nchan,rb.Chan)
+            if DEBUG>=2:
+                print('Pulled',rb.tag,x.dtype,self.nchan,rb.Chan)
     
         if self.nchan==2:
             #print(x.dtype==np.float32,x.dtype==np.float64)
@@ -1027,7 +1078,8 @@ class AudioIO():
             data = x.astype(np.float32).tostring()
         
         self.last=len(data)
-        #print('Pushed',N,self.last)
+        if DEBUG>=2 or status!=0:
+            print('Final Push:',N,self.last,x.dtype,len(data))
         return (data, pyaudio.paContinue)
 
 ###################################################################

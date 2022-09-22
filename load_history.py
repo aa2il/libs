@@ -38,7 +38,7 @@ from dx.spot_processing import Station
 from dx.cluster_connections import get_logger
 from pprint import pprint
 import glob 
-from rig_io.ft_tables import NAQP_SECS
+from rig_io.ft_tables import NAQP_SECS,CA_COUNTIES
 
 ###################################################################
 
@@ -260,7 +260,7 @@ def load_history(history,DEBUG_CALL=None):
                             elif len(val)==4:
                                 key='county'
                             else:
-                                print('Warning - skipping key',key)
+                                print('Warning - skipping blank key',key)
                                 print('row=',row)
                                 key=''
                                 
@@ -269,6 +269,9 @@ def load_history(history,DEBUG_CALL=None):
                                 HIST[call][key].append(val)
                             else:
                                 HIST[call][key] = val
+                                if fname[:7]=='QSOP_CA' and val in CA_COUNTIES:
+                                    HIST[call]['state'] = 'CA'
+                                    
                         elif key not in ['',' ','call','usertext','misc','ccnr','mbrdate']:
                             print('\nLOAD_HISTORY: Unknown field ...')
                             print('row=',row)
