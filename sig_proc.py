@@ -355,10 +355,11 @@ class ring_buffer2:
     # These allow arbirtrary chunk sizes to be accessed
     def push(self,x):
 
-        if self.tag=='Audio1' and False:
-            print(self.tag,'- Push',len(x),x.dtype)
-        if self.tag!='Audio1' and False:
+        DEBUG=0
+
+        if DEBUG>=2:
             print( self.tag,'- Push',x)
+        if DEBUG>=1:
             print( self.tag,'- Push',len(x),x.dtype)
             
         self.nsamps += len(x)

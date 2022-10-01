@@ -300,7 +300,7 @@ def read_mem_yaesu(self,chan):
     for ch in [chan]:
         cmd = 'BY;MC'+str(ch+1).zfill(3)+';'
         buf=self.sock.get_response(cmd)
-        print('\nSetting channel',ch,cmd)
+        print('\nReading channel',ch,cmd)
         print('response=',buf)
 
         if self.sock.rig_type2=='FT991a':    
@@ -311,15 +311,15 @@ def read_mem_yaesu(self,chan):
         print('\nReading channel',ch,cmd)
         print('response=',buf)
 
-        return resp2struct(buf)
+        return resp2struct(self,buf)
         
 
 def resp2struct(self,buf):
     mem=MEM_CHAN()
-    print('\nresp2struct: bufe=',buf)
+    print('\nresp2struct: buf=',buf)
 
     if True:
-        if buf[0:2] in ['MR','MT']:
+        if buf[0:2] in ['MR','MT','MW']:
             P2=buf[2:5]
             mem.chan=int(P2)
             print('P2=',P2,'\tChan=',mem.chan)
@@ -382,6 +382,7 @@ def resp2struct(self,buf):
             
         else:
             print('Mem channel not programmed')
+            mem=None
         
     return mem
             
@@ -451,8 +452,13 @@ def write_mem_yaesu(self,grp,lab,ch,KHz,mode,pl,frq2,inverting):
 
         if pl>0:
             P8='2'                                # Use PL tone
-            p3 = str( np.where(PL_TONES==pl)[0][0] ).zfill(3)
-            cmd2='CN00'+p3+';CT02;'
+            print('RIG TYPE2=',self.sock.rig_type2)
+            if self.sock.rig_type2=='FTdx3000':
+                p2 = str( np.where(PL_TONES==pl)[0][0] ).zfill(2)
+                cmd2='CN0'+p2+';CT02;'
+            else:
+                p3 = str( np.where(PL_TONES==pl)[0][0] ).zfill(3)
+                cmd2='CN00'+p3+';CT02;'
         else:
             P8='0'                          # No PL tone
             cmd2='CT00;'                    # CTCSS off
@@ -478,19 +484,19 @@ def write_mem_yaesu(self,grp,lab,ch,KHz,mode,pl,frq2,inverting):
         # Amateur Radio Repeater Offsets
         
         # Output Frequency  	Input Frequency Offset  
-        # 51-52	- 0.5 MHz
-        # 52-54	- 1.0 MHz
-        # 144.51-144.89	+ 0.6 MHz
-        # 145.11-145.49	- 0.6 MHz
-        # 146.0-146.39	+ 0.6 MHz
-        # 146.61-147.0	- 0.6 MHz
-        # 147.0-147.39	+ 0.6 MHz
-        # 147.6-147.99	- 0.6 MHz
-        # 223-225	- 1.6 MHz
-        # 440-445	+ 5.0 MHz
-        # 445-450	- 5.0 MHz
-        # 918-922	- 12 MHz
-        # 927-928	- 25 MHz
+        # 51-52	                     - 0.5 MHz
+        # 52-54	                     - 1.0 MHz
+        # 144.51-144.89	             + 0.6 MHz
+        # 145.11-145.49	             - 0.6 MHz
+        # 146.0-146.39               + 0.6 MHz
+        # 146.61-147.0               - 0.6 MHz
+        # 147.0-147.39               + 0.6 MHz
+        # 147.6-147.99	             - 0.6 MHz
+        # 223-225                    - 1.6 MHz
+        # 440-445	             + 5.0 MHz
+        # 445-450	             - 5.0 MHz
+        # 918-922	             - 12 MHz
+        # 927-928	             - 25 MHz
         
         f=KHz*1e-3
         if (f>145.75 and f<146.5) or (f>=147. and f<147.5) or (f>=440 and f<445):
@@ -500,13 +506,18 @@ def write_mem_yaesu(self,grp,lab,ch,KHz,mode,pl,frq2,inverting):
 
         # Select PL Tone
         try:
-            p3 = str( np.where(PL_TONES==pl)[0][0] ).zfill(3)
-            cmd2='CN00'+p3+';CT02;'
+            print('RIG TYPE2=',self.sock.rig_type2)
+            if self.sock.rig_type2=='FTdx3000':
+                p2 = str( np.where(PL_TONES==pl)[0][0] ).zfill(2)
+                cmd2='CN0'+p2+';CT02;'
+            else:
+                p3 = str( np.where(PL_TONES==pl)[0][0] ).zfill(3)
+                cmd2='CN00'+p3+';CT02;'
         except:
             print('Error looking up PL tone - probably a bad value',pl)
             print(PL_TONES)
             sys.exit(0)
-        #print(p3
+        #print(p3)
         #sys.exit(0)
 
     else:
@@ -516,7 +527,7 @@ def write_mem_yaesu(self,grp,lab,ch,KHz,mode,pl,frq2,inverting):
             split=0
             P10='0'                     # No shift (simplex)
         else:
-            # See page 109 of the user's manual as to how to program there manually.
+            # See page 109 of the user's manual as to how to program these manually.
             # Requires pressing PTT and A->B simultaneously and there is no way to do this via CAT - UGH!
             # May be able to use Auto Repeater shift (ARS) & menu functions 082 & 084 to get by for ISS but who knows.
             split=abs(KHz-frq2)
@@ -536,13 +547,13 @@ def write_mem_yaesu(self,grp,lab,ch,KHz,mode,pl,frq2,inverting):
 
     print('Chan No.       = P1 =',P1)
     print('Freq           = P2 =',P2,len(P2))
-    print('PL Tone        = P3 =',P3)
+    print('Clar Offset    = P3 =',P3)
     print('RX Clar Off/On = P4 =',P4)
     print('TX Clar Off/On = P5 =',P5)
     print('Mode           = P6 =',P6)
-    print('Zero?          = P7 =',P7)
+    print('Fixed Zero     = P7 =',P7)
     print('PL Tone Off/ON = P8 =',P8)
-    print('00?            = P9 =',P9)
+    print('Fixed 00       = P9 =',P9)
     print('Shift/Offest   = P10=',P10)
     print('Zero?          = P11=',P11)
     print('Label          = P12=',P12,len(P12),lab)
@@ -573,7 +584,7 @@ def write_mem_yaesu(self,grp,lab,ch,KHz,mode,pl,frq2,inverting):
 
     # Execute command that turns PL on & off
     print('P8=',P8)
-    print(cmd2,len(cmd2))
+    print('cmd2=',cmd2,len(cmd2))
     buf=self.sock.get_response(cmd2)
     print('buf=',buf)
 
@@ -596,11 +607,15 @@ def write_mem_yaesu(self,grp,lab,ch,KHz,mode,pl,frq2,inverting):
     # Readback
     buf=self.sock.get_response('MR'+mem_chan+';')
     print('MR read:',buf)
-    buf=self.sock.get_response('MT'+mem_chan+';')
-    print('MT read:',buf)
+    if self.sock.rig_type2=='FT991a':    
+        buf=self.sock.get_response('MT'+mem_chan+';')
+        print('MT read:',buf)
     buf=self.sock.get_response('CT0;')
     print('CT read:',buf)
-    buf=self.sock.get_response('CN00;')
+    if self.sock.rig_type2=='FTdx3000':
+        buf=self.sock.get_response('CN0;')
+    else:
+        buf=self.sock.get_response('CN00;')
     print('CN read:',buf)
 
     if False:

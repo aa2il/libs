@@ -19,10 +19,14 @@ import numpy as np
 # A recorder class for recording audio to a WAV file.
 # Records in mono @ 48KHz by default.
 class WaveRecorder(object):
-    def __init__(self, fname, mode='wb', channels=1, rate=48000, frames_per_buffer=1024, wav_rate=48000,rb2=None,GAIN=[1,1]):
+    def __init__(self, fname, mode='wb', channels=1, rate=48000, frames_per_buffer=None,
+                 wav_rate=48000,rb2=None,GAIN=[1,1]):
         self.channels = channels
         self.rate = rate
         self.wav_rate = wav_rate
+        if frames_per_buffer==None:
+            msec = 20                            # Set buffer size to about 20ms
+            frames_per_buffer=int( .001*msec*self.rate )
         self.frames_per_buffer = frames_per_buffer
         self.fname = fname
         self.mode = mode
@@ -35,7 +39,17 @@ class WaveRecorder(object):
         self.istart = 0
 
         self.wavefile = self._prepare_file(self.fname, self.mode)
-        
+                
+        if True:
+            print('WAVE RECORDER Init: fname=',fname,
+                  '\n\trates=',self.rate,self.wav_rate,
+                  '\n\tnchan=',self.channels,
+                  '\n\tframes_per_buf=',self.frames_per_buffer)
+
+            width = self.wavefile.getsampwidth()
+            fmt   = self._pa.get_format_from_width(width)
+            print('WAVE RECORDER Init: width=',width,'\tfmt=',fmt)
+
     def __enter__(self):
         print('@@@@@@@ ENTER @@@@@@@@@@@@@@')
         return self
@@ -43,7 +57,7 @@ class WaveRecorder(object):
     def __exit__(self, exception, value, traceback):
         self.close()
 
-    # Use a stream with no callback function in blocking mode
+    # Use a stream in blocking mode (no callback)
     def record(self, duration):
         self._stream = self._pa.open(format=pyaudio.paInt16,
                                      channels=self.channels,
@@ -73,7 +87,12 @@ class WaveRecorder(object):
 
     def stop_recording(self):
         self._stream.stop_stream()
-        print('... Recording stopped.')
+        print('WaveRecorder - ... Recording stopped.')
+        return self
+
+    def resume_recording(self):
+        self._stream.start_stream()
+        print('... Recording restarted.')
         return self
 
     # Wrapper to pass callback to gui
@@ -92,12 +111,16 @@ class WaveRecorder(object):
         # This version includes decimation (no filtering)
         def callback(in_data, frame_count, time_info, status):
 
+            DEBUG=0
+            
             # Generate indecies into the array
             # Keep track of starting point for next time around
             N=self.frames_per_buffer
             idx = list(range(self.istart,N,self.down))
             self.istart = idx[-1]+self.down-N
-            #print 'AUDIO callback:',N,self.down,self.istart,idx[-1],self.channels,len(data1),len(data2)
+            if DEBUG>0:
+                print('WAVE RECORDER CB: N=',N,'\tdown=',self.down,'\tistart=',self.istart,'\tidx=',idx[-1],
+                      '\tnchan=',self.channels)     # ,'\tndata1=',len(data1),'\tndata2=',len(data2))
 
             # Left channel is audio from RX
             # Direct decimation of the data
@@ -107,17 +130,21 @@ class WaveRecorder(object):
 
             # Right channel contains sidetone
             if self.rb2:
+                #N2=N                                      # Decimate sidetone also
+                N2=len(left)                               # Don't need to decimate anymore
                 nsamps = self.rb2.nsamps
-                #print(nsamps,N)
-                if nsamps>=N:
-                    data3 = 32767*self.rb2.pull(N)
+                if nsamps>=N2:
+                    data3 = 32767*self.rb2.pull(N2)
                 elif nsamps>0:
                     x = 32767*self.rb2.pull(nsamps)
-                    z = np.array((N-nsamps)*[0])
+                    z = np.array((N2-nsamps)*[0])
                     data3 = np.concatenate( (x,z) )
                 else:
-                    data3 = np.array(N*[0])
-                right = self.GAIN[1]*data3[idx].astype(np.int16)
+                    data3 = np.array(N2*[0])
+                #right = self.GAIN[1]*data3[idx].astype(np.int16)          # With decimation
+                right = self.GAIN[1]*data3.astype(np.int16)                # No longer need to decimate
+                if DEBUG>0:
+                    print('RB2: Pulled nsamps=',nsamps,N2,'\tLen=',len(left),len(right))
 
             # Write out to file
             if self.rb2:
@@ -147,6 +174,7 @@ class WaveRecorder(object):
         wavefile.setnchannels(nchan)
         wavefile.setsampwidth(self._pa.get_sample_size(pyaudio.paInt16))
         wavefile.setframerate(self.wav_rate)
+        print('WAVE RECORDER: Open Wave file: name=',fname,'\tnchan=',nchan,'\trate=',self.wav_rate)
         return wavefile
 
     def list_input_devices(self,dev_name):

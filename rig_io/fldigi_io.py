@@ -113,6 +113,11 @@ class fldigi_xlmrpc(direct_connect):
             #socket.setdefaulttimeout(5)           # set the timeout to N seconds
             socket.setdefaulttimeout(None)      # sets the default back
 
+            # Probe FLRIG interface
+            self.fldigi_probe()
+            if self.fldigi_active:
+                print("Connected to FLDIGI")
+            
         except:
 
             try:
@@ -127,7 +132,7 @@ class fldigi_xlmrpc(direct_connect):
                     return
 
                 # Probe FLRIG interface
-                self.flrig()
+                self.flrig_probe()
                 if self.flrig_active:
                     print("Connected to FLRIG")
             except Exception as e: 
@@ -173,8 +178,6 @@ class fldigi_xlmrpc(direct_connect):
             else:
                 print('Unknown rig type')
                 sys.exit(0)
-            #self.flrig()
-            #sys.exit(0)
             
         if self.fldigi_active:
             # Looking for something that distinguishes the rigs ...
@@ -200,18 +203,21 @@ class fldigi_xlmrpc(direct_connect):
                 #Avail modes= ['LSB', 'USB', 'CW', 'FM', 'AM', 'RTTY-L', 'CW-R', 'PSK-L', 'RTTY-U', 'PKT-FM', 'FM-N', 'PSK-U', 'AM-N']
                 
             else:
-                print('*** Need some more code to figure out what rig we are attached to ***')
                 buf = self.get_response('FA;')
-                print('buf=-',buf,'-\t',len(buf))
                 if len(buf)>11:
+                    print('Rig appears to be TS850')
                     self.rig_type1 = 'Kenwood'
                     self.s.rig.set_name("TS-850")
                     self.rig_type2 = 'TS850'
                 elif len(buf)==11:
+                    print('Rig appears to be FTdx3000')
                     self.rig_type1 = 'Yaesu'
                     #self.s.rig.set_name("FTDX-3000")
                     self.s.rig.set_name("FTdx3000")
                     self.rig_type2 = 'FTdx3000'
+                else:
+                    print('buf=-',buf,'-\t',len(buf))
+                    print('*** Need some more code to figure out what rig we are attached to ***')
 
         # Set rig name
         print('FLDIGI_OPEN: rig type=',self.rig_type1,self.rig_type2)
@@ -232,18 +238,20 @@ class fldigi_xlmrpc(direct_connect):
             c = self.s.main.get_counter()
             print(c)
             sys.exit(0)
+
+    # Test function to probe FLRIG interface
+    def fldigi_probe(self):
+        print("\nProbing FLDIGI interface:")
+        print(self.s)
             
-        if self.fldigi_active and False:
-            methods = self.s.fldigi.list()
-            for m in methods:
-                print(m['name'],'\t',m)
-            sys.exit(0)
-        elif False:
-            self.flrig()
+        print('FLDIGI Methods:')
+        methods = self.s.fldigi.list()
+        for m in methods:
+            print(m['name'],'\t',m)
 
                 
     # Test function to probe FLRIG interface
-    def flrig(self):
+    def flrig_probe(self):
         print("\nProbing FLRIG interface:")
         print(self.s)
         #print dir(self.s)

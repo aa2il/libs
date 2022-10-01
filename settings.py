@@ -72,7 +72,7 @@ class CONFIG_PARAMS:
 #########################################################################################
 
 ATTRIBUTES = ['Call','Name','State','Sec','Cat','Grid','City','County',
-              'CQ Zone','ITU Zone','Prec','Check','SKCC','FISTS','CWops',
+              'CQ Zone','ITU Zone','Prec','Check','Club','SKCC','FISTS','CWops',
               'Rig','Ant','Age','Ham Age','Occupation']
 
 class SETTINGS_GUI():

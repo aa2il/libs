@@ -53,7 +53,7 @@ def load_history(history,DEBUG_CALL=None):
 
     # If no history file, we're done
     if history=='':
-        return HIST
+        return HIST,history
     elif '*' in history:
 
         # Expand wildcards and only keep the most recent history file
@@ -129,7 +129,7 @@ def load_history(history,DEBUG_CALL=None):
                 HIST[call]['cwops']  = str( int(number) )
 
                 if call==DEBUG_CALL:
-                    print(call)
+                    print('\nLOAD_HISTORY 0: call=',call)
                     print(sheet.iloc[i,:])
                     print(call,number,name,state)
                     print(HIST[call])
@@ -139,9 +139,7 @@ def load_history(history,DEBUG_CALL=None):
             print('Unknown spreadsheet - aborting')
             sys.exit(1)
 
-        #print HIST
-        #print HIST['AA3B']
-        return HIST
+        return HIST,history
 
     # There seems to be a lot of issues trying to use csv reader or pandas to
     # read these files so we'll do it our selves!!!
@@ -230,16 +228,23 @@ def load_history(history,DEBUG_CALL=None):
                         print('Skipping invalid call',call)
                         #sys.exit(0)
                         continue
-                    
-                    HIST[call] = OrderedDict()
-                    for field in ALL_FIELDS:
-                        if field=='names':
-                            HIST[call][field]=[]
-                        else:
-                            HIST[call][field]=''
-                    #print('call=',call)
-                    #print('Hist=',HIST[call])
-                    #sys.exit(0)
+
+                    if call in HIST.keys():
+                        print('\nLOAD_HISTORY: Call already seen in this file',call)
+                        print('HIST=',HIST[call])
+                    else:
+                        HIST[call] = OrderedDict()
+                        for field in ALL_FIELDS:
+                            if field=='names':
+                                HIST[call][field]=[]
+                            else:
+                                HIST[call][field]=''
+
+                    if call==DEBUG_CALL:
+                        print('\nLOAD_HISTORY 1: row=',row)
+                        print('call=',call)
+                        print('HIST=',HIST[call])
+                        #sys.exit(0)
 
                     # Disect the data for this call
                     for i in range(len(KEYS)):
@@ -247,6 +252,8 @@ def load_history(history,DEBUG_CALL=None):
                         if len(row)>i:
                             val = row[i].replace(',',' ').upper()
                             val = val.encode('ascii',errors='ignore').decode()
+                        elif hasattr(HIST[call],key):
+                            val = HIST[call][key]
                         else:
                             val = ''
                         if val=='NAN':
@@ -279,7 +286,7 @@ def load_history(history,DEBUG_CALL=None):
                             sys.exit(0)
 
                     if call==DEBUG_CALL:
-                        print('row=',row)
+                        print('\nLOAD_HISTORY 2: row=',row)
                         print('call=',call)
                         print('HIST=',HIST[call])
                         #sys.exit(0)
@@ -301,12 +308,13 @@ def load_history(history,DEBUG_CALL=None):
                 HIST[call]['ituz'] = str( dx_station.ituz )
 
         if call==DEBUG_CALL:
-            print(call,HIST[call])
+            print('LOAD_HISTORY 3: call=',call,'\nHIST=',HIST[call])
             #sys.exit(0)
                 
     if False:
         print(HIST)
         sys.exit(0)
 
-    return HIST
+    return HIST,history
+
 
