@@ -338,7 +338,7 @@ def write_adif_record(fp,rec,P,long=False,sort=True):
 # Function to write out an ADIF file 
 #FIELDS=['FREQ','CALL','MODE','NAME','QSO_DATE','QSO_DATE_OFF','TIME_OFF','TIME_ON','QTH','RST_RCVD','RST_SENT','BAND', \
 #        'COUNTRY','SRX_STRING','STATION_CALLSIGN','MY_GRIDSQUARE','MY_CITY'
-def write_adif_log(qsos,fname,P):
+def write_adif_log(qsos,fname,P,SORT_KEYS=True):
     VERBOSITY=0
     
     fname2 = fname.replace('.LOG','.adif')
@@ -347,7 +347,10 @@ def write_adif_log(qsos,fname,P):
     fp.write('Simple Log Export<eoh>\n')
 
     for qso in qsos:
-        keys=sort_keys(qso.keys())
+        if SORT_KEYS:
+            keys=sort_keys(qso.keys())
+        else:
+            keys=qso.keys()
 
         # LoTW requires these fields
         if 'qso_date' not in keys:
@@ -361,6 +364,8 @@ def write_adif_log(qsos,fname,P):
         for key in keys:
             if VERBOSITY>0:
                 print('key=',key)
+            if key=='X-Notes' and True:
+                continue
             if key in qso:
                 # Fill in any missing fields that LoTW requires 
                 if key=='qso_date' and len(qso[key])==0:
