@@ -957,6 +957,8 @@ class AudioIO():
             self.idle =False
             self.stream.start_stream()
             print('### Audio Stream Resumed ###')
+        else:
+            self.start_playback(0,False)
 
     # Callback to retrieve data for a hungry sound card.
     # Finally know how to do this without an external function!!!!
