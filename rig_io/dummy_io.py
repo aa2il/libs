@@ -24,7 +24,7 @@ import logging
 
 ############################################################################################
 
-VERBOSITY=0
+VERBOSITY=1
 
 ############################################################################################
 
@@ -137,6 +137,11 @@ class no_connect:
         if VERBOSITY>0:
             logging.info('Ignoring call')
             #print('Ignoring call to SET_FREQ')
+        return 0
+
+    def set_filt(self,*args):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
         return 0
 
     def set_vfo(self,rx=None,tx=None,op=None):

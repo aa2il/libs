@@ -1,14 +1,15 @@
 ############################################################################################
 #
 # Fldigi IO - Rev 1.0
-# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-2 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Functions to control rig through FLDIGI or FLRIG from python.
 # See methods.txt for list of methods for these two protocols
 #
 # To Do:
-#    This was originally developed for use with fldigi and flrig was added as an after though.
-#    As is turns out, flrig is very good for rig control and is becomeing my main pathway.
+#
+#    This was originally developed for use with fldigi. Flrig was added as
+#    an after thought but has become the main pathway I use now.
 #    Should therefore separate capability for flrig into its own module
 #
 ############################################################################################
@@ -32,9 +33,9 @@ else:
     from xmlrpclib import ServerProxy, Error
     
 from .direct_io import direct_connect
+from .dummy_io import no_connect
 import threading
 import time
-#from .util import *
 import socket
 from .ft_tables import DELAY, Decode_Mode, modes
 import re
@@ -47,6 +48,7 @@ VERBOSITY=0
 ################################################################################################
 
 class fldigi_xlmrpc(direct_connect):
+#class fldigi_xlmrpc(no_connect):
     def __init__(self,host,port,tag='',MAX_TRYS=10):
 
         if host==0:
@@ -64,6 +66,7 @@ class fldigi_xlmrpc(direct_connect):
         self.band       = ''
         self.mode       = ''
         self.dead       = False
+        self.wpm        = 0
 
         self.rig_type  = 'UNKNOWN'
         self.rig_type1 = 'UNKNOWN'
@@ -159,7 +162,7 @@ class fldigi_xlmrpc(direct_connect):
         if self.flrig_active :
             info = self.s.rig.get_info()
             a=info.split()
-            print('a=',a)
+            print('FLRIG INFO a=',a)
             if len(a)==0:
                 print('FLDIGI_IO - OPEN: Unknown rig type')
                 sys.exit(0)
@@ -205,6 +208,7 @@ class fldigi_xlmrpc(direct_connect):
             else:
                 buf = self.get_response('FA;')
                 if len(buf)>11:
+                    # KENWOOD also has a ID command which might be used instead
                     print('Rig appears to be TS850')
                     self.rig_type1 = 'Kenwood'
                     self.s.rig.set_name("TS-850")
@@ -965,7 +969,27 @@ class fldigi_xlmrpc(direct_connect):
         #print('buf=',buf)
         self.lock.release()
         return int(buf)
-            
+
+
+    def cwio_set_wpm(self,wpm):
+        VERBOSITY=1
+        if VERBOSITY>0:
+            print('FLDIGI_IO - CWIO SET WPM wpm=',wpm)
+        self.wpm=wpm
+        self.s.rig.cwio_set_wpm(wpm)
+
+    def cwio_get_wpm(self):
+        VERBOSITY=1
+        if VERBOSITY>0:
+            print('FLDIGI_IO - CWIO GET WPM wpm=',self.wpm)
+        return self.wpm
+    
+    def cwio_write(self,txt):
+        VERBOSITY=1
+        if VERBOSITY>0:
+            print('FLDIGI_IO - CWIO WRITE txt=',txt)
+        self.s.rig.cwio_text(txt)
+        #self.s.rig.set_ptt(1)
 
 ################################################################################################
     
