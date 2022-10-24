@@ -60,7 +60,7 @@ def try_port(port,baud,verbosity):
     if verbosity>=1:
         print('\nDIRECT_IO - TRY_PORT: Trying port %s at %d baud - verb=%d ...' %
               (port,baud,verbosity) )
-    
+
     try:
         self=blank_struct()
         self.s = serial.Serial(port,baud,timeout=0.1)
@@ -71,15 +71,13 @@ def try_port(port,baud,verbosity):
             cmd = self.civ.icom_form_command(0x03)            # Get freq
         else:
             cmd='ID;'.encode()
-        if verbosity>=1:
-            print('TRY_PORT: cmd=',cmd)
             
         while True:
             if verbosity>=1:
-                print('TRY_PORT: Writing command ...')
+                print('TRY_PORT: Sending command cmd=',cmd)
             self.s.write(cmd)
             if verbosity>=1:
-                print('TRY_PORT: Reading...')
+                print('TRY_PORT: Reading response...')
             if ICOM:
                 time.sleep(DELAY)
                 x = self.s.read(256)
@@ -126,7 +124,12 @@ def try_port(port,baud,verbosity):
                 self.lock      = threading.Lock() 
                 return ['Yaesu','FT991a',self]
             elif buf=='ID009;':
-                return ['Kenwood','TS850']
+                self.rig_type  = 'Kenwood'
+                self.rig_type1 = 'Kenwood'
+                self.rig_type2 = 'TS850'
+                self.mode      = ''
+                self.lock      = threading.Lock() 
+                return ['Kenwood','TS850',self]
             elif buf=='?;' or  buf=='E;':
                 if verbosity>=1:
                     print('DIRECT TRY_PORT: Got a ? response - trying again')
@@ -756,15 +759,23 @@ class direct_connect:
         if VERBOSITY>0:
             print('DIRECT_SET_VFO: buf=',buf)
 
-    def get_info(self):
+    def get_info_old(self):
         print('DIRECT GET_INFO...')
         buf = self.get_response('ID;')
         print('DIRECT GET_INFO buf=',buf)
         buf=buf[:6]
         if buf=='ID0460':
+            self.rig_type  = 'Yaesu'
+            self.rig_type1 = 'Yaesu'
             self.rig_type2 = 'FTdx3000'
         elif buf=='ID0670':
+            self.rig_type  = 'Yaesu'
+            self.rig_type1 = 'Yaesu'
             self.rig_type2 = 'FT991a'
+        elif buf=='ID009;':
+            self.rig_type  = 'Kenwood'
+            self.rig_type1 = 'Kenwood'
+            self.rig_type2 = 'TS850'
         else:
             print('\n*** SOCKET_IO:DIRECT GET_INFO: Unknown rig on the other end ***',x)
             self.rig_type2 = ''
@@ -859,7 +870,7 @@ class direct_connect:
             if mode in ['USB','SSB','LSB']:
                 filt=['Wide','2400']
             elif mode in ['CW','CW-R']:
-                filt=['Narrow','200']
+                filt=['Narrow','500']           # Was 200
             elif mode in ['RTTY','DATA']:
                 filt=['Wide','3000']
             else:
@@ -1497,12 +1508,12 @@ class direct_connect:
 
             else:
 
-                print('SPLIT_MODE: Invalid opt',opt)
+                print('DIRECT SPLIT_MODE: Invalid opt',opt)
                 return -1
             
         else:
 
-            print('SPLIT_MODE: Invalid rig',self.rig_type2)
+            print('DIRECT SPLIT_MODE: Invalid rig',self.rig_type2)
             return -1
     
     
@@ -1564,7 +1575,13 @@ class direct_connect:
         if VERBOSITY>0:
             print('DIRECT READing keyer SPEED ...',self.rig_type,self.rig_type2)
 
-        if self.rig_type=='Yaesu' or self.rig_type1=='Yaesu':
+        if self.rig_type=='Yaesu' or self.rig_type1=='Yaesu' or \
+           self.rig_type1=='Kenwood':
+            
+            if self.rig_type2=='TS850':
+                print('DIRECT_IO - READ_SPEED - Not supported on TS-850 rig')
+                wpm=0            
+            
             buf = self.get_response('KS;')
             if buf[0:2]=='KS':
                 try:
@@ -1597,12 +1614,9 @@ class direct_connect:
                 print('x=',x)
                 print('y=',y)    # ,val,wpm )
 
-        elif self.rig_type1=='Kenwood':
-            print('DIRECT_IO - READ_SPEED - Not supported on Kenwood rigs')
-            wpm=0
-            
         else:
             print('DIRECT READ SPEED - Unknown Rig Type:',self.rig_type)
+            wpm=0            
             
         return wpm
 
@@ -1659,11 +1673,18 @@ class direct_connect:
         if VERBOSITY>0:
             print('DIRECT SETting keyer SPEED ...',self.rig_type,self.rig_type2,wpm)
 
-        if self.rig_type=='Yaesu' or self.rig_type1=='Yaesu':
+        if self.rig_type=='Yaesu' or self.rig_type1=='Yaesu' or \
+           self.rig_type1=='Kenwood':
+            
+            if self.rig_type2=='TS850':
+                print('DIRECT_IO - SET_SPEED - Not supported on TS-850 rig')
+                return
+            
             cmd='BY;KS'+str(wpm).zfill(3)+';'
             buf = self.get_response(cmd)
                 
         elif self.rig_type2=='IC9700':
+            
             if self.rig_type=='FLRIG' and False:
                 print('DIRECT SET_SPEED - Not available yet until we get ability to execute direct commands for ICOM under FLRIG')
                 return

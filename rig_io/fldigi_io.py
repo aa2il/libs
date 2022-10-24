@@ -178,6 +178,8 @@ class fldigi_xlmrpc(direct_connect):
                 if self.rig_type2 == "IC-9700":
                     self.rig_type2 = "IC9700"
                 self.civ = icom_civ(self.rig_type2)            
+            elif self.rig_type2[:2]=='TS':
+                self.rig_type1 = 'Kenwood'
             else:
                 print('Unknown rig type')
                 sys.exit(0)
@@ -208,7 +210,7 @@ class fldigi_xlmrpc(direct_connect):
             else:
                 buf = self.get_response('FA;')
                 if len(buf)>11:
-                    # KENWOOD also has a ID command which might be used instead
+                    # YAESU & KENWOOD rigs have a ID command which might be used instead
                     print('Rig appears to be TS850')
                     self.rig_type1 = 'Kenwood'
                     self.s.rig.set_name("TS-850")
