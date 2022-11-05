@@ -112,29 +112,31 @@ def open_rig_connection(connection,host=0,port=0,baud=0,tag='',
         return sock
 
     if connection=='FLRIG' or connection=='ANY':
-        pid = get_PIDs('flrig')
-        print('pids=',pid)
-        if len(pid)==0:
-            
-            time.sleep(1)
-            pid2 = get_PIDs('flrig')
-            print('pids2=',pid2)
-            print('\n*** FLRIG does not appear to be running ***')
-            if connection=='FLRIG':
-                print('*** Connection to FLRIG required - exiting ***\n')
-                sys,exit(0)
 
-        else:
+        ntries=0
+        while ntries<5:
+            ntries+=1
+        
+            pid = get_PIDs('flrig')
+            if len(pid)==0:
+                
+                print('\n*** FLRIG does not appear to be running ***')
+                print('pids=',pid)
+                time.sleep(1)
+                
+            else:
             
-            # Use xlmrpc server in FLRIG
-            if port==0:
-                port = 12345;
-            sock = fldigi_xlmrpc(host,port,tag)
-            if sock.flrig_active:
-                return sock
-            elif connection=='FLRIG':
-                print('SOCKET_IO: Unable to activate required FLRIG connection - aborting')
-                sys.exit(0)
+                # Use xlmrpc server in FLRIG
+                if port==0:
+                    port = 12345;
+                sock = fldigi_xlmrpc(host,port,tag)
+                if sock.flrig_active:
+                    return sock
+
+        # If we get here, we couldn't open the connection
+        if connection=='FLRIG':
+            print('SOCKET_IO: Unable to activate required FLRIG connection - giving up')
+            sys.exit(0)
 
     if connection=='FLDIGI' or connection=='ANY':
         pids = check_app('fldigi')
@@ -411,7 +413,7 @@ def get_status(self):
     try:
 
         # Legacy
-        print('Legacy...')
+        print('Legacy BAND.SET ... b=',b)
         self.band.set(b)
         if frq>1600 or frq<500:
             self.station.set(0)
@@ -421,7 +423,7 @@ def get_status(self):
         self.ant.set(ant)
 
     except:
-        print('Legacy failed...')
+        print('Legacy failed BAND.SET ... b=',b)
         self.band=b
         self.freq=frq
         self.mode=mode

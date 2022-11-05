@@ -25,6 +25,7 @@ import time
 
 from subprocess import check_output, CalledProcessError
 import platform
+import socket
 
 ############################################################################
 
@@ -159,6 +160,22 @@ def freq2band(frq):
     return band
 
 
+################################################################################
+
+# Function to display hostname and IP address
+def get_Host_Name_IP():
+    try:
+        host_name = socket.gethostname()+'.local'
+        host_ip = socket.gethostbyname(host_name)
+        #print("\nHostname :  ", host_name)
+        #print("IP : ", host_ip)
+    except:
+        host_name = None
+        host_ip = None
+        print("Unable to get Hostname and IP")
+
+    return host_name,host_ip
+ 
 ############################################################################
 
 # Routine to get PID of a process by name
@@ -217,3 +234,6 @@ def process_exists(process_name):
 'Darwin'   (Mac)
 
 """
+
+
+

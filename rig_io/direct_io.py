@@ -1370,6 +1370,7 @@ class direct_connect:
         if self.rig_type2=='IC9700':
         
             if opt==-1:
+                
                 # Read current sat mode setting
                 cmd =  self.civ.icom_form_command([0x16,0x5a])  
                 x=self.get_response(cmd)
@@ -1381,6 +1382,7 @@ class direct_connect:
                 return int( y[1],16 )
     
             elif opt<2:
+                
                 # Turn it on/off
                 cmd =  self.civ.icom_form_command([0x16,0x5a,opt])  
                 x=self.get_response(cmd)
@@ -1776,30 +1778,33 @@ class direct_connect:
     def frontend(self,opt,pamp=0,atten=0):
         VERBOSITY=1
         if VERBOSITY>0:
-            print('DIRECT FRONTEND:',opt,pamp,atten)
+            print('DIRECT FRONTEND: opt=',opt,'\tpamp=',pamp,'\tatten=',atten,
+                  '\trig1=',self.rig_type1)
             
-        if self.rig_type1=='Kenwood':     #  or self.rig_type1=='Icom':
-            print('FRONTEND: Function not yet implemented for Kenwood rigs')
+        if self.rig_type1=='Kenwood':
+            
+            print('DIRECT FRONTEND: Function not yet implemented for Kenwood rigs')
             return [0,0]
 
         elif self.rig_type1=='Icom':
 
             # Icom - assumes IC9700
             if opt==0:
+                
                 # Read current settings - need to test this
                 cmd = self.civ.icom_form_command([0x16,0x02])            # Pre-map
                 x   = self.get_response(cmd)
                 y   = self.civ.icom_response(cmd,x)                        
-                #print('DIRECT GET_PL_TONE: cmd =',show_hex(cmd))
+                #print('DIRECT FRONTEND: cmd =',show_hex(cmd))
                 on_off1 = int(y[1],16)
-                #print('DIRECT GET_PL_TONE: y   =',y,on_off)
+                #print('DIRECT FRONTEND: y   =',y,on_off)
 
                 cmd = self.civ.icom_form_command([0x11])            # Attenautor
                 x   = self.get_response(cmd)
                 y   = self.civ.icom_response(cmd,x)                        
-                #print('DIRECT GET_PL_TONE: cmd =',show_hex(cmd))
+                #print('DIRECT FRONTEND: cmd =',show_hex(cmd))
                 on_off2 = int(y[1],16)
-                #print('DIRECT GET_PL_TONE: y   =',y,on_off)
+                #print('DIRECT FRONTEND: y   =',y,on_off)
 
                 return [on_off1,on_off2]
 
@@ -1817,8 +1822,6 @@ class direct_connect:
 
             else:
                 print('DIRECT FRONTEND: Unknown option',opt)
-            
-
             
         else:
 

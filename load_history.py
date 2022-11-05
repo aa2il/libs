@@ -169,8 +169,9 @@ def load_history(history,DEBUG_CALL=None):
 
         for n in range(nrows):
             row=hist[n].split(delim)
+            #print(row,len(row))
 
-            if len(row)>0 and len(row[0])>0:
+            if len(row)>0 and len(row[0])>0 and row[0]!=' ':
 
                 if row[0][0]=='!' or \
                    (n==0 and ('skcc' in history or 'fists' in history)):
@@ -198,6 +199,9 @@ def load_history(history,DEBUG_CALL=None):
                                 key='qth'
                             elif fname[:7]=='13COLON' and key=='exch1':
                                 key='state'
+                            elif (fname[:6]=='CQWWCW' or fname[:7]=='CQWWSSB') \
+                                 and key=='exch1':
+                                key='cqz'
                             elif fname[:6]=='CWOPS_' and key=='exch1':
                                 key='cwops'
                             elif fname[:8]=='K1USNSST' and key=='exch1':

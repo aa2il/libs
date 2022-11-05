@@ -317,7 +317,7 @@ def write_adif_record(fp,rec,P,long=False,sort=True):
             if fld=='FREQ' and len(val)>8:
                 val=val[0:8]
             elif fld[:4]=='TIME' and len(val)>0 and len(val)!=6:
-                val=str(val).zfill(6)
+                val=str(val).replace(':','').zfill(6)
             #print(fld,val)
             if len(val)>0:
                 fp.write('<%s:%d>%s%s' % (fld,len(val),val,NL) )
