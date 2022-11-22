@@ -1306,40 +1306,54 @@ class direct_connect:
 
         if self.rig_type2=='FT991a':
 
-            #print('\nSetting Date ...',date)
+            if VERBOSITY>0:
+                print('\nSetting Date on FT991a to',date,'...')
             cmd='DT0'+date+';'
             self.send(cmd)
-            #print('\nSetting Time ...',time)
+            
+            if VERBOSITY>0:
+                print('\nSetting Time on FT991a to',time,'...')
             cmd='DT1'+time+';'
             self.send(cmd)
-            #print('Setting UTC offset ...')
+            
+            if VERBOSITY>0:
+                print('Setting UTC offset on FT991a ...')
             cmd='DT2+0000;'
             self.send(cmd)
             
         elif self.rig_type2=='IC9700':
         
-            #print('Setting UTC offset ...')
-            cmd =  self.civ.icom_form_command([0x1a,0x05,0x01,0x84,0x0,0x0,0x0])  
+            if VERBOSITY>0:
+                print('Setting UTC offset on IC9700 ...')
+            cmd =  self.civ.icom_form_command([0x1a,0x05,0x01,0x84,0x0,0x0,0x0])
             #print('cmd=',show_hex(cmd))
             x=self.get_response(cmd)
             y=self.civ.icom_response(cmd,x)
-            #print('y=',y)
+            if VERBOSITY>1:
+                print('cmd=',show_hex(cmd))
+                print('y=',y)
     
-            #print('\nSetting Date ...',date)
+            if VERBOSITY>0:
+                print('\nSetting Date on IC9700 to',date,'...')
             d=int2bcd(int(date),4,1)
             cmd =  self.civ.icom_form_command([0x1a,0x05,0x01,0x79]+d)  
             #print('cmd=',show_hex(cmd))
             x=self.get_response(cmd)
             y=self.civ.icom_response(cmd,x)
-            #print('y=',y)
+            if VERBOSITY>1:
+                print('cmd=',show_hex(cmd))
+                print('y=',y)
 
-            #print('\nSetting Time ...',time)
+            if VERBOSITY>0:
+                d#print('\nSetting Time on IC9700 to',time,'...')
             t=int2bcd(int(time[0:4]),2,1)
             cmd =  self.civ.icom_form_command([0x1a,0x05,0x01,0x80]+t)  
             #print('cmd=',show_hex(cmd))
             x=self.get_response(cmd)
             y=self.civ.icom_response(cmd,x)
-            #print('y=',y)
+            if VERBOSITY>1:
+                print('cmd=',show_hex(cmd))
+                print('y=',y)
 
         else:
 
@@ -1792,7 +1806,7 @@ class direct_connect:
             if opt==0:
                 
                 # Read current settings - need to test this
-                cmd = self.civ.icom_form_command([0x16,0x02])            # Pre-map
+                cmd = self.civ.icom_form_command([0x16,0x02])       # Pre-amp
                 x   = self.get_response(cmd)
                 y   = self.civ.icom_response(cmd,x)                        
                 #print('DIRECT FRONTEND: cmd =',show_hex(cmd))
@@ -1812,10 +1826,33 @@ class direct_connect:
                 
                 # Set pre-amp and/or attenator
                 if pamp in [0,1]:
-                    cmd = self.civ.icom_form_command([0x16,0x02,pamp])            # Pre-map
+
+                    print('DIRECT FRONT-END: Setting P-AMP on MAIN RX')
+                    cmd = self.civ.icom_form_command([0x16,0x02,pamp])            # Pre-amp for main RX
+                    x   = self.get_response(cmd)
+                    y   = self.civ.icom_response(cmd,x)
+                    print('DIRECT FRONTEND: y   =',y)
+
+                    print('DIRECT FRONT-END: Swapping MAIN and SUB RXs')
+                    cmd = self.civ.icom_form_command([0x07,0xB0])                 # Swap main & sub RXs
+                    x   = self.get_response(cmd)
+                    y   = self.civ.icom_response(cmd,x)
+                    print('DIRECT FRONTEND: y   =',y)
+                    
+                    print('DIRECT FRONT-END: Setting P-AMP on SUB RX')
+                    cmd = self.civ.icom_form_command([0x16,0x02,pamp])            # Pre-amp for sub RX
+                    x   = self.get_response(cmd)
+                    y   = self.civ.icom_response(cmd,x)
+                    print('DIRECT FRONTEND: y   =',y)
+
+                    print('DIRECT FRONT-END: Swapping MAIN and SUB RXs')
+                    cmd = self.civ.icom_form_command([0x07,0xB0])                 # Swap main & sub RXs back
                     x   = self.get_response(cmd)
                     y   = self.civ.icom_response(cmd,x)                        
+                    print('DIRECT FRONTEND: y   =',y)
+                    
                 if atten in [0,1]:         
+                    
                     cmd = self.civ.icom_form_command([0x11,atten*0x10])            # Atten
                     x   = self.get_response(cmd)
                     y   = self.civ.icom_response(cmd,x)                        

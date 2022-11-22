@@ -517,9 +517,7 @@ class Spot(object):
                 self.wpm = None
                 self.band = None
                 self.locator = None
-                #                print "HEY 1"
                 if self.__process_spot(raw_spot):
-                    #                        print "HEY 2"
                     self.dx_station = Station(self.dx_call)
                     self.spotter_station = Station(self.spotter_call)
                     self.spot_fixup()

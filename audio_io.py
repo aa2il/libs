@@ -13,6 +13,7 @@ import wave
 import sys
 import time
 import numpy as np
+from sig_proc import ring_buffer2
 
 ############################################################################################
 
@@ -21,6 +22,7 @@ import numpy as np
 class WaveRecorder(object):
     def __init__(self, fname, mode='wb', channels=1, rate=48000, frames_per_buffer=None,
                  wav_rate=48000,rb2=None,GAIN=[1,1]):
+        
         self.channels = channels
         self.rate = rate
         self.wav_rate = wav_rate
@@ -34,21 +36,21 @@ class WaveRecorder(object):
         self._stream = None
         self.rb2 = rb2
         self.GAIN=GAIN
+        self.rb     = ring_buffer2('WaveRec0',32*1024)
         
         self.down   = int( rate/wav_rate )
         self.istart = 0
 
         self.wavefile = self._prepare_file(self.fname, self.mode)
                 
-        if True:
-            print('WAVE RECORDER Init: fname=',fname,
-                  '\n\trates=',self.rate,self.wav_rate,
-                  '\n\tnchan=',self.channels,
-                  '\n\tframes_per_buf=',self.frames_per_buffer)
+        print('WAVE RECORDER Init: fname=',fname,
+              '\n\trates=',self.rate,self.wav_rate,
+              '\n\tnchan=',self.channels,
+              '\n\tframes_per_buf=',self.frames_per_buffer)
 
-            width = self.wavefile.getsampwidth()
-            fmt   = self._pa.get_format_from_width(width)
-            print('WAVE RECORDER Init: width=',width,'\tfmt=',fmt)
+        width = self.wavefile.getsampwidth()
+        fmt   = self._pa.get_format_from_width(width)
+        print('WAVE RECORDER Init: width=',width,'\tfmt=',fmt)
 
     def __enter__(self):
         print('@@@@@@@ ENTER @@@@@@@@@@@@@@')
@@ -73,7 +75,8 @@ class WaveRecorder(object):
     def start_recording(self,index=0):
         print('WaveRecorder - START_RECORDING - Recording started ...' \
               '\n\tDevice index=',index,'\tnchan=',self.channels,\
-              '\tfs=',self.rate,'\tframes/buf=',self.frames_per_buffer)
+              '\tfs=',self.rate,'\twave rate=',self.wav_rate,'\tdown=',self.down,
+              '\tframes/buf=',self.frames_per_buffer)
         self._stream = self._pa.open(format=pyaudio.paInt16,
                                      channels=self.channels,
                                      rate=self.rate,
@@ -96,16 +99,39 @@ class WaveRecorder(object):
         return self
 
     # Wrapper to pass callback to gui
-    def get_callback_orig(self):
+    def get_callback(self):
 
-        # Callback when samples are ready, writes out data to wave file
+        # Callback when samples are ready and copies them to a ring buffer
         def callback(in_data, frame_count, time_info, status):
-            self.wavefile.writeframes(in_data)
+            #self.wavefile.writeframes(in_data)
+
+            DEBUG=0
+
+            # Generate indecies into the array
+            # Keep track of starting point for next time around
+            N=self.frames_per_buffer
+            idx = list(range(self.istart,N,self.down))
+            self.istart = idx[-1]+self.down-N
+            if DEBUG>0:
+                print('WAVE RECORDER CB: frame_count=',frame_count,'\tN=',N,'\tdown=',self.down,
+                      '\n\tistart=',self.istart,'\tidx=',idx[-1],
+                      '\tnchan=',self.channels,'\tnamp=',self.rb.nsamps)  
+
+            # Left channel is audio from RX
+            # Direct decimation of the data
+            data1 = np.fromstring(in_data,dtype=np.int16);
+            left  = self.GAIN[0]*data1[idx]
+            
+            self.rb.push(left)
+            
             return in_data, pyaudio.paContinue
         return callback
 
+    
+
     # Wrapper to pass callback to gui
-    def get_callback(self):
+    # This works but is not good since it writes data to disk & can cause lost chunks
+    def get_callback_old(self):
         
         # Callback when samples are ready, writes out data to wave file
         # This version includes decimation (no filtering)
@@ -160,6 +186,44 @@ class WaveRecorder(object):
             return in_data, pyaudio.paContinue
         
         return callback
+
+
+
+    # Function to assemble & write-out data to disk
+    def write_data(self,in_data):
+
+        DEBUG=0
+            
+        # Left channel is audio from RX
+        # Direct decimation of the data
+        #data1 = np.fromstring(in_data,dtype=np.int16);
+        left  = self.GAIN[0]*in_data.astype(np.int16)
+        if DEBUG>0 and False:
+            print('WAVE RECORDER - WRITE_DATA: Left has nsamps=',len(left))
+
+        # Right channel contains sidetone
+        if self.rb2:
+            N2=len(left)                               # Don't need to decimate sidetone data
+            nsamps = self.rb2.nsamps
+            if nsamps>=N2:
+                data3 = 32767*self.rb2.pull(N2)
+            elif nsamps>0:
+                x = 32767*self.rb2.pull(nsamps)
+                z = np.array((N2-nsamps)*[0])
+                data3 = np.concatenate( (x,z) )
+            else:
+                data3 = np.array(N2*[0])
+            right = self.GAIN[1]*data3.astype(np.int16)   
+            if DEBUG>0:
+                print('WAVE RECORDER - WRITE_DATA: Pulled nsamps=',nsamps,'\tN2=',N2,'\tLen=',len(left),len(right))
+
+        # Write out to file
+        if self.rb2:
+            data = np.column_stack((left,right)) 
+        else:
+            data = left  
+        self.wavefile.writeframes(data)
+
 
     def close(self):
         self._stream.close()

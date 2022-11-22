@@ -171,27 +171,41 @@ def read_adif(fname):
     sys.exit(0)
 
 # Function to read list of qsos from input file
-def parse_adif(fn,line=None,upper_case=False,verbosity=0):
+def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False):
     logbook =[]
 
     if verbosity>0:
-        print('PARSE_ADIF - Reading',fn,'...')
+        print('PARSE_ADIF - Reading',fname,'...')
+
+    #if not hasattr(parse_adif, "fname"):
+    #    parse_adif.fname=fname
+    if not hasattr(parse_adif, "fp"):
+        parse_adif.fp=None
 
     try:
+        
         if line==None:
-            if False:
-                fp=open(fn)
-                raw1 = re.split('<eoh>(?i)',fp.read() )
-                fp.close()
+            if True:
+                if not parse_adif.fp:
+                    #fp=open(fname)
+                    parse_adif.fp=codecs.open(fname, 'r', encoding='utf-8',
+                                              errors='ignore')
+                raw1 = re.split('<eoh>(?i)',parse_adif.fp.read() )
+                if not REVISIT:
+                    parse_adif.fp.close()
+                    parse_adif.fp=None
             else:
-                with codecs.open(fn, 'r', encoding='utf-8',
+                # Old
+                with codecs.open(fname, 'r', encoding='utf-8',
                                  errors='ignore') as fp:
                     raw1 = re.split('<eoh>(?i)',fp.read() )
             
         else:
             raw1 = re.split('<eoh>(?i)',line )
+            
     except Exception as e:
-        print('*** Unable to open file or other error in PARSE_ADIF ***')
+        
+        print('PARSE_ADIF: *** Unable to open file or other error in PARSE_ADIF ***')
         print('fn=',fn)
         print('Error msg:\t',getattr(e, 'message', repr(e)))
         return logbook

@@ -130,8 +130,8 @@ def load_history(history,DEBUG_CALL=None):
 
                 if call==DEBUG_CALL:
                     print('\nLOAD_HISTORY 0: call=',call)
-                    print(sheet.iloc[i,:])
-                    print(call,number,name,state)
+                    print('iloc:',sheet.iloc[i,:])
+                    print('call=',call,'\tnumber=',number,name,state)
                     print(HIST[call])
                     #sys.exit(0)
                 
