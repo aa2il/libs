@@ -60,8 +60,11 @@ def load_history(history,DEBUG_CALL=None):
         files=[]
         for fname in glob.glob(history):
             files.append(fname)
+        if len(files)==0:
+            print('file=',files)
+            print('LOAD HISTORY - No files found matching',history)
+            sys.exit(0)
         files.sort()
-        #print('file=',files)
         history=files[-1]
         #print(files[-1]) 
         #sys.exit(0)
@@ -195,6 +198,8 @@ def load_history(history,DEBUG_CALL=None):
                                     key='fdcat'
                                 elif key=='sec':
                                     key='fdsec'
+                            elif fname[:7]=='ARRL160' and key=='exch1':
+                                key='sec'
                             elif fname[:7]=='QSOP_CA' and key=='exch1':
                                 key='qth'
                             elif fname[:7]=='13COLON' and key=='exch1':

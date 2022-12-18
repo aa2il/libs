@@ -866,14 +866,16 @@ class direct_connect:
 
     def set_filter(self,filt,mode=None):
         #VERBOSITY=1
-        if filt=='Auto':
+        #print('HEY 0',filt,mode,len(filt))
+        if filt in ['Auto','Narrow','Wide']:
+            #print('HEY 1',filt,mode)
             if mode in ['USB','SSB','LSB']:
                 filt=['Wide','2400']
             elif mode in ['CW','CW-R']:
                 filt=['Narrow','500']           # Was 200
             elif mode in ['RTTY','DATA']:
                 filt=['Wide','3000']
-            else:
+            elif filt=='Auto':
                 filt=['Wide']
                 
         if not type(filt) is list:
@@ -900,9 +902,9 @@ class direct_connect:
         else:
             
             if filt[0]=='Wide':
-                cmd='NA00;'
+                cmd='RF03;NA00;'
             else:
-                cmd='NA01;'
+                cmd='RF00;NA01;'
             buf = self.get_response('BY;'+cmd)
             if VERBOSITY>0:
                 print('DIRECT SET_FILTERS = Setting wide/narrow: cmd=',
@@ -938,12 +940,19 @@ class direct_connect:
 
 
             if len(filt)==1:
+                #print('Hey 1')
                 if filt[0]=='Wide':
                     filt.append( max(filts) )
+                    if self.rig_type2 == 'FTdx3000':
+                        if filt[1]>300:
+                            filt[1]=2400
                 else:
+                    #print('Hey 2',self.rig_type,self.rig_type1,self.rig_type2)
                     filt.append( min(filts) )
-                if self.rig_type2 == 'FTdx3000' and filt[1]>300:
-                    filt[1]=2400
+                    if self.rig_type2 == 'FTdx3000':
+                        #print('Hey 3')
+                        if filt[1]<200:
+                            filt[1]=200
             else:
                 filt[1]=filt[1].replace(' Hz','')
             if VERBOSITY>0:

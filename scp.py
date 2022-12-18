@@ -43,6 +43,8 @@ class SUPER_CHECK_PARTIAL:
     def match(self,call,MAX_DX=1):
 
         call=call.upper()
+
+        # Look through SCP list and find possible matches
         matches=[]
         dist=[]
         for c in self.calls:
@@ -51,19 +53,43 @@ class SUPER_CHECK_PARTIAL:
                 dist.append(dx)
                 matches.append(c)
 
+        # Sort matches by distance from call
         matches = [x for _, x in sorted(zip(dist,matches))]
-        print('SCP: call=',call,'-',matches)
-                
-        return matches
+
+        # Put calls that match the first chars to the front of the list
+        if False:
+            
+            for i in range(len(matches)):
+                if call in matches[i]:
+                    m=matches.pop(i)
+                    matches.insert(0,m)
+                    
+        elif True:
+
+            matches1=[]
+            matches2=[]
+            for m in matches:
+                if call in m:
+                    matches1.append(m)
+                else:
+                    matches2.append(m)
+
+            print(matches1)
+            matches=matches1+matches2
+                    
+        print('SCP: call=',call,' - ',matches,'\ndist',dist,'\n',matches1)
+        return matches,matches1
         
 ############################################################################################
 
 # Test program
 if __name__ == '__main__':
     SCP=SUPER_CHECK_PARTIAL()
-    call = input("Enter a call:\n")
+    call = input("\nEnter a call:\n")
     if len(call)==0:
         call='aa2il'
-    print('Calls matching',call,':',SCP.match(call,MAX_DX=max(1,call.count('?'))) )
+    matches=SCP.match(call,MAX_DX=max(1,call.count('?')))
+    print('\nCalls matching',call,':',matches)
 
+    sys.exit(0)
 

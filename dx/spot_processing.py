@@ -93,7 +93,7 @@ class ChallengeData:
         #           'PAUL ISLAND','VINCENT','SAN ANDRES']
         special = ['VIET','GERMANY','NEVIS','EUSTATIUS','FIJI', \
                    'SOUTH AFRICA','PIERRE','CHATHAM','BARTHELEMY', \
-                   'PAUL ISLAND','VINCENT','SAN ANDRES']
+                   'PAUL ISLAND','VINCENT','SAN ANDRES','ROTUMA']
         needed=True
 
         #print('NEEDED_CHALLENGE:',dxcc,band)
