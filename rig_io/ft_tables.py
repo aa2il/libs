@@ -129,9 +129,15 @@ LOWER48 = ['AL','AR','AZ','CA','CO','CT','DE','FL','GA', \
            'VA','WA','WV','WI','WY']
 STATES  = LOWER48 + ['AK','HI']
 
-# Canadian provinces/territories: NB (VE1, 9), NS (VE1), QC (VE2), ON (VE3), MB (VE4), SK (VE5),
-# AB (VE6), BC (VE7), NWT (VE8), NF (VO1), LB (VO2), NU (VY0), YT (VY1), PEI (VY2)
-PROVINCES = ['NB', 'NS', 'BC','AB','SK','MB','ON', 'QC', 'NWT', 'NF', 'LB', 'NU', 'YT', 'PEI']
+# Canadian provinces/territories: 
+# NS ((VE1, VA1, CY9, CYØ),         QC (VE2 VA2),
+# ON (VE3 VA3),    MB (VE4 VA4),    SK (VE5 VA5),
+# AB (VE6 VA6),    BC (VE7 VA7),    NWT (VE8),
+# NB (VE9),        NF & LB (VO1 and VO2),
+# NU (VY0),        YT (VY1), PEI (VY2)
+
+#PROVINCES = ['NB', 'NS', 'BC','AB','SK','MB','ON', 'QC', 'NWT', 'NF', 'LB', 'NU', 'YT', 'PEI']
+PROVINCES = ['NB', 'NS', 'BC','AB','SK','MB','ON', 'QC', 'NT', 'NL', 'NU', 'YT', 'PE']
 
 # Mexican states
 XE_STATES=['AGS','BAC','BCS','CAM','CHI','CHH','CMX','COA','COL','DGO','EMX','GTO','GRO','HGO', \
