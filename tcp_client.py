@@ -2,7 +2,7 @@
 ################################################################################
 #
 # tcp_client.py - Rev 1.0
-# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-2 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 #    Simple tcp server to effect allow clients to communicate to app.
 #
@@ -31,16 +31,23 @@ import time
 # TCP Client object
 class TCP_Client(Thread):
     
-    def __init__(self,host,port,BUFFER_SIZE = 1024): 
-        Thread.__init__(self) 
+    def __init__(self,P,host,port,BUFFER_SIZE=1024,handler=None): 
+        Thread.__init__(self)
+
+        self.P=P
         if not host:
             host='127.0.0.1'
         self.host=host
         self.port=port
-        self.BUFFER_SIZE = BUFFER_SIZE = 1024
+        self.BUFFER_SIZE = BUFFER_SIZE
         self.running=False
-        
-        print('TCP Client:',host,port)
+        if handler:
+            self.handler=handler
+        else:
+            self.handler=self.simple_msg_handler
+            
+        print('TCP Client: host=',host,'\tport=',port,'\tBuf Size=',self.BUFFER_SIZE,
+              '\tHandler=',self.handler)
 
         self.Stopper = Event()
         self.StartClient()
@@ -82,8 +89,14 @@ class TCP_Client(Thread):
                     self.socks.remove(sock)
                     sock.close()
                 else:
-                    print('\r{}:'.format(sock.getpeername()),data)
-                        
+                    #print('\rLISTENER:{}:'.format(sock.getpeername()),data)
+                    if self.handler:
+                        self.handler(self,sock,data.decode("utf-8") )
+
+        self.Close()
+        
+    def Close(self):
+        
         # Close socket
         self.tcpClient.close()
         print('Listerner: Bye bye!')
@@ -110,13 +123,18 @@ class TCP_Client(Thread):
         except:
             print('Send: Problem with socket')
             print(sock)
-            
+
+    def simple_msg_handler(self,sock,msg):
+        id=sock.getpeername()
+        print('TCP_CLIENT->MSG HANDLER: id=',id,'\tmsg=',msg)
+        
+################################################################################
 
 if __name__ == '__main__':
     TCP_IP = '127.0.0.1' 
     TCP_PORT = 2004 
 
-    client = TCP_Client(TCP_IP,TCP_PORT)
+    client = TCP_Client(None,TCP_IP,TCP_PORT)
     worker = Thread(target=client.Listener, args=(), name='TCP Client' )
     worker.setDaemon(True)
     worker.start()
