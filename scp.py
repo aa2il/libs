@@ -40,7 +40,7 @@ class SUPER_CHECK_PARTIAL:
         print('No. calls in SCP database=',len(self.calls))
         #print(calls[0],calls[-1])
 
-    def match(self,call,MAX_DX=1):
+    def match(self,call,MAX_DX=1,VERBOSITY=0):
 
         call=call.upper()
 
@@ -74,10 +74,12 @@ class SUPER_CHECK_PARTIAL:
                 else:
                     matches2.append(m)
 
-            print(matches1)
+            if VERBOSITY>0:
+                print('SCP: matches1=',matches1)
             matches=matches1+matches2
                     
-        print('SCP: call=',call,' - ',matches,'\ndist',dist,'\n',matches1)
+        if VERBOSITY>0:
+            print('SCP: call=',call,' - ',matches,'\ndist',dist,'\n',matches1)
         return matches,matches1
         
 ############################################################################################
