@@ -1,7 +1,7 @@
 #######################################################################################
 #
 # Signal Processing - Rev 1.0
-# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Various routines/objects related to sig processing, demodulation and digital receivers
 #
@@ -102,7 +102,7 @@ class spectrum:
         self.df = float(fs*1e3)/NFFT
         self.frq1 = np.fft.rfftfreq(NFFT, d=1./fs) + foffset
         self.frq2 = np.fft.fftshift( np.fft.fftfreq(NFFT, d=1./fs) ) + foffset
-        self.first_time = True
+        #self.first_time = True
         self.demean = demean
 
         # From the numpy docs, here is how the shape parameter of the Kaiser window affects its performance
@@ -120,19 +120,39 @@ class spectrum:
         self.new_samps = chunk_size - self.old_samps
         self.prev = np.zeros(self.old_samps)
 
+    # Routine to compute PSD estimate as an average of periodograms
+    def psd_est(self,x,FORCE_COMPLEX=False):
+
+        PSD=None
+        n=0
+        STEP=int(self.chunk_size*(1-self.overlap))
+        for i in range(0,len(x),STEP):
+            xx=x[i:(i+STEP)]
+            #print('PSD_EST:',n,len(xx))
+            if len(xx)<STEP:
+                break                        # May should pad with zeros instead?
+            PSD1 = self.periodogram(xx,FORCE_COMPLEX)
+            if i==0:
+                PSD=PSD1
+            else:
+                PSD+=PSD1
+            n+=1
+        PSD/=n
+        return PSD
+        
+    # Routine to compute a single periodogram
     def periodogram(self,x,FORCE_COMPLEX=False):
 
         # Take care of overlap between periodograms
-        #print 'PERIODOGRAM 1',len(x)
         if self.old_samps>0:
             #print 'PERIODOGRAM:',len(x),len(self.prev)
             xx = np.concatenate( (-self.prev, x) )
             self.prev = -xx[-self.old_samps:]
         else:
             xx = x
+        #print('PERIODOGRAM:',len(x),self.old_samps,len(xx),len(self.win))
 
         # Demean data
-        #print 'PERIODOGRAM 2',len(xx)
         if self.demean:
             xx = xx - np.mean(xx)
             
