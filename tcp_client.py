@@ -2,9 +2,9 @@
 ################################################################################
 #
 # tcp_client.py - Rev 1.0
-# Copyright (C) 2021-2 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
 #
-#    Simple tcp server to effect allow clients to communicate to app.
+#    Simple tcp client to effect comms between apps.
 #
 ################################################################################
 #
@@ -22,16 +22,25 @@
 
 import sys
 import socket 
-import select
 from threading import Thread,Event
 import time
+import select
 
 ################################################################################
 
+VERBOSITY=0
+
+################################################################################
+
+# Prototype message handler
+def dummy_msg_handler(self,sock,msg):
+    id=sock.getpeername()
+    print('TCP_CLIENT->MSG HANDLER: id=',id,'\tmsg=',msg.rstrip())
+        
 # TCP Client object
 class TCP_Client(Thread):
     
-    def __init__(self,P,host,port,BUFFER_SIZE=1024,handler=None): 
+    def __init__(self,P,host,port,BUFFER_SIZE=1024,Handler=None): 
         Thread.__init__(self)
 
         self.P=P
@@ -41,19 +50,25 @@ class TCP_Client(Thread):
         self.port=port
         self.BUFFER_SIZE = BUFFER_SIZE
         self.running=False
-        if handler:
-            self.handler=handler
+        if Handler:
+            self.msg_handler=Handler
         else:
-            self.handler=self.simple_msg_handler
+            self.msg_handler=dummy_msg_handler
+        if P and hasattr(P,'Stopper'):
+            self.Stopper = P.Stopper
+        else:
+            self.Stopper = Event()
             
         print('TCP Client: host=',host,'\tport=',port,'\tBuf Size=',self.BUFFER_SIZE,
-              '\tHandler=',self.handler)
+              '\tHandler=',self.msg_handler)
 
-        self.Stopper = Event()
+        # Start the client
         self.StartClient()
 
+################################################################################
+
     def StartClient(self):
-        print('TCP_CLIENT StartClient Starting ...')
+        print('TCP_CLIENT->StartClient: Starting ...')
         if self.running:
             self.tcpClient.close()
             #self.socks.remove(self.tcpClient)
@@ -64,10 +79,12 @@ class TCP_Client(Thread):
         
     # Function to listener for new connections and/or data from clients
     def Listener(self): 
-        print('Listener Client ...')
+        print('TCP_CLIENT->Listener ...')
 
         # Run until stopper is set
-        while not self.Stopper.isSet():
+        while not self.Stopper.is_set():
+            if VERBOSITY>0:
+                print('TCP_CLIENT - Listener - Hey 1')
             time.sleep(1)
 
             # Get list of sockets 
@@ -90,8 +107,8 @@ class TCP_Client(Thread):
                     sock.close()
                 else:
                     #print('\rLISTENER:{}:'.format(sock.getpeername()),data)
-                    if self.handler:
-                        self.handler(self,sock,data.decode("utf-8") )
+                    if self.msg_handler:
+                        self.msg_handler(self,sock,data.decode("utf-8") )
 
         self.Close()
         
@@ -124,19 +141,16 @@ class TCP_Client(Thread):
             print('Send: Problem with socket')
             print(sock)
 
-    def simple_msg_handler(self,sock,msg):
-        id=sock.getpeername()
-        print('TCP_CLIENT->MSG HANDLER: id=',id,'\tmsg=',msg)
-        
 ################################################################################
 
+# Test program                
 if __name__ == '__main__':
     TCP_IP = '127.0.0.1' 
     TCP_PORT = 2004 
 
     client = TCP_Client(None,TCP_IP,TCP_PORT)
     worker = Thread(target=client.Listener, args=(), name='TCP Client' )
-    worker.setDaemon(True)
+    worker.daemon=True
     worker.start()
 
     while True:

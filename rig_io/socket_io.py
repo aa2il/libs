@@ -432,31 +432,28 @@ def get_status(self):
 
 ############################################################################################
 
-# Function to manipulate VFO
+# Function to manipulate VFOs
 def SetVFO(self,cmd):
     s=self.sock
     print('SetVFO - cmd=',cmd,'\t',s.rig_type,'\t',s.rig_type1)
     
-    if cmd=='A':
-        if s.rig_type1=='Icom':
-            print('SetVFO - Select A')
-            s.set_vfo('A')
-        else:
-            #s.get_response("BY;FR0;FT2;")
-            s.set_vfo('A')
-    elif cmd=='B':
-        if s.rig_type1=='Icom':
-            print('SetVFO - Select A')
-            s.set_vfo('B')
-        else:
-            #s.get_response("BY;FR4;FT3;")
-            s.set_vfo('B')
+    if cmd in ['A','B']:
+        s.set_vfo(cmd)
     elif cmd=='A->B':
-        self.sock.get_response("BY;AB;")
+        if s.rig_type1=='Icom':
+            print('SetVFO - Select A->B - Not implemented on ICOM rigs yet')
+        else:
+            self.sock.get_response("BY;AB;")
     elif cmd=='B->A':
-        self.sock.get_response("BY;BA;")
+        if s.rig_type1=='Icom':
+            print('SetVFO - Select B->A - Not implemented on ICOM rigs yet')
+        else:
+            self.sock.get_response("BY;BA;")
     elif cmd=='A<->B':
-        self.sock.get_response("BY;SV;")
+        if s.rig_type1=='Icom':
+            print('SetVFO - Select A<->B - Not implemented on ICOM rigs yet')
+        else:
+            self.sock.get_response("BY;SV;")
     else:
         print('SetVFO: Invalid command - ',cmd)
 
@@ -473,13 +470,9 @@ def ClarReset(self):
         self.sock.get_response('U XIT 0')
         self.sock.get_response("J 0")
         self.sock.get_response("Z 0")
-    elif True:
-        self.sock.get_response("BY;RC;RT0;XT0;")
     else:
-        self.sock.get_response("BY;RC;")
-        self.sock.get_response("BY;RT0;")
-        self.sock.get_response("BY;XT0;")
-    #sys.exit(0)
+        # Yaesu rigs
+        self.sock.get_response("BY;RC;RT0;XT0;")
 
 # Function to set TX split
 def SetTXSplit(self,df_kHz):

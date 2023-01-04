@@ -109,11 +109,16 @@ class spectrum:
         # beta	Window shape
         #  0	Rectangular
         #  5	Similar to a Hamming
-        #  6	Similar to a Hanning
-        beta = 8.6	# Similar to a Blackman
-        # 14    Probably a good starting point
-        #self.win  = np.kaiser(chunk_size,2*np.pi)
+        #  6	Similar to a Hanning - 2*np.pi was my old standard
+        beta = 8.6   # Similar to a Blackman
+        #beta = 12    # 
+        #beta = 14    # Probably a good starting point
         self.win  = np.kaiser(chunk_size,beta)
+
+        # Let's try a Dolph-Chebyshev to control sidelobes?
+        # Look good but messes with dyn range?
+        # Also, it seems the close-in sidelobes might be due to AGC action in the SDR - can we control this?
+        #self.win  = signal.windows.chebwin(chunk_size, at=100)
 
         self.overlap = overlap
         self.old_samps = int( chunk_size*overlap )
