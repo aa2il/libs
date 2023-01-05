@@ -1,10 +1,10 @@
 #! /usr/bin/python3
 ################################################################################
 #
-# tcp_client.py - Rev 1.0
+# tcp_server.py - Rev 1.0
 # Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
 #
-#    Simple tcp client to effect comms between apps.
+#    Simple tcp server to allow clients to communicate to keyer app.
 #
 ################################################################################
 #
@@ -37,12 +37,12 @@ BANDMAP_UDP_PORT = 7575
 # Prototype message handler
 def dummy_msg_handler(self,sock,msg):
     id=sock.getpeername()
-    print('TCP_CLIENT->MSG HANDLER: id=',id,'\tmsg=',msg.rstrip())
+    print('TCP_SERVER->MSG HANDLER: id=',id,'\tmsg=',msg.rstrip())
         
-# TCP Client object
-class TCP_Client(Thread):
+# TCP Server class
+class TCP_Server(Thread):
     
-    def __init__(self,P,host,port,Client=True,BUFFER_SIZE=1024,Handler=None): 
+    def __init__(self,P,host,port,Server=False,BUFFER_SIZE=1024,Handler=None): 
         Thread.__init__(self)
 
         self.P=P
@@ -50,7 +50,7 @@ class TCP_Client(Thread):
             host='127.0.0.1'
         self.host=host
         self.port=port
-        self.Server=not Client
+        self.Server=Server
         self.BUFFER_SIZE = BUFFER_SIZE
         self.running=False
         if Handler:
@@ -62,39 +62,44 @@ class TCP_Client(Thread):
         else:
             self.Stopper = Event()
             
-        print('TCP Client: host=',host,'\tport=',port,'\tBuf Size=',self.BUFFER_SIZE,
+        print('TCP Server: host=',host,'\tport=',port,'\tBuf Size=',self.BUFFER_SIZE,
               '\tHandler=',self.msg_handler)
 
-        # Start the client
-        self.StartClient()
+        # Start the server
+        self.StartServer()
 
 ################################################################################
 
-    def StartClient(self):
-        print('TCP_CLIENT->StartClient: Starting ...')
+    def StartServer(self):
+        print('TCP_SERVER->StartServer: Starting ...')
         if self.running:
-            self.tcpClient.close()
-            #self.socks.remove(self.tcpClient)
-        self.tcpClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  
-        self.tcpClient.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) # Try out on client????
-        self.tcpClient.connect((self.host, self.port))                       # Connect to server
-        self.socks = [self.tcpClient]
+            self.tcpServer.close()
+            #self.socks.remove(self.tcpServer)
+        self.tcpServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+        self.tcpServer.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) # Not sure why we need these?
+        if self.Server:
+            self.tcpServer.bind((self.host,self.port))                           # Bind socket to server address
+        else:
+            self.tcpClient.connect((self.host, self.port))                       # Connect to server
+        self.socks = [self.tcpServer]        
         self.running=True
 
     def Connect(self,host,port):
         if not host:
             host='127.0.0.1'
+        print('TCP_SERVER->Connect: Connecting to',host,port,'\tfrom',self.host,self.port)
         self.tcpServer.connect((host, port))                       # Connect to server
         
     # Function to listener for new connections and/or data from clients
     def Listener(self): 
-        print('TCP_CLIENT->Listener ...')
-        #self.tcpClient.listen(4)                                              # Listen for clients - not valid for a client?
+        print('TCP_SERVER->Listener: Waiting for connections from TCP clients...')
+        if self.Server:
+            self.tcpServer.listen(4)                                              # Listen for clients
 
         # Run until stopper is set
         while not self.Stopper.is_set():
             if VERBOSITY>0:
-                print('TCP_CLIENT - Listener - Hey 1')
+                print('TCP_SERVER - Listener - Hey 1')
             time.sleep(1)
 
             # Get list of sockets 
@@ -102,22 +107,22 @@ class TCP_Client(Thread):
             #readable,writeable,inerror = select.select(self.socks,self.socks,self.socks,0)
             readable,writeable,inerror = select.select(self.socks,[],[],0)
             if VERBOSITY>0:
-                print('TCP_CLIENT - Listener - readable=',readable,  \
+                print('TCP_SERVER - Listener - readable=',readable,  \
                       '\twriteable=',writeable,'\tinerror=',inerror)
             
             # iterate through readable sockets
             for sock in readable:
                 if VERBOSITY>0:
-                    print('TCP_CLIENT - Listener - Hey 2')
+                    print('TCP_SERVER - Listener - Hey 2')
 
                 # Any new connections?
-                if sock is self.tcpClient and False:
+                if self.Server and sock is self.tcpServer:
                     
                     if VERBOSITY>0:
-                        print('TCP_CLIENT - Listener - Hey 3')
+                        print('TCP_SERVER - Listener - Hey 3')
                     
                     # Accept new connection
-                    conn, addr = self.tcpClient.accept()
+                    conn, addr = self.tcpServer.accept()
                     #conn.settimeout(2)
                     conn.setblocking(0)
                     print('LISTENER:\r{}:'.format(addr),'connected')
@@ -179,7 +184,7 @@ class TCP_Client(Thread):
     # Function to close socket
     def Close(self):
         
-        self.tcpClient.close()
+        self.tcpServer.close()
         print('Listerner: Bye bye!')
 
 ################################################################################
@@ -220,7 +225,7 @@ class TCP_Client(Thread):
         # Get list of sockets
         readable,writeable,inerror = select.select([],self.socks,[],0)
         if len(writeable)==0:
-            print('TCP_CLIENT->Broadcast: No open sockets')                
+            print('TCP_SERVER->Broadcast: No open sockets')                
                 
         msg=msg+'\n'
         for sock in writeable:
@@ -239,22 +244,37 @@ class TCP_Client(Thread):
 
 # Test program                
 if __name__ == '__main__':
-    TCP_IP = '127.0.0.1'
-    TCP_PORT = 2004
+    TCP_HOST = '127.0.0.1' 
+    if 0:
+        TCP_PORT = 2004 
+        TCP_PORT2 = None
+    else:
+        TCP_PORT  = 2135
+        TCP_PORT2 = 2004
 
-    client = TCP_Client(None,TCP_IP,TCP_PORT)
-    worker = Thread(target=client.Listener, args=(), name='TCP Client' )
+    server = TCP_Server(None,TCP_HOST,TCP_PORT)
+    worker = Thread(target=server.Listener, args=(), name='TCP Server' )
     worker.daemon=True
     worker.start()
 
+    if TCP_PORT2:
+        time.sleep(1)
+        print('Connecting to ',TCP_HOST,TCP_PORT2)
+        try:
+            server.Connect(TCP_HOST,TCP_PORT2)
+            print('Connected.')
+        except Exception as e:
+            print('Excpetion Raised:',e)        
+
     while True:
+        server.Broadcast('Heartbeat')
         MESSAGE = input("Enter Response or exit:")
         if MESSAGE == 'exit':
-            client.Stopper.set()
+            server.Stopper.set()
             print('Main exiting')
             break
         else:
-            client.Broadcast(MESSAGE)
+            server.Broadcast(MESSAGE)
         time.sleep(1)
 
     print('Joining ...')
