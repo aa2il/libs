@@ -6,6 +6,11 @@
 #
 #    Simple tcp server to allow clients to communicate to keyer app.
 #
+# THIS OBJECT NOW ALSO INCLUDES THE CLIENT OBJECT!
+# Use tcp_server instead with Server=False - see test program below.
+# This was done to lessen the amount of duplicate codes that has to be
+# maintaned since the client and server codes are very similar.
+#
 ################################################################################
 #
 # This program is free software: you can redistribute it and/or modify
@@ -29,6 +34,7 @@ import select
 ################################################################################
 
 VERBOSITY=0
+SDR_UDP_PORT     = 7373
 KEYER_UDP_PORT   = 7474
 BANDMAP_UDP_PORT = 7575
 
@@ -37,8 +43,33 @@ BANDMAP_UDP_PORT = 7575
 # Prototype message handler
 def dummy_msg_handler(self,sock,msg):
     id=sock.getpeername()
-    print('TCP_SERVER->MSG HANDLER: id=',id,'\tmsg=',msg.rstrip())
+    print('TCP_SERVER->DUMMY MSG HANDLER: id=',id,'\tmsg=',msg.rstrip())
+
+# Function to open UDP client
+def open_udp_client(P,port,msg_handler,BUFFER_SIZE=1024):
+
+    if not port:
+        port = KEYER_UDP_PORT
+    
+    try:
         
+        print('Opening UDP client ...')
+        udp_client = TCP_Server(P,None,port,Server=False,
+                                  BUFFER_SIZE=BUFFER_SIZE,Handler=msg_handler)
+        worker = Thread(target=udp_client.Listener,args=(), kwargs={},
+                        name='UDP Client' )
+        worker.setDaemon(True)
+        worker.start()
+        P.threads.append(worker)
+        return udp_client
+    
+    except Exception as e:
+        
+        print('OPEN UDP CLIENT: Exception Raised:\n',e)
+        print('--- Unable to connect to UDP socket ---')
+        return None
+    
+    
 # TCP Server class
 class TCP_Server(Thread):
     
@@ -78,9 +109,9 @@ class TCP_Server(Thread):
         self.tcpServer = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
         self.tcpServer.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) # Not sure why we need these?
         if self.Server:
-            self.tcpServer.bind((self.host,self.port))                           # Bind socket to server address
+            self.tcpServer.bind((self.host,self.port))                       # Server binds socket to server address
         else:
-            self.tcpClient.connect((self.host, self.port))                       # Connect to server
+            self.tcpServer.connect((self.host, self.port))                   # Client connects to server
         self.socks = [self.tcpServer]        
         self.running=True
 
@@ -94,7 +125,7 @@ class TCP_Server(Thread):
     def Listener(self): 
         print('TCP_SERVER->Listener: Waiting for connections from TCP clients...')
         if self.Server:
-            self.tcpServer.listen(4)                                              # Listen for clients
+            self.tcpServer.listen(4)                                          # Server listens for clients
 
         # Run until stopper is set
         while not self.Stopper.is_set():
@@ -117,7 +148,8 @@ class TCP_Server(Thread):
 
                 # Any new connections?
                 if self.Server and sock is self.tcpServer:
-                    
+
+                    # Server has a new client
                     if VERBOSITY>0:
                         print('TCP_SERVER - Listener - Hey 3')
                     
@@ -135,14 +167,22 @@ class TCP_Server(Thread):
                     #print('\tName Info=',conn.getnameinfo())
 
                     # Send my name & query name of this client
-                    msg='Name:pyKeyer\nName:?\n'
+                    if self.port==SDR_UDP_PORT:
+                        name='pySDR'
+                    elif self.port==KEYER_UDP_PORT:
+                        name='pyKeyer'
+                    elif self.port==BANDMAP_UDP_PORT:
+                        name='bandmap'
+                    else:
+                        name='NoName'
+                    msg='Name:'+name+'\nName:?\n'
                     conn.send(msg.encode())
 
                 else:
 
-                    # Read from a client
-                    #timeout=False
+                    # Server and clients read from a client
                     try:
+                        
                         if VERBOSITY>0:
                             print('TCP_SERVER - Listener - Hey 4a')
                         ready = select.select([sock], [], [], 1)
@@ -152,12 +192,15 @@ class TCP_Server(Thread):
                             data=None
                         if VERBOSITY>0:
                             print('TCP_SERVER - Listener - Hey 4b - ready=',ready)
-                    except Exception as e: 
+                            
+                    except Exception as e:
+                        
                         print('Listener: Problem with socket - closing')
                         print( str(e) )
                         print(sock)
                         data=None
-                
+
+                    # Pass data onto message handler
                     if data:
                         
                         # We received a message from a client
@@ -166,6 +209,7 @@ class TCP_Server(Thread):
                             self.msg_handler(self,sock,data.decode())
 
                     elif ready[0]:
+                        
                         # The client seemed to send a msg but we didn't get it
                         try:
                             print('LISTENER:\r{}:'.format(sock.getpeername()),'disconnected')
@@ -174,7 +218,9 @@ class TCP_Server(Thread):
                             pass
                         readable.remove(sock)
                         self.socks.remove(sock)
+                        
                     else:
+                        
                         # Nothing to see here
                         pass
         
@@ -189,36 +235,11 @@ class TCP_Server(Thread):
 
 ################################################################################
 
-    # These two function do similar things - perhaps we need a version that only
-    # send to one peer?
-
     # Function to send a message to all writeable peers
+    # Need to modify this to send to only one peer?
     def Send(self,msg):
         self.Broadcast(msg)
 
-    """
-        # Get list of sockets
-        readable,writeable,inerror = select.select([],self.socks,[],0)
-        if len(writeable)==0:
-            print('TCP_CLIENT->SEND: No open sockets')                
-                
-        msg=msg+'\n'
-        for sock in writeable:
-            addr = sock.getsockname()
-            print('TCP_CLIENT->SEND: Sending msg',msg,'to addr',addr,'...')
-            sock.send(msg.encode())
-
-        return
-            
-        sock = self.tcpClient
-        try:
-            addr = sock.getsockname()
-            sock.send(msg.encode())
-        except:
-            print('Send: Problem with socket')
-            print(sock)
-    """
-    
     # Function to broadcast a message to all connected clients
     def Broadcast(self,msg):
 
@@ -244,39 +265,33 @@ class TCP_Server(Thread):
 
 # Test program                
 if __name__ == '__main__':
-    TCP_HOST = '127.0.0.1' 
-    if 0:
-        TCP_PORT = 2004 
-        TCP_PORT2 = None
-    else:
-        TCP_PORT  = 2135
-        TCP_PORT2 = 2004
+    TCP_HOST = '127.0.0.1'
+    TCP_PORT = 2004 
 
-    server = TCP_Server(None,TCP_HOST,TCP_PORT)
+    mode=''
+    while not mode in ['S','C']:
+        mode = input("Server or Client? (S/C) ").upper()
+    
+    print('mode=',mode)
+    if mode=='S':
+        # Server mode
+        server = TCP_Server(None,TCP_HOST,TCP_PORT,Server=True)
+    else:
+        # Client mode
+        server = TCP_Server(None,TCP_HOST,TCP_PORT,Server=False)
+
     worker = Thread(target=server.Listener, args=(), name='TCP Server' )
     worker.daemon=True
     worker.start()
 
-    if TCP_PORT2:
+    MESSAGE=''
+    while MESSAGE.lower()!='exit':
         time.sleep(1)
-        print('Connecting to ',TCP_HOST,TCP_PORT2)
-        try:
-            server.Connect(TCP_HOST,TCP_PORT2)
-            print('Connected.')
-        except Exception as e:
-            print('Excpetion Raised:',e)        
-
-    while True:
-        server.Broadcast('Heartbeat')
+        server.Broadcast(mode+' Heartbeat')
         MESSAGE = input("Enter Response or exit:")
-        if MESSAGE == 'exit':
-            server.Stopper.set()
-            print('Main exiting')
-            break
-        else:
-            server.Broadcast(MESSAGE)
-        time.sleep(1)
+        server.Broadcast(MESSAGE)
 
+    server.Stopper.set()
     print('Joining ...')
     worker.join()
     print('Done.')

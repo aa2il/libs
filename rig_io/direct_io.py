@@ -1948,7 +1948,7 @@ class direct_connect:
     # Note - this seems different than menu item 035 which is General Monitor Level
     # We acces the latter via EX035xxx command
     def set_monitor_gain(self,gain):
-        #VERBOSITY=1
+        VERBOSITY=1
         if VERBOSITY>0:
             print('DIRECT_IO - SET_MONITOR_GAIN: gain=',gain)
         cmd  = 'ML1'+str(gain).zfill(3)+';ML1;'

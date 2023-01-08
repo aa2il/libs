@@ -6,6 +6,10 @@
 #
 #    Simple tcp client to effect comms between apps.
 #
+# THIS OBJECT HAS BEEN DEPRICATED - Use tcp_server instead with Server=False
+# This was done to lessen the amount of duplicate codes that has to be
+# maintaned since the client and server codes are very similar.
+#
 ################################################################################
 #
 # This program is free software: you can redistribute it and/or modify

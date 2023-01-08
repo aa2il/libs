@@ -260,6 +260,7 @@ class no_connect:
         return 0
     
     def set_monitor_gain(self,gain):
+        print('DUMMY_IO: Set Monitor Level - Ignored')
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 
