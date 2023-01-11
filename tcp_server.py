@@ -30,6 +30,7 @@ import socket
 from threading import Thread,Event
 import time
 import select
+import zlib
 
 ################################################################################
 
@@ -205,6 +206,12 @@ class TCP_Server(Thread):
                         
                         # We received a message from a client
                         print('\r{}:'.format(sock.getpeername()),data)
+                        try:
+                            # Some messages are compressed
+                            #print('DATA TYPE:',type(data))
+                            data=zlib.decompress(data)
+                        except:
+                            pass
                         if self.msg_handler:
                             self.msg_handler(self,sock,data.decode())
 
