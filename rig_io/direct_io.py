@@ -36,6 +36,7 @@ import serial
 from .icom_io import *
 from datetime import timedelta,datetime
 from pytz import timezone
+from utilities import find_serial_device
 
 #######################################################################################
 
@@ -248,8 +249,14 @@ def find_direct_rig(self,port_in,baud_in,force=False):
             return True
 
     if port_in==0 or port_in==3000:
-        if try_rig(self,'Yaesu','FTdx3000',SERIAL_PORT1,baud):
-            return True
+        if False:
+            if try_rig(self,'Yaesu','FTdx3000',SERIAL_PORT1,baud):
+                return True
+        else:
+            # New path - after contest!
+            port=find_serial_device('FTdx3000',0)
+            if try_rig(self,'Yaesu','FTdx3000',port,baud):
+                return True
         
     if port_in==0 or port_in==991:
         if try_rig(self,'Yaesu','FT991a',SERIAL_PORT3,baud):

@@ -1,7 +1,7 @@
 ############################################################################
 #
 # utilities.py - Rev 1.0
-# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Useful utilities.
 #
@@ -27,9 +27,48 @@ from subprocess import check_output, CalledProcessError
 import platform
 import socket
 
+import serial.tools.list_ports as lp
+from pprint import pprint
+
 ############################################################################
 
 VERBOSITY=0
+
+############################################################################
+
+DEVICE_IDs={'nanoIO'   : '1A86:7523' ,
+            'FTdx3000' : 'SER=AH046H3M120067'}
+
+#            'FTdx3000' : '10C4:EA70'}
+
+def find_serial_device(device_name,device_number=None,VERBOSITY=0):
+
+    try:
+        VID_PID=DEVICE_IDs[device_name]
+    except:
+        print('\nFIND SERIAL DEVICE: No such device -',device_name)
+        return None
+        
+    ports = lp.grep(VID_PID)
+    nports=0
+    device=None
+    for port in ports:
+        nports+=1
+        if device_number==None or port.location[-1]==str(device_number):
+            device=port.device
+        if VERBOSITY>0:
+            print(' ')
+            pprint(vars(port))
+            print('\nFIND SERIAL DEVICE:',VID_PID,device)
+
+    if VERBOSITY>0:
+        if nports==0:
+            print('FIND SERIAL DEVICE: Unable to locate serial device',VID_PID)
+        elif nports>1:
+            print('FIND SERIAL DEVICE: Multiple devices found!',VID_PID,nports)
+            print('\tReturning device with location ending in',device_number)
+
+    return device
 
 ############################################################################
 

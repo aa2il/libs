@@ -206,7 +206,7 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False):
     except Exception as e:
         
         print('PARSE_ADIF: *** Unable to open file or other error in PARSE_ADIF ***')
-        print('fn=',fn)
+        print('fname=',fname)
         print('Error msg:\t',getattr(e, 'message', repr(e)))
         return logbook
         
@@ -515,7 +515,12 @@ def read_text_file(fname,KEEP_BLANKS=True,UPPER=False):
         Done=False
         with open(fname) as f:
             while not Done:
-                line = f.readline()
+                try:
+                    line = f.readline()
+                except Exception as e:
+                    print('READ TEXT FILE: Problem reading line')
+                    print('Error msg:\t',getattr(e, 'message', repr(e)))
+                    line=''
                 if not line:
                     Done=True
                 else:
