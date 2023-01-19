@@ -43,10 +43,11 @@ DEVICE_IDs={'nanoIO'   : '1A86:7523' ,
 
 ############################################################################
 
+# Function to locate a file
 def find_resource_file(f):
 
     PATH=os.path.realpath(sys.executable)
-    print('FIND_FILE: PATH=',PATH)
+    #print('FIND_FILE: PATH=',PATH)
     if '/usr/bin/python' in PATH or 'python.exe' in PATH:
         # Pythin script on linux or Windoz
         #print('FIND_FILE: _file_=',__file__)
@@ -68,7 +69,7 @@ def find_resource_file(f):
     #print('FIND_FILE: fname=',fname)
     if not os.path.isfile(fname):
         fname=f
-    print('FIND_FILE: fname=',fname)
+    #print('FIND_FILE: fname=',fname)
 
     return fname
 

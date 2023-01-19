@@ -18,7 +18,6 @@ from pytz import timezone
 from datetime import datetime, time, date, tzinfo
 from .cty import load_cty
 import logging
-#import os.path
 from pprint import pprint
 import xlrd
 from unidecode import unidecode
@@ -314,7 +313,7 @@ class Station(object):
                         dxcc = load_cty(cty_dir+"cty.plist")              #Load Country File
                 else:
                         fname=find_resource_file('cty.plist')
-                        print('fname=',fname)
+                        #print('fname=',fname)
                         if os.path.isfile(fname):
                             dxcc = load_cty(fname)              #Load Country File
                         else:

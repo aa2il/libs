@@ -513,7 +513,7 @@ def read_text_file(fname,KEEP_BLANKS=True,UPPER=False):
     lines=[]
     if os.path.exists(fname):
         Done=False
-        with open(fname) as f:
+        with open(fname,encoding='utf8') as f:
             while not Done:
                 try:
                     line = f.readline()
