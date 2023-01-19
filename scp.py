@@ -2,7 +2,7 @@
 ############################################################################################
 #
 # scp.py - Rev 1.0
-# Copyright (C) 2022 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2022-3 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Class to make use of Super Check Partial Database
 #
@@ -30,10 +30,19 @@ import Levenshtein
 ############################################################################################
 
 class SUPER_CHECK_PARTIAL:
-    def __init__(self,fname='~/Python/data/MASTER.SCP'):
+    def __init__(self,fname=None):
+
+        # Check for valid file name
+        if fname==None:
+            fname=os.path.expanduser('~/Python/data/MASTER.SCP')
+            if not os.path.isfile(fname):
+                fname='MASTER.SCP'
+        if not os.path.isfile(fname):
+            self.calls=[]
+            return
 
         print('Loading Super Check Partial Database from',fname,'...')
-        with open(os.path.expanduser(fname)) as f:
+        with open(fname) as f:
             scp = f.readlines()
 
         self.calls=[s.strip() for s in scp if '#' not in s]

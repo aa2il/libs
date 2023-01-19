@@ -20,6 +20,7 @@
 ############################################################################
 
 import sys
+import os
 import numpy as np
 import time
 
@@ -29,17 +30,49 @@ import socket
 
 import serial.tools.list_ports as lp
 from pprint import pprint
+import platform
 
 ############################################################################
 
 VERBOSITY=0
 
-############################################################################
-
 DEVICE_IDs={'nanoIO'   : '1A86:7523' ,
             'FTdx3000' : 'SER=AH046H3M120067'}
 
 #            'FTdx3000' : '10C4:EA70'}
+
+############################################################################
+
+def find_resource_file(f):
+
+    PATH=os.path.realpath(sys.executable)
+    print('FIND_FILE: PATH=',PATH)
+    if '/usr/bin/python' in PATH or 'python.exe' in PATH:
+        # Pythin script on linux or Windoz
+        #print('FIND_FILE: _file_=',__file__)
+        dname = os.path.dirname(__file__)
+    elif platform.system()=='Linux':
+        dname = os.path.dirname(PATH)
+    elif platform.system()=='Windows':
+        dname = os.path.dirname(PATH)
+    else:
+        print('FIND RESOURCE FILE: I dont know what I am doing here!')
+        return None
+
+    #print('FIND_FILE: argv=',sys.argv)
+    #print('FIND_FILE: dname=',dname)
+    fname = dname+'/'+f
+    #print('FIND_FILE: fname=',fname)
+    if not os.path.isfile(fname):
+        fname = os.path.expanduser('~/Python/data/'+f)
+    #print('FIND_FILE: fname=',fname)
+    if not os.path.isfile(fname):
+        fname=f
+    print('FIND_FILE: fname=',fname)
+
+    return fname
+
+############################################################################
 
 def find_serial_device(device_name,device_number=None,VERBOSITY=0):
 

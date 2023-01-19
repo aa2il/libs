@@ -18,11 +18,11 @@ from pytz import timezone
 from datetime import datetime, time, date, tzinfo
 from .cty import load_cty
 import logging
-import os.path
+#import os.path
 from pprint import pprint
-
 import xlrd
 from unidecode import unidecode
+from utilities import find_resource_file
 
 ################################################################################
 
@@ -33,20 +33,32 @@ root_logger = "dxcsucker"
 # Download this file from http://www.country-files.com/cty/
 cty_dir = os.path.expanduser('~/Python/data/')
 
+################################################################################
+
 class ChallengeData:
     def __init__(self,fname):
+
+        # Init
+        self.dxccs=[]
+        self.bands=[]
+        self.slots=[]
+        self.nrows1=0
+        self.nrows2=0
+        if fname==None:
+            return
 
         # Read XLS format spreadsheet and pull out sheet we want
         book  = xlrd.open_workbook(fname,formatting_info=True)
         self.sheet1 = book.sheet_by_name('Challenge')
+        self.nrows1 = self.sheet1.nrows
         self.sheet2 = book.sheet_by_name('Modes')
+        self.nrows2 = self.sheet2.nrows
 
         # Read in spreadsheet with band slots - much faster this way
-        self.dxccs=[]
         for i in range(1, self.sheet1.nrows):
             self.dxccs.append( self.sheet1.cell(i, 0).value )
         #print 'DXCCs:',self.dxccs
-        self.bands=[]
+        
         NCOLS=20
         for j in range(1, NCOLS):
             #self.bands.append( str( self.sheet1.cell(0, j).value ) )
@@ -75,6 +87,10 @@ class ChallengeData:
             
     # Work through Challenge sheet
     def needed_challenge(self,dxcc,band,verbosity):
+
+        if self.nrows1==0:
+            return False
+        
         band=str(band)
         if dxcc is None or band=='60M' or band=='Unknown':
             return False
@@ -110,7 +126,7 @@ class ChallengeData:
                 print('BANDS:',self.bands)
         #print('NEEDED_CHALLENGE: dxcc=',dxcc,'\tattribute=',band,'\tjj=',jj)
 
-        for i in range(1, self.sheet1.nrows):
+        for i in range(1, self.nrows1):
             cell = self.dxccs[i-1]
 
             found = dxcc==cell
@@ -160,7 +176,11 @@ class ChallengeData:
 
     # Work through Modes sheet
     def needed_mode(self,dxcc,band):
-        for i in range(1, self.sheet2.nrows):
+        
+        if self.nrows2==0:
+            return False
+        
+        for i in range(1, self.nrows2):
             cell =self.sheet2.cell(i, 0).value 
             #if sheet2.cell(i, 0).value==dxcc:
             if dxcc==cell or ('GERMANY' in dxcc and 'GERMANY' in cell):
@@ -293,10 +313,16 @@ class Station(object):
                 if os.path.isfile(cty_dir+"cty.plist"):
                         dxcc = load_cty(cty_dir+"cty.plist")              #Load Country File
                 else:
-                        self._logger.critical("CTY.PLIST could not be loaded!")
-                        raise Exception("cty.plist not found!")
+                        fname=find_resource_file('cty.plist')
+                        print('fname=',fname)
+                        if os.path.isfile(fname):
+                            dxcc = load_cty(fname)              #Load Country File
+                        else:
+                            self._logger.critical("CTY.PLIST could not be loaded!")
+                            raise Exception("cty.plist not found!")
         except Exception as e:
                 #self._logger.exception("CTY.PLIST could not be loaded!")
+                print(e)
                 print("CTY.PLIST could not be loaded!")
                 
         #------------------Class Methods --------------------           
