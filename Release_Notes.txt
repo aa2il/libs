@@ -1,0 +1,18 @@
+Support Libraries - by AA2IL
+----------------------------
+
+These are several libraries that support the other codes found in this repository.  They are written in python 3 and run on linux and windoz 10/11.
+
+Please email constructive comments/suggestions to aa2il AT arrl DOT net.
+
+Known issues:
+
+None
+
+------------------------------------------------------------------------------
+
+Revision history:
+
+Version 1.0 - Jan. 2023
+
+This is the first version-controlled release.
