@@ -40,6 +40,7 @@ from .ft_tables import *
 from utilities import get_PIDs
 import time
 import numpy as np
+from pprint import pprint
 
 from .dummy_io import *
 from .hamlib_io import *
@@ -211,6 +212,11 @@ def open_rig_connection(connection,host=0,port=0,baud=0,tag='',
         # Direct connection to rig
         sock = direct_connect(port,baud)
         if sock.active or force:
+            if False:
+                print(port,baud,sock)
+                pprint(vars(sock))
+                sys.exit(0)
+            
             if tag=='ROTOR':
                 sock.send('C2\r')
                 print(sock.recv(256))

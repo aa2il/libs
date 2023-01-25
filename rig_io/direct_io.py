@@ -240,7 +240,7 @@ def try_rig(self,type1,type2,port,baud):
 # Routine to search known ports & find a rig
 def find_direct_rig(self,port_in,baud_in,force=False):
 
-    print('FIND_DIRECT_RIG: Looking for any rigs connected to a USB port - port=',port_in,'\tbaud=',baud_in)
+    print('\nFIND_DIRECT_RIG: Looking for any rigs connected to a USB port - port=',port_in,'\tbaud=',baud_in)
     baud=baud_in
     
     # The GS232 rotor
@@ -253,8 +253,8 @@ def find_direct_rig(self,port_in,baud_in,force=False):
             if try_rig(self,'Yaesu','FTdx3000',SERIAL_PORT1,baud):
                 return True
         else:
-            # New path - after contest!
-            port=find_serial_device('FTdx3000',0)
+            # New pathway
+            port=find_serial_device('FTdx3000',0,VERBOSITY=0)
             if try_rig(self,'Yaesu','FTdx3000',port,baud):
                 return True
         

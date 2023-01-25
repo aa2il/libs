@@ -80,7 +80,8 @@ def find_serial_device(device_name,device_number=None,VERBOSITY=0):
     try:
         VID_PID=DEVICE_IDs[device_name]
     except:
-        print('\nFIND SERIAL DEVICE: No such device -',device_name)
+        if VERBOSITY>0:
+            print('\nFIND SERIAL DEVICE: No such device -',device_name)
         return None
         
     ports = lp.grep(VID_PID)
@@ -93,7 +94,7 @@ def find_serial_device(device_name,device_number=None,VERBOSITY=0):
         if VERBOSITY>0:
             print(' ')
             pprint(vars(port))
-            print('\nFIND SERIAL DEVICE:',VID_PID,device)
+            print('\nFIND SERIAL DEVICE: vid_pid=',VID_PID,'\tdevice=',device)
 
     if VERBOSITY>0:
         if nports==0:
