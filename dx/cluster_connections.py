@@ -63,8 +63,9 @@ def connection(TEST_MODE,CLUSTER,MY_CALL,fname=None,ip_addr=None,port=None):
             print("Opening telnet connection to ",host," on port ",port)
 
             try:
-                tn = telnetlib.Telnet(host,port)
-            except:
+                tn = telnetlib.Telnet(host,port,timeout=10)
+            except Exception as e: 
+                print(e)
                 print("Cluster Connect Failed for ",CLUSTER)
                 return None
 

@@ -29,34 +29,50 @@ else:
     from Tkinter import *
     import tkFont
 import time
+from rig_io.ft_tables import SATELLITE_LIST
+
+#from PyQt5 import QtCore
+#from PyQt5.QtWidgets import *
 
 #########################################################################################
 
 # Function to read config params
-def read_settings(fname):
+def read_settings(fname,attr=None):
 
     # Read config file
     RCFILE=os.path.expanduser("~/"+fname)
     print('Reading config file ...',RCFILE)
     SETTINGS=None
-    try:
+    if os.path.isfile(RCFILE):
+        
         with open(RCFILE) as json_data_file:
             SETTINGS = json.load(json_data_file)
-    except:
+            
+    else:
+        
         print(RCFILE,' not found!\n')
-        s=SETTINGS_GUI(None,None)
+        s=SETTINGS_GUI(None,None,attr)
         while not SETTINGS:
             try:
+                if s.win==None:
+                    print('Giving up - Must have basic settings!')
+                    sys.exit(0)
                 s.win.update()
-            except:
-                pass
+            except Exception as e: 
+                print( str(e) )
             SETTINGS=s.SETTINGS
             time.sleep(.1)
+
         print('Settings:',SETTINGS)
         print('Writing settings to',RCFILE,'...')
         with open(RCFILE, "w") as outfile:
             json.dump(SETTINGS, outfile)
 
+    # Fill in the blanks
+    for attr in ['MY_CITY','MY_STATE']:
+        if attr not in SETTINGS:
+            SETTINGS[attr] = ''
+                
     SETTINGS['MY_QTH']=SETTINGS['MY_CITY']+', '+SETTINGS['MY_STATE']
             
     #sys,exit(0)
@@ -71,27 +87,36 @@ class CONFIG_PARAMS:
 
 #########################################################################################
 
-ATTRIBUTES = ['Call','Name','State','Sec','Cat','Grid','City','County',
-              'CQ Zone','ITU Zone','Prec','Check','Club','SKCC','FISTS','CWops',
-              'Rig','Ant','Age','Ham Age','Occupation']
+KEYER_ATTRIBUTES = ['Call','Name','State','Sec','Cat','Grid','City','County',
+                    'CQ Zone','ITU Zone','Prec','Check','Club','SKCC','FISTS','CWops',
+                    'Rig','Ant','Age','Ham Age','Occupation']
 
 class SETTINGS_GUI():
-    def __init__(self,root,P):
+    def __init__(self,root,P,attrib=None):
+
+        self.root=root
+        if root:
+            self.win=Toplevel(root)
+            #print('Top-level')
+        else:
+            self.win = Tk()
+            #print('Root')
+        self.win.title("Settings")
+
         self.P = P
         if P:
             self.SETTINGS=self.P.SETTINGS
         else:
             self.SETTINGS=None
-        
-        if root:
-            self.win=Toplevel(root)
+
+        if attrib:
+            self.ATTRIBUTES = attrib
         else:
-            self.win = Tk()
-        self.win.title("Settings")
+            self.ATTRIBUTES = KEYER_ATTRIBUTES            
 
         row=-1
         self.boxes=[]
-        for attr in ATTRIBUTES:
+        for attr in self.ATTRIBUTES:
             row+=1
             txt='My '+attr
             Label(self.win, text=txt+':').grid(row=row, column=0)
@@ -123,7 +148,7 @@ class SETTINGS_GUI():
     def Dismiss(self):
         print('DISMISS: P=',self.P)
         self.SETTINGS = {}
-        for attr,box in zip(ATTRIBUTES,self.boxes):
+        for attr,box in zip(self.ATTRIBUTES,self.boxes):
             attr2='MY_'+attr.upper().replace(' ','_')
             self.SETTINGS[attr2] = box.get().upper()
 
@@ -138,7 +163,6 @@ class SETTINGS_GUI():
         
         #self.win.destroy()
         self.hide()
-        print('Hey4')
 
     def show(self):
         print('Show Settings Window ...')
@@ -146,5 +170,153 @@ class SETTINGS_GUI():
         self.win.deiconify()
         
     def hide(self):
-        print('Hide Settings Window ...')
-        self.win.withdraw()
+        print('Hide Settings Window ...',self.root)
+        if self.root:
+            self.win.withdraw()
+        else:
+            print('Bye Bye')
+            self.win.destroy()
+            self.win=None
+
+"""
+# This doesn't work on its own
+class SETTINGS_GUI_QT(QMainWindow):
+    def __init__(self,P,parent=None):
+        super(SETTINGS_GUI_QT, self).__init__(parent)
+
+        # Init
+        self.P=P
+        self.win  = QWidget()
+        self.setCentralWidget(self.win)
+        self.setWindowTitle('pySat Settings')
+        self.grid = QGridLayout(self.win)
+
+        # Boxes to hold geographic info (i.e. gps data)
+        row=0
+        col=0
+        labels=['My Call:','My Grid:','Latitude:','Longitude:','Altitude (m):']
+        self.items=['MY_CALL','MY_GRID','MY_LAT','MY_LON','MY_ALT']
+        self.eboxes=[] 
+        for label,item in zip(labels,self.items):
+            
+            lab = QLabel(self)
+            lab.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
+            lab.setText(label)
+            self.grid.addWidget(lab,row,col,1,1)
+
+            ebox = QLineEdit(self)
+            try:
+                txt=str(self.P.SETTINGS[item])
+            except:
+                txt=''
+            ebox.setText(txt)
+            ebox.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
+            self.grid.addWidget(ebox,row,col+1,1,1)
+            
+            self.eboxes.append(ebox)            
+            row+=1
+
+        # Separater for next section
+        lab = QLabel(self)
+        lab.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
+        lab.setText('----- Known Satellites: -----')
+        self.grid.addWidget(lab,row,col,1,1)
+
+        if False:
+            row+=1
+            lab = QLabel(self)
+            lab.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
+            lab.setText('Known Satellites:')
+            self.grid.addWidget(lab,row,col,1,1)
+
+        # List of available satellites, whether we want them & tuning offsets
+        self.cboxes=[]
+        self.eboxes1=[]
+        self.eboxes2=[]
+        isat=0
+        OFFSETS=self.P.SETTINGS['OFFSETS']
+        row0=row+1
+        for sat in SATELLITE_LIST:
+            row+=1
+            if row>row0+16:
+                row=row0
+                col+=4
+            
+            cbox = QCheckBox(sat)
+            self.grid.addWidget(cbox,row,col,1,1)
+            self.cboxes.append(cbox)
+            if sat!='None' and sat in P.SATELLITE_LIST:
+                cbox.setChecked(True)
+                
+            ebox = QLineEdit(self)
+            self.eboxes1.append(ebox)
+            try:
+                #txt="0"   # str(OFFSETS[sat][0])
+                txt=str(OFFSETS[sat][0])
+            except:
+                txt="0"
+            ebox.setText(txt)
+            ebox.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
+            self.grid.addWidget(ebox,row,col+1,1,1)
+            
+            ebox = QLineEdit(self)
+            self.eboxes2.append(ebox)
+            try:
+                txt=str(OFFSETS[sat][1])
+            except:
+                txt="0"
+            ebox.setText(txt)
+            ebox.setAlignment(QtCore.Qt.AlignCenter | QtCore.Qt.AlignVCenter)
+            self.grid.addWidget(ebox,row,col+2,1,1)
+            
+            isat+=1
+                
+        # Buttons to complete or abandon the update
+        row+=2
+        col+=1
+        button1 = QPushButton('OK')
+        button1.setToolTip('Click to Update Settings')
+        button1.clicked.connect(self.Update)
+        self.grid.addWidget(button1,row,col,1,1)
+        
+        col+=1
+        button2 = QPushButton('Cancel')
+        button2.setToolTip('Click to Cancel')
+        button2.clicked.connect(self.Cancel)
+        self.grid.addWidget(button2,row,col,1,1)
+        
+        self.hide()
+
+    # Function to update settings and write them to resource file
+    def Update(self):
+
+        # Collect things related to the list of sats
+        ACTIVE=[]
+        OFFSETS={}
+        for sat,cbox,ebox1,ebox2 in zip(SATELLITE_LIST,self.cboxes,self.eboxes1,self.eboxes2):
+            if sat!='None':
+                OFFSETS[sat] = [int(ebox1.text()) , int(ebox2.text())]
+                if cbox.isChecked():
+                    ACTIVE.append(sat)
+
+        # Bundle all into a common structure
+        self.P.SETTINGS = {}
+        for item,ebox in zip(self.items,self.eboxes):
+            self.P.SETTINGS[item]=ebox.text()
+        self.P.SETTINGS['ACTIVE']=ACTIVE
+        self.P.SETTINGS['OFFSETS']=OFFSETS
+        self.P.SATELLITE_LIST=ACTIVE
+        
+        # Write out the resource file
+        with open(self.P.RCFILE, "w") as outfile:
+            json.dump(self.P.SETTINGS, outfile)
+
+        # Hide the sub-window
+        self.hide()
+
+    # Abaondon the update, just close the sub-window
+    def Cancel(self):
+        self.hide()
+        
+
+"""
