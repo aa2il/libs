@@ -1,7 +1,7 @@
 #######################################################################################
 #
 # Direct Rig IO - Rev 1.0
-# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Socket I/O routines related to commanding the radio via a
 # direct USB connection.
@@ -169,7 +169,7 @@ def try_rig(self,type1,type2,port,baud):
         print('\nTRY_RIG: Trying %s %s\nport=%s\nbaud=%d ...' %
               (type1,type2,port,baud) )
 
-        # Attempting to reest usb device - not working yet
+        # Attempting to reset usb device - not working yet
         if False:
             print('Hey 11')
             fp0 = open(port, 'r', os.O_WRONLY)
@@ -177,7 +177,7 @@ def try_rig(self,type1,type2,port,baud):
             fcntl.ioctl(fp0, USBDEVFS_RESET, 0)
             print('Hey 33')
 
-        # This doesn't d it either
+        # This doesn't do it either
         if False:
             print('Hey 11')
             import termios
@@ -259,8 +259,14 @@ def find_direct_rig(self,port_in,baud_in,force=False):
                 return True
         
     if port_in==0 or port_in==991:
-        if try_rig(self,'Yaesu','FT991a',SERIAL_PORT3,baud):
-            return True
+        if False:
+            if try_rig(self,'Yaesu','FT991a',SERIAL_PORT3,baud):
+                return True
+        else:
+            # New pathway
+            port=find_serial_device('FT991a',0,VERBOSITY=0)
+            if try_rig(self,'Yaesu','FT991a',port,baud):
+                return True
 
     # There are two possible connections to the TS-850
     # The first is via my home-brew interface
@@ -936,15 +942,14 @@ class direct_connect:
                     filts=FT991A_SSB_FILTERS2
                 else:
                     filts=FT991A_SSB_FILTERS1
-            elif m in ['CW','CW-R','CWR']:
+            elif m in ['CW','CW-R','CWR','CW-U','CW-L']:
                 if filt[0]=='Wide':                    
                     filts=FT991A_CW_FILTERS2
                 else:
                     filts=FT991A_CW_FILTERS1
             else:
                 print('DIRECT SET_FILTER - Unknown mode',m)
-                sys,exit(0)
-
+                return False
 
             if len(filt)==1:
                 #print('Hey 1')
@@ -1682,9 +1687,14 @@ class direct_connect:
 
         buf = self.get_response('IF;')
 
-        p3=buf[13:18]
-        p4=buf[18]
-        p5=buf[19]
+        if self.rig_type2=='FT991a':
+            p3=buf[15:20]
+            p4=buf[20]
+            p5=buf[21]
+        else:
+            p3=buf[13:18]
+            p4=buf[18]
+            p5=buf[19]
 
         shift=int(p3)
         rx=int(p4)*shift

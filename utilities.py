@@ -37,9 +37,11 @@ import platform
 VERBOSITY=0
 
 DEVICE_IDs={'nanoIO'   : '1A86:7523' ,
-            'FTdx3000' : 'SER=AH046H3M120067'}
+            'FTdx3000' : 'SER=AH046H3M120067',
+            'FT991a'   : 'SER=00A50791'}
 
 #            'FTdx3000' : '10C4:EA70'}
+#            'FT991a'   : '10C4:EA70'}
 
 ############################################################################
 
@@ -81,7 +83,14 @@ def find_serial_device(device_name,device_number=None,VERBOSITY=0):
         VID_PID=DEVICE_IDs[device_name]
     except:
         if VERBOSITY>0:
-            print('\nFIND SERIAL DEVICE: No such device -',device_name)
+            print('\nFIND SERIAL DEVICE: *** ERROR *** No such device -',device_name)
+            ports = lp.comports()
+            print('ports=',ports,'\n')
+
+            for port in ports:
+                pprint(vars(port))
+                #print("port={}: desc={} hwid=[{}]".format(port.device, port.description, port.hwid))
+            sys.exit(0)
         return None
         
     ports = lp.grep(VID_PID)
