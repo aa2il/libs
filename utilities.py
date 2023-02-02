@@ -38,10 +38,12 @@ VERBOSITY=0
 
 DEVICE_IDs={'nanoIO'   : '1A86:7523' ,
             'FTdx3000' : 'SER=AH046H3M120067',
-            'FT991a'   : 'SER=00A50791'}
+            'FT991a'   : 'SER=00A50791',
+            'IC9700'   : 'SER=IC-9700 12007709 A'}
 
 #            'FTdx3000' : '10C4:EA70'}
 #            'FT991a'   : '10C4:EA70'}
+#            'IC9700'   : '10C4:EA60'}
 
 ############################################################################
 
@@ -77,13 +79,17 @@ def find_resource_file(f):
 
 ############################################################################
 
-def find_serial_device(device_name,device_number=None,VERBOSITY=0):
+def find_serial_device(device_name,device_number,VERBOSITY=0):
 
     try:
         VID_PID=DEVICE_IDs[device_name]
-    except:
+        if VERBOSITY>0:
+            print('\nFIND SERIAL DEVICE: Looking for device name=',device_name,
+                  '\tvid_pid=',VID_PID)
+    except Exception as e: 
         if VERBOSITY>0:
             print('\nFIND SERIAL DEVICE: *** ERROR *** No such device -',device_name)
+            print(e)
             ports = lp.comports()
             print('ports=',ports,'\n')
 
@@ -96,12 +102,15 @@ def find_serial_device(device_name,device_number=None,VERBOSITY=0):
     ports = lp.grep(VID_PID)
     nports=0
     device=None
+    best=None
     for port in ports:
         nports+=1
-        if device_number==None or port.location[-1]==str(device_number):
+        loc=int(port.location[-1])
+        if best==None or (device_number==0 and loc<best)  or (device_number==1 and loc>best):
             device=port.device
+            best=loc            
         if VERBOSITY>0:
-            print(' ')
+            print('port=')
             pprint(vars(port))
             print('\nFIND SERIAL DEVICE: vid_pid=',VID_PID,'\tdevice=',device)
 
@@ -110,7 +119,8 @@ def find_serial_device(device_name,device_number=None,VERBOSITY=0):
             print('FIND SERIAL DEVICE: Unable to locate serial device',VID_PID)
         elif nports>1:
             print('FIND SERIAL DEVICE: Multiple devices found!',VID_PID,nports)
-            print('\tReturning device with location ending in',device_number)
+            print('\tReturning device with location ending in',best)
+            print(device)
 
     return device
 

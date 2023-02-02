@@ -57,7 +57,7 @@ def strip_garbage(buf,cmd):
 
 
 # Routine to try a port and see if anything is connected
-def try_port(port,baud,verbosity):
+def try_port(port,baud,verbosity,ICOM=False):
     if verbosity>=1:
         print('\nDIRECT_IO - TRY_PORT: Trying port %s at %d baud - verb=%d ...' %
               (port,baud,verbosity) )
@@ -65,7 +65,7 @@ def try_port(port,baud,verbosity):
     try:
         self=blank_struct()
         self.s = serial.Serial(port,baud,timeout=0.1)
-        ICOM = "IC-9700" in port
+        #ICOM = "IC-9700" in port
         if ICOM:
             #print("ICOM 9700!")
             self.civ = icom_civ('IC9700')            
@@ -245,9 +245,16 @@ def find_direct_rig(self,port_in,baud_in,force=False):
     
     # The GS232 rotor
     if port_in==232:
-        if try_rig(self,'Yaesu','GS232b',SERIAL_ROTOR,baud):
-            return True
+        if False:
+            if try_rig(self,'Yaesu','GS232b',SERIAL_ROTOR,baud):
+                return True
+        else:
+            # New pathway
+            port=find_serial_device('GS232b',0,VERBOSITY=0)
+            if try_rig(self,'Yaesu','GS232b',port,baud):
+                return True
 
+    # FTdx3000
     if port_in==0 or port_in==3000:
         if False:
             if try_rig(self,'Yaesu','FTdx3000',SERIAL_PORT1,baud):
@@ -258,6 +265,7 @@ def find_direct_rig(self,port_in,baud_in,force=False):
             if try_rig(self,'Yaesu','FTdx3000',port,baud):
                 return True
         
+    # FT991a
     if port_in==0 or port_in==991:
         if False:
             if try_rig(self,'Yaesu','FT991a',SERIAL_PORT3,baud):
@@ -266,6 +274,17 @@ def find_direct_rig(self,port_in,baud_in,force=False):
             # New pathway
             port=find_serial_device('FT991a',0,VERBOSITY=0)
             if try_rig(self,'Yaesu','FT991a',port,baud):
+                return True
+
+    # IC-9700
+    if port_in==0 or port_in==9700:
+        if False:
+            if try_rig(self,'Icom','IC9700',SERIAL_PORT9,baud):
+                return True
+        else:
+            # New pathway
+            port=find_serial_device('IC9700',0,VERBOSITY=0)
+            if try_rig(self,'Icom','IC9700',port,baud):
                 return True
 
     # There are two possible connections to the TS-850
@@ -283,11 +302,6 @@ def find_direct_rig(self,port_in,baud_in,force=False):
     # IC-706
     if port_in==0 or port_in==706:
         if try_rig(self,'Icom','IC706',SERIAL_PORT7,baud):
-            return True
-
-    # IC9700
-    if port_in==0 or port_in==9700:
-        if try_rig(self,'Icom','IC9700',SERIAL_PORT9,baud):
             return True
 
     print("\n*** Can't find any rigs - giving up - PORT =",port_in,'***')
@@ -1951,6 +1965,10 @@ class direct_connect:
 
     # Function to get monitor level - see note below on set_mon_gain
     def get_monitor_gain(self):
+        if self.rig_type1=='Kenwood' or self.rig_type1=='Icom':
+            print('DIRECT - GET MONITOR GAIN: Function not yet implemented for Kenwood and Icom rigs')
+            return 0
+        
         buf = self.get_response('ML1;')
         if VERBOSITY>0:
             print('DIRECT_IO - GET_MONITOR_GAIN: buf=',buf,'\t',buf[3:6])
@@ -1965,7 +1983,11 @@ class direct_connect:
     # Note - this seems different than menu item 035 which is General Monitor Level
     # We acces the latter via EX035xxx command
     def set_monitor_gain(self,gain):
-        VERBOSITY=1
+        #VERBOSITY=1
+        if self.rig_type1=='Kenwood' or self.rig_type1=='Icom':
+            print('DIRECT - SET MONITOR GAIN: Function not yet implemented for Kenwood and Icom rigs')
+            return 0
+        
         if VERBOSITY>0:
             print('DIRECT_IO - SET_MONITOR_GAIN: gain=',gain)
         cmd  = 'ML1'+str(gain).zfill(3)+';ML1;'

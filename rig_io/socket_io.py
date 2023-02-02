@@ -460,6 +460,21 @@ def SetVFO(self,cmd):
             print('SetVFO - Select A<->B - Not implemented on ICOM rigs yet')
         else:
             self.sock.get_response("BY;SV;")
+    #elif cmd=='SPLIT':
+    #    if s.rig_type1=='Icom':
+    #        print('SetVFO - Select SPLIT - Not implemented on ICOM rigs yet')
+    #    else:
+    #        self.sock.get_response("BY;SV;")
+    elif cmd=='TXW':
+        if s.rig_type1=='Icom':
+            print('SetVFO - TXW - Not implemented on ICOM rigs yet')
+        else:
+            txw=self.sock.get_response("TS;")
+            print('TXW=',txw)
+            if txw=='TS0;':
+                self.sock.get_response("BY;TS1;")
+            else:
+                self.sock.get_response("BY;TS0;")
     else:
         print('SetVFO: Invalid command - ',cmd)
 
@@ -481,10 +496,13 @@ def ClarReset(self):
         self.sock.get_response("BY;RC;RT0;XT0;")
 
 # Function to set TX split
-def SetTXSplit(self,df_kHz):
+def SetTXSplit(self,df_kHz,onoff=True):
     df=int( df_kHz*1000 )
-    cmd = 'BY;RC;RT0;XT1;RU'+str(df).zfill(4)+';'
-    print('CLARSPLIT:',df,cmd)
+    if onoff:
+        cmd = 'BY;RC;RT0;XT1;RU'+str(df).zfill(4)+';'
+    else:
+        cmd = 'BY;RC;RT0;XT0;'
+    print('Set TX CLARiFIER SPLIT:',df,cmd)
     self.sock.get_response(cmd)
 
 # Function to get split settings (clarifier)

@@ -1,7 +1,7 @@
 ############################################################################################
 #
 # Fldigi IO - Rev 1.0
-# Copyright (C) 2021-2 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Functions to control rig through FLDIGI or FLRIG from python.
 # See methods.txt for list of methods for these two protocols
@@ -797,7 +797,13 @@ class fldigi_xlmrpc(direct_connect):
         if self.rig_type1 == "Icom":
             buf = self.recv(1024)
         else:
-            buf = self.recv(1024).rstrip()
+            try:
+                buf = self.recv(1024).rstrip()
+            except Exception as e: 
+                print( str(e) )
+                print( 'FLDIGI/RIG IO - GET RESPONSE: Error reading response for cmd=',cmd)
+                buf=''
+
         if VERBOSITY>0:
             print('...Got it',buf)
 
