@@ -333,9 +333,13 @@ class fldigi_xlmrpc(direct_connect):
         
         if self.fldigi_active:
             if VFO=='A':
-                self.lock.acquire()
-                x=self.s.main.get_frequency()
-                self.lock.release()
+                acq=self.lock.acquire(timeout=1.0)
+                if acq:
+                    x=self.s.main.get_frequency()
+                    self.lock.release()
+                else:
+                    print('FLDIGI GET FREQ: Failed to acquire lock')
+                    x=0
             else:
                 buf = self.get_response('F'+VFO+';')
                 try:
@@ -385,9 +389,12 @@ class fldigi_xlmrpc(direct_connect):
         f=float( 1000*frq_KHz )
         if self.fldigi_active:
             if VFO=='A':
-                self.lock.acquire()
-                self.s.main.set_frequency(f)
-                self.lock.release()
+                acq=self.lock.acquire(timeout=1.0)
+                if acq:
+                    self.s.main.set_frequency(f)
+                    self.lock.release()
+                else:
+                    print('FLDIGI SET FREQ: Failed to acquire lock')
             else:
                 cmd='BY;F'+VFO+str(int(f)).zfill(8)+';'
                 self.send(cmd)
@@ -448,37 +455,50 @@ class fldigi_xlmrpc(direct_connect):
 
         print("FLDIGI_IO SET BAND ",band,frq)
         if frq>0:
-            self.lock.acquire()
-            self.set_freq(frq*1000)
-            self.lock.release()
+            acq=self.lock.acquire(timeout=1.0)
+            if acq:
+                self.set_freq(frq*1000)
+                self.lock.release()
+            else:
+                print('FLDIGI SET BAND: Failed to acquire lock')
 
     # Function to read rig mode 
     def get_mode(self,VFO='A'):
         if VERBOSITY>0:
             print('FLDIGI_IO: GET_MODE vfo=',VFO)
             
-        self.lock.acquire()
-        if self.fldigi_active:
-            m=self.s.rig.get_mode()
-        else:
-            if VFO=='A':
-                m=self.s.rig.get_modeA()
+        acq=self.lock.acquire(timeout=1.0)
+        if acq:
+            if self.fldigi_active:
+                m=self.s.rig.get_mode()
             else:
-                m=self.s.rig.get_modeB()
-        self.lock.release()
+                if VFO=='A':
+                    m=self.s.rig.get_modeA()
+                else:
+                    m=self.s.rig.get_modeB()
+            self.lock.release()
+        else:
+            print('FLDIGI GET FREQ: Failed to acquire lock')
+            m=''
             
         return m
 
     # Function to read fldigi mode 
     def get_fldigi_mode(self):
-        self.lock.acquire()
-        if self.fldigi_active:
-            m=self.s.modem.get_name()
+
+        acq=self.lock.acquire(timeout=1.0)
+        if acq:
+            if self.fldigi_active:
+                m=self.s.modem.get_name()
+            else:
+                if not self.flrig_active:
+                    print('*** FLDIGI_IO: Warning - unable to read modem name ***')
+                m=self.s.rig.get_mode()
+            self.lock.release()
         else:
-            if not self.flrig_active:
-                print('*** FLDIGI_IO: Warning - unable to read modem name ***')
-            m=self.s.rig.get_mode()
-        self.lock.release()
+            print('FLDIGI GET FLDIGI FREQ: Failed to acquire lock')
+            m=''
+            
         return m
 
     def get_vfo(self):
@@ -590,7 +610,11 @@ class fldigi_xlmrpc(direct_connect):
         if VFO=='A' or self.flrig_active:
             #print('FLDIGI_IO - SET_MODE: Using xlmrpc mode=',mode)
         
-            self.lock.acquire()
+            acq=self.lock.acquire(timeout=1.0)
+            if not acq:
+                print('FLDIGI SET MODE: Failed to acquire lock')
+                return ' '
+                
             if self.fldigi_active:
                 self.s.rig.set_mode(mode)  
                 mold=self.s.modem.set_by_name(mode2)
@@ -660,30 +684,34 @@ class fldigi_xlmrpc(direct_connect):
     def set_call(self,call):
         if self.fldigi_active:
             print("SET CALL:",call)
-            self.lock.acquire()
-            x=self.s.log.set_call(call)
-            self.lock.release()
+            acq=self.lock.acquire(timeout=1.0)
+            if acq:
+                x=self.s.log.set_call(call)
+                self.lock.release()
+            else:
+                x=''
             return x
 
     # Function to set log fields
     def set_log_fields(self,fields):
         if self.fldigi_active:
             print('SET_LOG_FIELDS: Fields:',fields)
-            self.lock.acquire()
-            for key in list(fields.keys()):
-                if key=='Call':
-                    self.s.log.set_call(fields['Call'])
-                elif key=='Name':
-                    self.s.log.set_name(fields['Name'])
-                elif key=='QTH':
-                    self.s.log.set_qth(fields['QTH'])
-                elif key=='RST_out':
-                    self.s.log.set_rst_out(fields['RST_out'])
-                elif key=='Exchange':
-                    self.s.log.set_exchange(fields['Exchange'])
-                else:
-                    print('SET_LOG_FIELD: %%% Unknwon log field %%%%%%%%%% ',key)
-            self.lock.release()
+            acq=self.lock.acquire(timeout=1.0)
+            if acq:
+                for key in list(fields.keys()):
+                    if key=='Call':
+                        self.s.log.set_call(fields['Call'])
+                    elif key=='Name':
+                        self.s.log.set_name(fields['Name'])
+                    elif key=='QTH':
+                        self.s.log.set_qth(fields['QTH'])
+                    elif key=='RST_out':
+                        self.s.log.set_rst_out(fields['RST_out'])
+                    elif key=='Exchange':
+                        self.s.log.set_exchange(fields['Exchange'])
+                    else:
+                        print('SET_LOG_FIELD: %%% Unknwon log field %%%%%%%%%% ',key)
+                self.lock.release()
             print('SET_LOG_FIELDS: Done.')
 
     # Function to get log fields

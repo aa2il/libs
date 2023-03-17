@@ -82,7 +82,7 @@ class ChallengeData:
                         val = str(int(val))
                 calls.append( unidecode( val ) )
             self.slots.append(calls)
-                
+            #print('CHALLENGE DATA - i=',i,'\tcalls=',calls)
             
     # Work through Challenge sheet
     def needed_challenge(self,dxcc,band,verbosity):
@@ -141,8 +141,10 @@ class ChallengeData:
                     call = str(self.slots[i-1][jj]).strip()
                     #if isinstance(call,float):
                     #    call = str(call)
-                    #print('CHALLENGE_NEEDED: dxcc=',dxcc,'\ti=',i,'\jj=',jj,'\tcall=',call,
-                    #      '\tval=',self.slots[i-1][jj])
+                    if verbosity>0:
+                        print('CHALLENGE_NEEDED: dxcc=',dxcc,'\ti=',i,'\tjj=',jj,'\tcall=',call,
+                              '\tval=',self.slots[i-1][jj])
+                        print('slots=',self.slots[i-1])
                     needed= call=='' or call=='PAPER'
                     if verbosity>0 or band=='Phone99':
                         print('CHALLENGE_NEEDED: band=',band,'\tdxcc=',dxcc,\
@@ -163,7 +165,7 @@ class ChallengeData:
                         else:
                             NEEDED=' '
                             needed=False
-                        if verbosity>0:
+                        if verbosity>0 or NEEDED!=' ':
                             print(("DXCC: %s : %-8s -   %-10s     %-20s" % (dxcc,b2,call,NEEDED) ))
                 break
         else:

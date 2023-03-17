@@ -402,8 +402,13 @@ class ring_buffer2:
 
             xx = self.prev
             while self.buf.qsize()>1 or len(xx)<n:
-                xxx = self.buf.get()
-                #print 'Pull:',len(xx),len(xxx),self.buf.qsize()
+                #xxx = self.buf.get()
+                try:
+                    xxx = self.buf.get(timeout=1.0)
+                except Exception as e:
+                    print('PULL: Exception Raised:\n',e)
+                    #print 'Pull:',len(xx),len(xxx),self.buf.qsize()
+                    break
                 xx = np.concatenate( (xx, xxx) )
                 self.buf.task_done()
                 self.nsamps -= len(xxx)

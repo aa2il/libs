@@ -37,6 +37,7 @@ import platform
 VERBOSITY=0
 
 DEVICE_IDs={'nanoIO'   : '1A86:7523' ,
+            'nanoIO32' : '10C4:EA60' ,
             'FTdx3000' : 'SER=AH046H3M120067',
             'FT991a'   : 'SER=00A50791',
             'IC9700'   : 'SER=IC-9700 12007709 A'}
@@ -78,6 +79,15 @@ def find_resource_file(f):
     return fname
 
 ############################################################################
+
+def list_all_serial_devices():
+    ports = lp.comports()
+    print('LIST ALL SERIAL DEVICES: ports=',ports,'\n')
+    
+    for port in ports:
+        print('\n',port,':')
+        pprint(vars(port))
+        print("\nport={}: desc={} hwid=[{}]".format(port.device, port.description, port.hwid))
 
 def find_serial_device(device_name,device_number,VERBOSITY=0):
 
@@ -249,6 +259,7 @@ def freq2band(frq):
         band='23cgm'
     else:
         band='70cm'
+        print('FREQ2BAND: frq=',frq,'\tband=',band)
             
     return band
 

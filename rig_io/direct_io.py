@@ -446,7 +446,8 @@ class direct_connect:
         if wait:
             #while len(x)==0:
             #while x.find(';')<0:
-            while x[-1]!=';':
+            #while x[-1]!=';':
+            while len(x)==0 or x[-1]!=';':
                 x = x + self.s.read(1024).decode("utf-8") 
                 #x = x + self.recv()
 
@@ -615,16 +616,16 @@ class direct_connect:
                 print('\ty        =',[hex(ord(c)) for c in y])
 
         else:
-            buf = self.get_response('F'+VFO+';')
-            buf = strip_garbage(buf,'F'+VFO)
-            if buf[0]=='?':
+            try:
                 buf = self.get_response('F'+VFO+';')
                 buf = strip_garbage(buf,'F'+VFO)
-        
-            try:
+                if buf[0]=='?':
+                    buf = self.get_response('F'+VFO+';')
+                    buf = strip_garbage(buf,'F'+VFO)
                 frq = float(buf[2:-1])
-            except:
+            except Exception as e: 
                 print('DIRECT GET_FREQ: Unable to read freq - buf=',buf)
+                print(e)
                 frq=0
 
         self.freq=frq
