@@ -251,9 +251,13 @@ class TCP_Server(Thread):
     def Broadcast(self,msg):
 
         # Get list of sockets
-        readable,writeable,inerror = select.select([],self.socks,[],0)
+        try:
+            readable,writeable,inerror = select.select([],self.socks,[],0)
+        except:
+            writeable=[]
         if len(writeable)==0:
-            print('TCP_SERVER->Broadcast: No open sockets')                
+            print('TCP_SERVER->Broadcast: No open sockets')
+            return
                 
         msg=msg+'\n'
         for sock in writeable:
