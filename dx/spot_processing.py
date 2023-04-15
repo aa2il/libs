@@ -248,6 +248,7 @@ class Station(object):
                 self.call = None
                 self.prefix = None
                 self.homecall = None
+                self.appendix = None
                 self.country = None
                 self.latitude = None
                 self.longitude = None
@@ -255,9 +256,9 @@ class Station(object):
                 self.ituz = None
                 self.continent = None
                 self.offset = None
-                self.mm = False
-                self.am = False
-                self.beacon = False
+                self.mm = False                 # Marine mobile
+                self.am = False                 # Aero mobile
+                self.beacon = False             # Beacon
                 
                 self.call_prefix=None
                 self.call_number=None
@@ -270,15 +271,17 @@ class Station(object):
                     self._logger.warning("Busted Homecall: '"+ str(self.homecall) + "' of " + self.call + " could not be decoded")
                 else:
                     self.prefix = self.obtain_prefix(self.call)
+                    #print(self.prefix)
                     if not self.prefix:
                         self.valid = False
                         if not self.mm and not self.am:
                             self._logger.warning("Busted Prefix: '"+ str(self.prefix) + "' of " + self.call + " could not be decoded")
                     else:
-                        #print self.call,self.prefix
+                        #print(self.call,self.prefix)
                         cty_info = self.lookup_cty_info(self.prefix)
                         if not cty_info:
                             self.valid = False
+                            print("Busted: No Country Info found for " + self.call )
                             self._logger.warning("Busted: No Country Info found for " + self.call )
                                         
                         else:
@@ -331,7 +334,7 @@ class Station(object):
             """truncate call until it corresponds to a Prefix in the database"""
 
             prefix = call
-            #print prefix,prefix in Station.dxcc
+            #print(prefix,prefix in Station.dxcc)
             while (prefix in Station.dxcc) != True:
                 if len(prefix) == 0:
                     break
@@ -345,6 +348,7 @@ class Station(object):
                 #print Station.dxcc[prefix]
                 return Station.dxcc[prefix]['Prefix']
             else:
+                #print(prefix)
                 return(prefix)
 
         def obtain_parts(self,homecall):
@@ -376,19 +380,26 @@ class Station(object):
                         #--------identify Homecall in case the callsign has an appendix (e.g. call: DH1TW/VP5, homecall: DH1TW) ------------
                         homecall = re.search('[\d]{0,1}[A-Z]{1,2}\d([A-Z]{1,4}|\d{3,3}|\d{1,3}[A-Z])[A-Z]{0,5}', raw_call, re.I)
                         if homecall:
-                                homecall = homecall.group(0)
+                            #print('\n',homecall)
+                            #print(homecall.group())
+                            #print(homecall.end(),len(raw_call))
+                            #appendix=raw_call[homecall.end():]
+                            #print(appendix)
+                            homecall = homecall.group(0)
                         else:
-                                return(False)
-                        return(homecall)
+                            homecall = False
+                            #appendix = ''
+                        return(homecall)     # ,appendix)
                 except Exception as e:
                         self._logger.debug(str(e))
-                        return(False)
+                        return(False)        # ,'')
         
         
         def obtain_prefix(self, call):
             #print call
             try:
                 entire_call = call.upper()
+                self.appendix=''
                 #self._logger.debug("obtain_prefix(): call " + call)
                 if re.search('[/A-Z0-9\-]{3,15}', entire_call, re.I):  #make sure the call has at least 3 characters
                                 
@@ -403,6 +414,7 @@ class Station(object):
                         appendix = re.search('/[A-Z0-9]{1,4}$', call)
                         appendix = re.sub('/', '', appendix.group(0))
                         self._logger.debug("obtain_prefix(): appendix: " + appendix)
+                        self.appendix=appendix
                                         
                         if appendix == 'MM':                            # special case Martime Mobile
                             self.mm = True
@@ -430,12 +442,27 @@ class Station(object):
                             prefix = self.__iterate_prefix(call)
                             self._logger.debug("obtain_prefix(): prefix: "+ str(prefix) + " (case /LH)")
                         else:
-                            prefix = self.__iterate_prefix(re.sub('/', '', appendix))   #check if the appendix is a valid country prefix
+                            
+                            # Look for "bogus" appendices that are often used in state QPs
+                            valid_app=False
+                            for i in range(len(appendix)):
+                                valid_app = valid_app or appendix[i].isdigit()
+                            #print('=============',appendix,valid_app)
+
+                            if valid_app:
+                                # It looks like a valid appendix
+                                prefix = self.__iterate_prefix(re.sub('/', '', appendix))   #check if the appendix is a valid country prefix
+                            else:
+                                # Its probably bogus
+                                #prefix = self.homecall
+                                call = re.sub('/'+appendix, '', call)
+                                prefix = self.__iterate_prefix(call)
                             self._logger.debug("obtain_prefix(): prefix: " + str(prefix) + " using appendix: " + appendix )
                         
                     elif re.search('/[A-Z0-9]$', call):  # case call/p or /b /m or /5 etc.
                         appendix = re.search('/[A-Z0-9]$', call)
                         appendix = re.sub('/', '', appendix.group(0))
+                        self.appendix=appendix
                         if appendix == 'B':                     #special case Beacon
                             call = re.sub('/B', '', call)
                             prefix = self.__iterate_prefix(call)
@@ -447,6 +474,7 @@ class Station(object):
                             call = re.sub('[\d]+',area_nr, call)
                             prefix = self.__iterate_prefix(call)
                         else:
+                            #print('call=',call)
                             prefix = self.__iterate_prefix(call)
                             self._logger.debug("obtain_prefix(): appendix: " + appendix)
                         
@@ -493,7 +521,8 @@ class Station(object):
                 return(False)
             
         def lookup_cty_info(self, prefix):
-            #--------Lookup Prefix in Country Database / File and the variables ------------    
+            #--------Lookup Prefix in Country Database / File and the variables ------------
+            #print('LOOKUP CTY INFO:',prefix)
             if prefix:  # if Country information found, fill the variables
                 try:
                     #print prefix,Station.dxcc[prefix]
