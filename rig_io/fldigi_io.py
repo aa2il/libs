@@ -469,13 +469,18 @@ class fldigi_xlmrpc(direct_connect):
             
         acq=self.lock.acquire(timeout=1.0)
         if acq:
-            if self.fldigi_active:
-                m=self.s.rig.get_mode()
-            else:
-                if VFO=='A':
-                    m=self.s.rig.get_modeA()
+            try:
+                if self.fldigi_active:
+                    m=self.s.rig.get_mode()
                 else:
-                    m=self.s.rig.get_modeB()
+                    if VFO=='A':
+                        m=self.s.rig.get_modeA()
+                    else:
+                        m=self.s.rig.get_modeB()
+            except Exception as e: 
+                print('*** ERROR *** FLDIGI_IO - GET_MODE - Problem getting vfo')
+                print(e)
+                m=''
             self.lock.release()
         else:
             print('FLDIGI GET FREQ: Failed to acquire lock')

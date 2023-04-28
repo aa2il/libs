@@ -271,7 +271,6 @@ class Station(object):
                     self._logger.warning("Busted Homecall: '"+ str(self.homecall) + "' of " + self.call + " could not be decoded")
                 else:
                     self.prefix = self.obtain_prefix(self.call)
-                    #print(self.prefix)
                     if not self.prefix:
                         self.valid = False
                         if not self.mm and not self.am:
@@ -380,11 +379,6 @@ class Station(object):
                         #--------identify Homecall in case the callsign has an appendix (e.g. call: DH1TW/VP5, homecall: DH1TW) ------------
                         homecall = re.search('[\d]{0,1}[A-Z]{1,2}\d([A-Z]{1,4}|\d{3,3}|\d{1,3}[A-Z])[A-Z]{0,5}', raw_call, re.I)
                         if homecall:
-                            #print('\n',homecall)
-                            #print(homecall.group())
-                            #print(homecall.end(),len(raw_call))
-                            #appendix=raw_call[homecall.end():]
-                            #print(appendix)
                             homecall = homecall.group(0)
                         else:
                             homecall = False
@@ -392,7 +386,7 @@ class Station(object):
                         return(homecall)     # ,appendix)
                 except Exception as e:
                         self._logger.debug(str(e))
-                        return(False)        # ,'')
+                        return(False)
         
         
         def obtain_prefix(self, call):
@@ -522,7 +516,6 @@ class Station(object):
             
         def lookup_cty_info(self, prefix):
             #--------Lookup Prefix in Country Database / File and the variables ------------
-            #print('LOOKUP CTY INFO:',prefix)
             if prefix:  # if Country information found, fill the variables
                 try:
                     #print prefix,Station.dxcc[prefix]
