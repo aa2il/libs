@@ -106,9 +106,10 @@ class ChallengeData:
         #special = ['VIET','GERMANY','NEVIS','LUCIA','EUSTATIUS','FIJI', \
         #          'SOUTH AFRICA','PIERRE','CHATHAM','BARTHELEMY','MARTIN',\
         #           'PAUL ISLAND','VINCENT','SAN ANDRES']
-        special = ['VIET','GERMANY','NEVIS','EUSTATIUS','FIJI', \
+        special = ['VIET','GERMANY','NEVIS','EUSTATIUS','FIJI',    \
                    'SOUTH AFRICA','PIERRE','CHATHAM','BARTHELEMY', \
-                   'PAUL ISLAND','VINCENT','SAN ANDRES','ROTUMA']
+                   'PAUL ISLAND','VINCENT','SAN ANDRES','ROTUMA',  \
+                   'BRUNEI']
         needed=True
 
         #print('NEEDED_CHALLENGE:',dxcc,band)

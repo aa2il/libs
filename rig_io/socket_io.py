@@ -479,7 +479,7 @@ def SetVFO(self,cmd):
         print('SetVFO: Invalid command - ',cmd)
 
 # Function to reset clarifier
-def ClarReset(self):
+def ClarReset(self,RXClarOn=False):
     if VERBOSITY>0:
         print('Clarifier reset ...')
     if self.sock.rig_type1=='Kenwood' or self.sock.rig_type1=='Icom':
@@ -493,7 +493,11 @@ def ClarReset(self):
         self.sock.get_response("Z 0")
     else:
         # Yaesu rigs
-        self.sock.get_response("BY;RC;RT0;XT0;")
+        if RXClarOn:
+            cmd="BY;RC;RT1;XT0;"
+        else:
+            cmd="BY;RC;RT0;XT0;"
+        self.sock.get_response(cmd)
 
 # Function to set TX split
 def SetTXSplit(self,df_kHz,onoff=True):
