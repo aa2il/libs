@@ -242,7 +242,9 @@ SATELLITE_LIST = ['None','ISS','PO-101','SO-50','AO-27', \
                   'CAS-4A','CAS-4B','CAS-6', \
                   'XW-2A','XW-2B','XW-2C','XW-2D','XW-2F','RS-44', \
                   'AO-7','JO-97','UVSQ-SAT', \
-                  'LILACSAT-2','FO-29','AO-73','Moon']
+                  'LILACSAT-2','FO-29','AO-73',
+                  'Orbicraft-Zorkiy',
+                  'Moon']
 
 # Valid precidences for ARRL SS
 PRECS='QSABUMS'
