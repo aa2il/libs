@@ -1991,7 +1991,9 @@ class direct_connect:
         
         if VERBOSITY>0:
             print('DIRECT_IO - SET_MONITOR_GAIN: gain=',gain)
+        #cmd  = 'ML1;'+'ML1'+str(gain).zfill(3)+';ML1;'
         cmd  = 'ML1'+str(gain).zfill(3)+';ML1;'
+        #cmd  = 'ML1'+str(gain).zfill(3)+';'
         buf=self.get_response(cmd)
         if VERBOSITY>0:
             print('DIRECT_IO - SET_MONITOR_GAIN: cmd=',cmd,'\tbuf=',buf)

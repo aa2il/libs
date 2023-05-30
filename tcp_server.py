@@ -54,7 +54,7 @@ def open_udp_client(P,port,msg_handler,BUFFER_SIZE=1024):
     
     try:
         
-        print('Opening UDP client ...')
+        print('OPEN_UDP_CLIENT: Opening UDP client ...')
         udp_client = TCP_Server(P,None,port,Server=False,
                                   BUFFER_SIZE=BUFFER_SIZE,Handler=msg_handler)
         worker = Thread(target=udp_client.Listener,args=(), kwargs={},
@@ -205,7 +205,7 @@ class TCP_Server(Thread):
                     if data:
                         
                         # We received a message from a client
-                        print('\r{}:'.format(sock.getpeername()),data)
+                        #print('LISTERNER: \r{}:'.format(sock.getpeername()),data)
                         try:
                             # Some messages are compressed
                             #print('DATA TYPE:',type(data))
@@ -219,7 +219,7 @@ class TCP_Server(Thread):
                         
                         # The client seemed to send a msg but we didn't get it
                         try:
-                            print('LISTENER:\r{}:'.format(sock.getpeername()),'disconnected')
+                            #print('LISTENER:\r{}:'.format(sock.getpeername()),'disconnected')
                             sock.close()
                         except:
                             pass
@@ -263,7 +263,7 @@ class TCP_Server(Thread):
         for sock in writeable:
             #print(sock)
             addr = sock.getsockname()
-            print('BROADCASTing',msg.strip(),'to',addr,'...')
+            #print('BROADCASTing',msg.strip(),'to',addr,'...')
             #print('\tSock Name=',sock.getsockname())
             #print('\tPeer Name=',sock.getpeername())
             try:

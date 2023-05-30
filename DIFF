@@ -10,8 +10,8 @@
 #set ROOT="/media/${USER}/pi"
 #set ROOT="/media/${USER}/aa2il"
 set ROOT="/media/${USER}/marconi"
-#set ROOT="/media/${USER}/sproul"
-set ROOT="/media/${USER}/3D76-ECB1"
+set ROOT="/media/${USER}/sproul"
+#set ROOT="/media/${USER}/3D76-ECB1"
 #set ROOT="/media/${USER}/acer"
 #set ROOT="/media/${USER}/cartman"
 if( !(-e $ROOT) )then
@@ -25,10 +25,10 @@ echo N=$N
 set PTH=`pwd | sed 's/\/home2//g' | cut -c ${N}-`
 echo PTH=$PTH
 set old=${ROOT}${PTH}
-echo OLD=$old
 
 # Overide if necessary
-#set OLD="work2"
+#set OLD="save59"
+echo OLD=$old
 
 rm -f DIFFS
 foreach i (*.py rig_io/*py dx/*py pywsjtx/*py DIFF *.bat *.txt)

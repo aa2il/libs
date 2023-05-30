@@ -26,6 +26,7 @@
 #
 ############################################################################################
 
+import traceback
 import sys
 if sys.version_info[0]==3:
     from xmlrpc.client import ServerProxy, Error
@@ -46,6 +47,24 @@ from .icom_io import icom_civ, show_hex
 VERBOSITY=0
 
 ################################################################################################
+
+"""
+def full_stack():
+    import traceback, sys
+    exc = sys.exc_info()[0]
+    stack = traceback.extract_stack()[:-1]  # last one would be full_stack()
+    if exc is not None:  # i.e. an exception is present
+        del stack[-1]       # remove call of full_stack, the printed exception
+                            # will contain the caught exception caller instead
+    trc = 'Traceback (most recent call last):\n'
+    stackstr = trc + ''.join(traceback.format_list(stack))
+    if exc is not None:
+         stackstr += '  ' + traceback.format_exc().lstrip(trc)
+    return stackstr
+
+print full_stac()
+"""
+
 
 class fldigi_xlmrpc(direct_connect):
 #class fldigi_xlmrpc(no_connect):
@@ -792,7 +811,10 @@ class fldigi_xlmrpc(direct_connect):
                 #print('SEND: reply=',self.reply)
             except Exception as e: 
                 print("**** FLDIGI SEND FAILURE cmd=",cmd2)
-                print(e)
+                print('e=',e)
+                #print('reply=',reply,'\n',show_hex(reply) )
+                traceback.print_exc()
+                #traceback.print_exception(*sys.exc_info())
                 self.reply = ''
         else:
             self.reply = ''

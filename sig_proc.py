@@ -390,9 +390,10 @@ class ring_buffer2:
         self.nsamps += len(x)
         self.buf.put(x)
 
-        if self.nsamps>self.size and False:
+        if self.nsamps>self.size:
             print('Ringbuffer2: Push overflow',self.tag,self.nsamps,self.size)
-
+            #self.nsamps -= self.size
+       
     def pull(self,n,flush=False):
 
         if self.tag=='Audio1' and False:
@@ -932,8 +933,8 @@ class AudioIO():
                 return False
 
         print("\nStarting audio play back @",self.fs,"Hz\ttag=",self.rb.tag,
-              '\n\tnsamps=',self.rb.nsamps,'\tdevice=',self.device)
-
+              '\n\tnsamps=',self.rb.nsamps,'\trb_size=',self.rb.size,
+              '\tdevice=',self.device)
         msec = 20                            # Set buffer size to about 20ms
         ifr = int( .001*msec*self.fs )
         self.stream = self.p.open(output_device_index=self.device,
