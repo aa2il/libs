@@ -1004,6 +1004,7 @@ class AudioIO():
                   '\ttag=',rb.tag,'ZeroFill=',self.ZeroFill)
 
         ##################################################################
+        #                                                                #
         # Handle problems - See comments just above AudioIO class def    #
         # on how to fix some underruns.                                  #
         #                                                                #
@@ -1046,10 +1047,10 @@ class AudioIO():
                       rb.tag,rb.nsamps,self.last,self.nchan,rb.Chan)
                 #print("See comments in sig_proc.py on how to fix if this persists")
                 
-                # Wait for ring buffer to fill half way again
+                # Wait for ring buffer to fill again
                 delay=self.P.RB_SIZE/self.P.FS_OUT/4
                 #print(self.P.RB_SIZE,self.P.FS_OUT,delay)
-                while not rb.ready( rb.size/2 ) and not self.P.REPLAY_MODE and not Stopper:
+                while not rb.ready( self.P.DELAY ) and not self.P.REPLAY_MODE and not Stopper:
                     #print('Hey')
                     time.sleep(delay)
                     Stopper = (self.P.Stopper and self.P.Stopper.isSet())
