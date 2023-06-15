@@ -797,6 +797,7 @@ class fldigi_xlmrpc(direct_connect):
             #print 'SEND: REPLY=',self.reply
         elif self.flrig_active:
             try:
+                reply=None
                 if self.rig_type1 == "Icom":
                     cmd2=' '.join( show_hex(cmd) )
                 else:
@@ -810,8 +811,8 @@ class fldigi_xlmrpc(direct_connect):
                     self.reply = reply
                 #print('SEND: reply=',self.reply)
             except Exception as e: 
-                print("**** FLDIGI SEND FAILURE cmd=",cmd2)
-                print('e=',e)
+                print("\n**** FLDIGI SEND FAILURE ***\ncmd=",cmd2,'\nreply=',reply)
+                print('e=',e,'\n')
                 #print('reply=',reply,'\n',show_hex(reply) )
                 traceback.print_exc()
                 #traceback.print_exception(*sys.exc_info())

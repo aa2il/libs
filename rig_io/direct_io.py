@@ -27,6 +27,7 @@
 #
 #######################################################################################
 
+import traceback
 import sys
 from .ft_tables import *
 import socket
@@ -594,7 +595,13 @@ class direct_connect:
         if self.rig_type1=='Icom':
             #vfo=self.get_vfo()
             #print('vfo=',vfo)
-            self.select_vfo(VFO)          # Not sure why this was here
+            try:
+                self.select_vfo(VFO)          # Not sure why this was here
+            except Exception as e: 
+                print("\n**** DIRECT IO -> GET_FREQ ERROR ***")
+                print('e=',e,'\n')
+                traceback.print_exc()
+                
             cmd = self.civ.icom_form_command(0x03)            # Get freq
             x   = self.get_response(cmd)
             y   = self.civ.icom_response(cmd,x)                        
@@ -608,12 +615,19 @@ class direct_connect:
                 y=self.civ.icom_response(cmd,x)
             try:
                 frq = bcd2int(y)
-            except:
+            except Exception as e: 
+                print("\n**** DIRECT IO -> GET_FREQ ERROR ***")
+                print('e=',e,'\n')
+                traceback.print_exc()
+
                 frq=0
                 print('DIRECT Icom get freq - problem reading freq')
-                print('\tcmd      =',[hex(c) for c in cmd])
-                print('\tresponse =',[hex(ord(c)) for c in x])
-                print('\ty        =',[hex(ord(c)) for c in y])
+                #print('\tcmd      =',[hex(c) for c in cmd])
+                #print('\tresponse =',[hex(ord(c)) for c in x])
+                #print('\ty        =',[hex(ord(c)) for c in y])
+                print('\tcmd      =',cmd)
+                print('\tresponse =',x)
+                print('\ty        =',y)
 
         else:
             try:

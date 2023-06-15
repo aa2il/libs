@@ -288,7 +288,7 @@ def write_adif_record(fp,rec,P,long=False,sort=True):
         try:
             qso['QSO_DATE'] = qso['QSO_DATE_OFF']
         except:
-            print('FILE_IO - Write Adif Rec - Cant figure out QSO Date - giving up')
+            print('FILE_IO - WRITE ADIF REC - Cant figure out QSO Date - giving up')
             print('qso=',qso)
             sys,exit(0)
             
@@ -313,10 +313,12 @@ def write_adif_record(fp,rec,P,long=False,sort=True):
     fields = list(qso.keys())
     if sort:
         fields.sort()
-    #print('keys=',fields)
+    if VERBOSITY>1:
+        print('keys=',fields)
     for fld in fields:
         val = qso[fld]
-        #print('WRITE_ADIF_RECORD:',fld,val)
+        if VERBOSITY>1:
+            print('WRITE_ADIF_RECORD:',fld,val)
         if fld=='SAT_NAME':
             if val!='None' and val!='':
                 if val=='ISS':
@@ -332,7 +334,8 @@ def write_adif_record(fp,rec,P,long=False,sort=True):
                 val=val[0:8]
             elif fld[:4]=='TIME' and len(val)>0 and len(val)!=6:
                 val=str(val).replace(':','').zfill(6)
-            #print(fld,val)
+            if VERBOSITY>1:
+                print(fld,val)
             if len(val)>0:
                 fp.write('<%s:%d>%s%s' % (fld,len(val),val,NL) )
 
@@ -341,8 +344,9 @@ def write_adif_record(fp,rec,P,long=False,sort=True):
         if len(val)>0:
             fld='CONTEST_ID'
             fp.write('<%s:%d>%s%s' % (fld,len(val),val,NL) )
-    except:
-        pass
+    except Exception as e:
+        print('ADIF WRITE RECORD: Problem writing contest id')
+        print('Error msg:\t',getattr(e, 'message', repr(e)))
         
     #fp.write('<EOR>\n'+NL)
     fp.write('<EOR>\n\n')
