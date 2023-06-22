@@ -906,6 +906,15 @@ class direct_connect:
         return [filt1,filt2]
 
 
+    def set_breakin(self,onoff):
+        if self.rig_type1=='Kenwood' or self.rig_type1=='Icom':
+            print('DIRECTSET_BREAKIN: Function not yet implemented for Kenwood and Icom rigs')
+            return 
+        
+        cmd='BY;BI'+str(onoff)+';'
+        self.get_response(cmd)
+
+
     def set_filter(self,filt,mode=None):
         #VERBOSITY=1
         #print('HEY 0',filt,mode,len(filt))
@@ -913,8 +922,8 @@ class direct_connect:
             #print('HEY 1',filt,mode)
             if mode in ['USB','SSB','LSB']:
                 filt=['Wide','2400']
-            elif mode in ['CW','CW-R']:
-                filt=['Narrow','500']           # Was 200
+            elif mode[0:2]==['CW']:
+                filt=['Narrow','200']           # Was 500
             elif mode in ['RTTY','DATA']:
                 filt=['Wide','3000']
             elif filt=='Auto':
@@ -925,6 +934,10 @@ class direct_connect:
         
         if VERBOSITY>0:
             print('\nDIRECT SET_FILTER: filt=',filt,'\tmode=',mode)
+            
+        if self.rig_type1=='Icom':
+            print('DIRECT_IO: SET_POWER not support yet for Icom rigs')
+            return False
             
         if self.rig_type=='Kenwood':
             c1 = modes[filt[0]]["Filter3"]

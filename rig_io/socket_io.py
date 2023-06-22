@@ -813,7 +813,7 @@ def SetFilter(self,b=None,m=None):
             m = self.mode.get()
         except:
             m = s.get_mode()
-    print("\nSetFilter:",b,m)
+    print("\nSetFilter: band=",b,'\tmode=',m)
     
     if self.ContestMode:
         filt = modes[m]["Filter2"]
@@ -822,7 +822,9 @@ def SetFilter(self,b=None,m=None):
         filt = modes[m]["Filter1"]
         buf=self.sock.get_response("BY;NA00;")  
     if m!="AM" and self.sock.rig_type2=='FTdx3000':
-        buf=self.sock.get_response("BY;RF"+filt+";")
+        buf=self.sock.get_response("BY;RF"+filt+";")             # Roofing filter
+        if m=='CW':
+            buf2=self.sock.get_response("BY;SH004;")              # Bandwidth
         print("SetFilter:",self.ContestMode,filt)
 
 ############################################################################################

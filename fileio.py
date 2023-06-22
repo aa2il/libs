@@ -341,14 +341,14 @@ def write_adif_record(fp,rec,P,long=False,sort=True):
 
     try:
         val=P.CONTEST_ID
-        if len(val)>0:
+        if val and len(val)>0:
             fld='CONTEST_ID'
             fp.write('<%s:%d>%s%s' % (fld,len(val),val,NL) )
     except Exception as e:
-        print('ADIF WRITE RECORD: Problem writing contest id')
+        print('\nADIF WRITE RECORD: Problem writing contest id')
         print('Error msg:\t',getattr(e, 'message', repr(e)))
+        print('rec=',rec)
         
-    #fp.write('<EOR>\n'+NL)
     fp.write('<EOR>\n\n')
     fp.flush()
 

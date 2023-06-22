@@ -106,6 +106,34 @@ class fldigi_xlmrpc(direct_connect):
             self.active=False
             print('Too many tries - giving up')
 
+    # Function to determine rig type
+    def get_rig_type(self):
+        
+        info = self.s.rig.get_info()
+        a=info.split()
+        print('GET RIG TYPE: info=',a)
+        if len(a)==0:
+            print('FLDIGI_IO - OPEN: Unknown rig type')
+            sys.exit(0)
+            
+        print("\nFLRIG active - Rig info: ",info,'\tinfo0=',a[0])
+        self.rig_type2 = a[0][2:]
+        if self.rig_type2[:2]=='FT':
+            self.rig_type1 = 'Yaesu'
+            if self.rig_type2 == "FT-991A":
+                self.rig_type2 = "FT991a"
+        elif self.rig_type2[:2]=='IC':
+            self.rig_type1 = 'Icom'
+            if self.rig_type2 == "IC-9700":
+                self.rig_type2 = "IC9700"
+            self.civ = icom_civ(self.rig_type2)            
+        elif self.rig_type2[:2]=='TS':
+            self.rig_type1 = 'Kenwood'
+        else:
+            print('Unknown rig type')
+            sys.exit(0)
+            
+            
     # Function to open connection to FLDIGI/FLRIG
     def open(self,host,port,tag):
 
@@ -145,7 +173,8 @@ class fldigi_xlmrpc(direct_connect):
             try:
                 # Look for flrig
                 print('... no FLDIG - Looking for FLRIG ...')
-                info = self.s.rig.get_info()
+                self.get_rig_type()
+
                 self.version = 'flrig'
                 self.flrig_active=True
                 self.connection = 'FLRIG'
@@ -179,29 +208,7 @@ class fldigi_xlmrpc(direct_connect):
                 self.rig_type1 = 'Yaesu'
 
         if self.flrig_active :
-            info = self.s.rig.get_info()
-            a=info.split()
-            print('FLRIG INFO a=',a)
-            if len(a)==0:
-                print('FLDIGI_IO - OPEN: Unknown rig type')
-                sys.exit(0)
-            
-            print("\nFLRIG active - Rig info: ",info,'\tinfo0=',a[0])
-            self.rig_type2 = a[0][2:]
-            if self.rig_type2[:2]=='FT':
-                self.rig_type1 = 'Yaesu'
-                if self.rig_type2 == "FT-991A":
-                    self.rig_type2 = "FT991a"
-            elif self.rig_type2[:2]=='IC':
-                self.rig_type1 = 'Icom'
-                if self.rig_type2 == "IC-9700":
-                    self.rig_type2 = "IC9700"
-                self.civ = icom_civ(self.rig_type2)            
-            elif self.rig_type2[:2]=='TS':
-                self.rig_type1 = 'Kenwood'
-            else:
-                print('Unknown rig type')
-                sys.exit(0)
+            self.get_rig_type()
             
         if self.fldigi_active:
             # Looking for something that distinguishes the rigs ...
