@@ -598,7 +598,7 @@ class fldigi_xlmrpc(direct_connect):
     def set_mode(self,mode,VFO='A',Filter=None):
         #VERBOSITY=1
         if VERBOSITY>0:
-            print("FLDIGI_IO - SET_MODE mode=",mode,'\tVFO=',VFO,self.v4)
+            print("FLDIGI_IO - SET_MODE mode=",mode,'\tVFO=',VFO,self.v4,'\tFilter=',Filter)
         mode2=mode       # Fldigi mode needs to match rig mode
 
         # Translate rig mode into something rig understands
@@ -704,6 +704,8 @@ class fldigi_xlmrpc(direct_connect):
 
 
         if Filter=='Auto':
+            if VERBOSITY>0:
+                print("FLDIGI_IO: SET MODE - Setting filter ...\n")
             self.set_filter(Filter,mode=mout)
 
         if VERBOSITY>0:

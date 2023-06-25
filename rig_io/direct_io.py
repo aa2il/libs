@@ -917,13 +917,14 @@ class direct_connect:
 
     def set_filter(self,filt,mode=None):
         #VERBOSITY=1
-        #print('HEY 0',filt,mode,len(filt))
+        if VERBOSITY>0:
+            print('\nDIRECT SET_FILTER: filt=',filt,'\tmode=',mode,mode[0:2])
+            
         if filt in ['Auto','Narrow','Wide']:
-            #print('HEY 1',filt,mode)
             if mode in ['USB','SSB','LSB']:
                 filt=['Wide','2400']
-            elif mode[0:2]==['CW']:
-                filt=['Narrow','200']           # Was 500
+            elif mode[0:2]=='CW':
+                filt=['Narrow','400']           # Was 500
             elif mode in ['RTTY','DATA']:
                 filt=['Wide','3000']
             elif filt=='Auto':
@@ -2008,8 +2009,9 @@ class direct_connect:
     
         
     # Function to set monitor level and turn on the monitor
+    # The doc for this isn't clear but it finally seems to work
     # Note - this seems different than menu item 035 which is General Monitor Level
-    # We acces the latter via EX035xxx command
+    # We can acces the latter via EX035xxx command
     def set_monitor_gain(self,gain):
         #VERBOSITY=1
         if self.rig_type1=='Kenwood' or self.rig_type1=='Icom':
@@ -2018,8 +2020,17 @@ class direct_connect:
         
         if VERBOSITY>0:
             print('DIRECT_IO - SET_MONITOR_GAIN: gain=',gain)
-        #cmd  = 'ML1;'+'ML1'+str(gain).zfill(3)+';ML1;'
-        cmd  = 'ML1'+str(gain).zfill(3)+';ML1;'
+        if False:
+            cmd  = 'ML0001;'
+            buf=self.get_response(cmd)
+            print('buf=',buf)
+            time.sleep(0.1)
+            cmd  = 'ML1030;'
+            buf=self.get_response(cmd)
+            print('buf=',buf)
+                
+        cmd  = 'ML0001;'+'ML1'+str(gain).zfill(3)+';ML1;'
+        #cmd  = 'ML1'+str(gain).zfill(3)+';ML1;'
         #cmd  = 'ML1'+str(gain).zfill(3)+';'
         buf=self.get_response(cmd)
         if VERBOSITY>0:
