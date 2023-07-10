@@ -476,6 +476,13 @@ class direct_connect:
             ant=1
         return ant
 
+    def set_if_shift(self,shift):
+        if self.rig_type2 in ['FTdx3000','FT991a']:
+            cmd='BY;IS0+'+str(shift).zfill(4)+';'
+            #print('DIRECT SET IF SHIFT:',shift,'\tcmd=',cmd)
+            buf=self.get_response(cmd)
+            #print('buf=',buf)
+            
     def set_ant(self,a,VFO='A'):
         if self.rig_type2=='FTdx3000':
             if VFO=='B':

@@ -26,6 +26,8 @@
 import os
 import sys
 import Levenshtein
+from fileio import parse_file_name
+from load_history import *
 
 ############################################################################################
 
@@ -34,36 +36,67 @@ class SUPER_CHECK_PARTIAL:
 
         # Check for valid file name
         if fname==None:
-            fname=os.path.expanduser('~/Python/data/MASTER.SCP')
-            if not os.path.isfile(fname):
-                fname='MASTER.SCP'
+            fname = os.path.expanduser('~/Python/data/MASTER.SCP')
+        p,n,ext=parse_file_name(fname)
+        print(fname,p,n,ext,len(p))
+        if len(p)==0 and not os.path.isfile(fname):
+            fname = os.path.expanduser('~/Python/history/data/'+fname)
+                
         if not os.path.isfile(fname):
+            print('SCP INIT: File not found',fname)
             self.calls=[]
             return
 
-        print('Loading Super Check Partial Database from',fname,'...')
-        with open(fname) as f:
-            scp = f.readlines()
+        print('SCP INIT: Loading Super Check Partial Database from',fname,'...')
+        if ext=='.SCP':
+            with open(fname) as f:
+                scp = f.readlines()
+            self.calls=[s.strip() for s in scp if '#' not in s]
+            self.MAX_DX=1            
+        else:
+            scp,fname9 = load_history(fname)
+            #print(scp)
+            self.calls=list(scp.keys())
+            self.MAX_DX=1
 
-        self.calls=[s.strip() for s in scp if '#' not in s]
+        #print('calls=',self.calls)
         print('No. calls in SCP database=',len(self.calls))
-        #print(calls[0],calls[-1])
+        print(self.calls[0],self.calls[-1])
+        #sys.exit(0)
 
-    def match(self,call,MAX_DX=1,VERBOSITY=0):
+        
+    # Function to find matches
+    def match(self,call,MAX_DX=None,VERBOSITY=0):
+
+        if not MAX_DX:
+            MAX_DX=self.MAX_DX
 
         call=call.upper()
 
         # Look through SCP list and find possible matches
-        matches=[]
-        dist=[]
+        matches1=[]
+        matches2=[]
+        dist1=[]
+        dist2=[]
+        n=len(call)
         for c in self.calls:
-            dx= Levenshtein.distance(call,c) 
-            if dx<=MAX_DX:
-                dist.append(dx)
-                matches.append(c)
+            dx= Levenshtein.distance(call,c)
+            
+            # First chars match OR distance less than 1
+            if call==c[:n] or dx<=MAX_DX:
+                dist1.append(dx)
+                matches1.append(c)
+
+            # Just in case nothing matches, keep list of dist less than 2
+            if dx<=MAX_DX+1:
+                dist2.append(dx)
+                matches2.append(c)
 
         # Sort matches by distance from call
-        matches = [x for _, x in sorted(zip(dist,matches))]
+        if len(matches1)>0:
+            matches = [x for _, x in sorted(zip(dist1,matches1))]
+        else:
+            matches = [x for _, x in sorted(zip(dist2,matches2))]
 
         # Put calls that match the first chars to the front of the list
         if False:
