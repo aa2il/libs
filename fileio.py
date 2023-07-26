@@ -27,6 +27,7 @@ import csv
 from collections import OrderedDict
 from zipfile import ZipFile
 from io import TextIOWrapper
+import traceback
 
 #######################################################################################
 
@@ -208,6 +209,7 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False):
         print('PARSE_ADIF: *** Unable to open file or other error in PARSE_ADIF ***')
         print('fname=',fname)
         print('Error msg:\t',getattr(e, 'message', repr(e)))
+        traceback.print_exc()
         return logbook
         
     raw = re.split('<eor>(?i)',raw1[-1] )
