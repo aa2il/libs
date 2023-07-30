@@ -27,6 +27,7 @@ import os
 import sys
 import Levenshtein
 from fileio import parse_file_name
+import glob 
 from load_history import *
 
 ############################################################################################
@@ -37,6 +38,23 @@ class SUPER_CHECK_PARTIAL:
         # Check for valid file name
         if fname==None:
             fname = os.path.expanduser('~/Python/data/MASTER.SCP')
+        elif '*' in fname:
+            # Expand wildcards and only keep the most recent call history file
+            fnames = os.path.expanduser(fname)
+            print('SCP_INIT: fname=',fname)
+            print('SCP_INIT: fnames=',fnames)
+            files=[]
+            for f in glob.glob( fnames ):
+                print('f=',f)
+                files.append(f)
+                if len(files)==0:
+                    print('file=',files)
+                    print('SCP_INIT - No files found matching',fname)
+                    sys.exit(0)
+            files.sort()
+            print('SCP_INIT: files=',files)
+            fname=files[-1]
+
         p,n,ext=parse_file_name(fname)
         print(fname,p,n,ext,len(p))
         if len(p)==0 and not os.path.isfile(fname):
@@ -71,7 +89,10 @@ class SUPER_CHECK_PARTIAL:
         if not MAX_DX:
             MAX_DX=self.MAX_DX
 
-        call=call.upper()
+        #call=call.upper()
+        call = ''.join(call.upper().split())
+        if len(call)==0:
+            return [],[]
 
         # Look through SCP list and find possible matches
         matches1=[]
