@@ -332,7 +332,7 @@ def write_adif_record(fp,rec,P,long=False,sort=True):
         elif fld=='TIME_STAMP':
             pass
         else:
-            if fld=='FREQ' and len(val)>8:
+            if fld[:4]=='FREQ' and len(val)>8:
                 val=val[0:8]
             elif fld[:4]=='TIME' and len(val)>0 and len(val)!=6:
                 val=str(val).replace(':','').zfill(6)

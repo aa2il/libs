@@ -263,9 +263,10 @@ class TCP_Server(Thread):
         for sock in writeable:
             #print(sock)
             addr = sock.getsockname()
-            #print('BROADCASTing',msg.strip(),'to',addr,'...')
-            #print('\tSock Name=',sock.getsockname())
-            #print('\tPeer Name=',sock.getpeername())
+            if False:
+                print('BROADCASTing',msg.strip(),'to',addr,'...')
+                print('\tSock Name=',sock.getsockname())
+                print('\tPeer Name=',sock.getpeername())
             try:
                 sock.send(msg.encode())
             except:
