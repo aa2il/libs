@@ -1,7 +1,7 @@
 ############################################################################################
 #
 # Icom Rig IO - Rev 1.0
-# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Functions to support communicating with Icom 706 & 9700 rigs
 #
@@ -87,6 +87,8 @@ class icom_civ:
         self.rig_type2=rig_type2
         if rig_type2=='IC9700':
             ICOM_RIG_ID    = 0xA2
+        elif rig_type2=='IC7300':
+            ICOM_RIG_ID    = 0x94
         else:
             ICOM_RIG_ID    = 0x4E
             

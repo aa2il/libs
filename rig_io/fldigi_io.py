@@ -126,6 +126,8 @@ class fldigi_xlmrpc(direct_connect):
             self.rig_type1 = 'Icom'
             if self.rig_type2 == "IC-9700":
                 self.rig_type2 = "IC9700"
+            if self.rig_type2 == "IC-7300":
+                self.rig_type2 = "IC7300"
             self.civ = icom_civ(self.rig_type2)            
         elif self.rig_type2[:2]=='TS':
             self.rig_type1 = 'Kenwood'
@@ -814,7 +816,7 @@ class fldigi_xlmrpc(direct_connect):
                 reply = self.s.rig.cat_string(cmd2)
                 if VERBOSITY>0:
                     print("FLDIGI SEND: cmd=",cmd2,'\treply=',reply)
-                if self.rig_type2 == "IC9700":
+                if self.rig_type2 in ['IC9700','IC7300']:
                     self.reply = [int(i,16) for i in reply.split(' ')]
                 else:
                     self.reply = reply

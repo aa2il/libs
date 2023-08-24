@@ -58,7 +58,7 @@ def strip_garbage(buf,cmd):
 
 
 # Routine to try a port and see if anything is connected
-def try_port(port,baud,verbosity,ICOM=False):
+def try_port(port,baud,verbosity,ICOM=None):
     if verbosity>=1:
         print('\nDIRECT_IO - TRY_PORT: Trying port %s at %d baud - verb=%d ...' %
               (port,baud,verbosity) )
@@ -69,7 +69,8 @@ def try_port(port,baud,verbosity,ICOM=False):
         #ICOM = "IC-9700" in port
         if ICOM:
             #print("ICOM 9700!")
-            self.civ = icom_civ('IC9700')            
+            #self.civ = icom_civ('IC9700')            
+            self.civ = icom_civ(ICOM)            
             cmd = self.civ.icom_form_command(0x03)            # Get freq
         else:
             cmd='ID;'.encode()
@@ -97,11 +98,14 @@ def try_port(port,baud,verbosity,ICOM=False):
                     else:
                         self.rig_type  = 'Icom'
                         self.rig_type1 = 'Icom'
-                        self.rig_type2 = 'IC9700'
+                        if x[-3]==0x94:
+                            self.rig_type2 = 'IC7300'
+                        else:
+                            self.rig_type2 = 'IC9700'
                         self.lock      = threading.Lock() 
                         if verbosity>=1:
-                            print('TRY_PORT: Found IC9700')
-                        return ['Icom','IC9700',self]
+                            print('TRY_PORT: Found IC9700/IC7300')
+                        return ['Icom',self.rig_type2,self]
                 else:
                     buf=''
             else:
@@ -278,15 +282,14 @@ def find_direct_rig(self,port_in,baud_in,force=False):
                 return True
 
     # IC-9700
-    if port_in==0 or port_in==9700:
-        if False:
-            if try_rig(self,'Icom','IC9700',SERIAL_PORT9,baud):
-                return True
-        else:
-            # New pathway
-            port=find_serial_device('IC9700',0,VERBOSITY=0)
-            if try_rig(self,'Icom','IC9700',port,baud):
-                return True
+    if port_in [0,9700]:
+        port=find_serial_device('IC9700',0,VERBOSITY=0)
+        if try_rig(self,'Icom','IC9700',port,baud):
+            return True
+    elif port_in [0,7300]:
+        port=find_serial_device('IC7300',0,VERBOSITY=0)
+        if try_rig(self,'Icom','IC7300',port,baud):
+            return True
 
     # There are two possible connections to the TS-850
     # The first is via my home-brew interface
@@ -885,7 +888,7 @@ class direct_connect:
         if VERBOSITY>0 or False:
             print('DIRECT GET_FILTERS:')
             
-        if self.rig_type1=='Icom' or self.rig_type2=='IC9700' or self.rig_type2=='IC706' or \
+        if self.rig_type1=='Icom' or self.rig_type2 in ['IC9700','IC7300','IC706'] or \
            self.rig_type2=='Dummy':
             print('DIRECT_IO: Get Filters - not yet supported for Icom Rigs')
             return [None,None]
@@ -1329,7 +1332,7 @@ class direct_connect:
             if VERBOSITY>0:
                 print('DIRECT GET_DATE_TIME: Zone=',buf,z)
 
-        elif self.rig_type2=='IC9700':
+        elif self.rig_type2 in ['IC9700','IC7300']:
 
             if VERBOSITY>0:
                 print('DIRECT GET_DATE_TIME - Icom - Getting UTC offset ...')
@@ -1392,7 +1395,7 @@ class direct_connect:
             cmd='DT2+0000;'
             self.send(cmd)
             
-        elif self.rig_type2=='IC9700':
+        elif self.rig_type2 in ['IC9700','IC7300']:
         
             if VERBOSITY>0:
                 print('Setting UTC offset on IC9700 ...')
@@ -1435,7 +1438,7 @@ class direct_connect:
     # Routine to set ICOM settings to values I find most useful
     def icom_defaults(self):
     
-        if self.rig_type2=='IC9700':
+        if self.rig_type2 in ['IC9700','IC7300']:
 
             # Turn off CI-V transceive mode - this is only useful if multiple rigs
             # are connected together and generates a lot of extranious junk
@@ -1565,7 +1568,7 @@ class direct_connect:
                 print('SPLIT_MODE: Invalid opt',opt)
                 return -1
             
-        elif self.rig_type2=='IC9700':
+        elif self.rig_type2 in ['IC9700','IC7300']:
         
             if opt==-1:
                 # Read current split setting
@@ -1613,7 +1616,7 @@ class direct_connect:
             print('Keyer not yet supported for hamlib')
             return -1
             
-        elif self.rig_type2=='IC9700':
+        elif self.rig_type2 in ['IC9700','IC7300']:
 
             # Turn on full QSK
             cmd =  self.civ.icom_form_command([0x16,0x47,0x02])  
@@ -1678,7 +1681,8 @@ class direct_connect:
             else:
                 wpm=0
                 
-        elif self.rig_type2=='IC9700':
+        elif self.rig_type2 in ['IC9700','IC7300']:
+            
             if self.rig_type=='FLRIG' and False:
                 print('DIRECT READ_SPEED - Not available yet until we get ability to execute direct commands for ICOM under FLRIG')
                 return 0
@@ -1775,7 +1779,7 @@ class direct_connect:
             cmd='BY;KS'+str(wpm).zfill(3)+';'
             buf = self.get_response(cmd)
                 
-        elif self.rig_type2=='IC9700':
+        elif self.rig_type2 in ['IC9700','IC7300']:
             
             if self.rig_type=='FLRIG' and False:
                 print('DIRECT SET_SPEED - Not available yet until we get ability to execute direct commands for ICOM under FLRIG')

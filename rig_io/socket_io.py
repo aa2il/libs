@@ -1,7 +1,7 @@
 ############################################################################################
 #
-# Socker IO - Rev 1.0
-# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+# Socket IO - Rev 1.0
+# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # This module contains socket I/O routines related to commanding the radio.
 #
@@ -201,6 +201,8 @@ def open_rig_connection(connection,host=0,port=0,baud=0,tag='',
                 port=850
             elif rig=='IC706':
                 port=706
+            elif rig=='IC7300':
+                port=7300
             elif rig=='IC9700':
                 port=9700
             else:

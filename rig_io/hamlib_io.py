@@ -145,6 +145,10 @@ class hamlib_connect(direct_connect):
             self.rig_type1 = 'Icom'
             self.rig_type2 = 'IC9700'
             self.civ = icom_civ(self.rig_type2)            
+        elif caps2['Model name']=='IC-7300':
+            self.rig_type1 = 'Icom'
+            self.rig_type2 = 'IC7300'
+            self.civ = icom_civ(self.rig_type2)            
         elif caps2['Model name']=='GS-232B':
             self.rig_type1 = 'Yaesu'
             self.rig_type2 = 'GS-232B'
