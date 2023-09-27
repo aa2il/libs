@@ -715,6 +715,7 @@ class fldigi_xlmrpc(direct_connect):
             
         return mout
 
+    
     # Function to set call 
     def set_call(self,call):
         if self.fldigi_active:
@@ -971,10 +972,14 @@ class fldigi_xlmrpc(direct_connect):
                 
         print('FLDIGI/FLRIG PTT Done.')
 
-    # Routine to put rig into split mode
+    # Routine to get/put rig split mode
     def split_mode(self,opt):
         if VERBOSITY>0:
             print('FLDIGI_IO - SPLIT_MODE: opt=',opt)
+            
+        if self.fldigi_active:
+            print('FLDIGI_IO: SPLIT_MODE not available yet for FLDIGI')
+            return
 
         if opt==-1:
             #print('\nQuerying split ...')
@@ -1002,6 +1007,36 @@ class fldigi_xlmrpc(direct_connect):
             print('FLDIGI_IO - SPLIT_MODE: Invalid opt',opt)
             return -1
             
+
+    # Routine to get/put fldigi modem carrier freq
+    def modem_carrier(self,frq=None):
+        if VERBOSITY>0:
+            print('FLDIGI_IO - MODEM_CARRIER: frq=',frq)
+            
+        if self.flrig_active:
+            print('FLDIGI_IO: MODEM_CARRIER not available yet for FLRIG')
+            return 0
+
+        if frq==None:
+            
+            print('\nQuerying modem carrier ...')
+            self.lock.acquire()
+            buf=self.s.modem.get_carrier()
+            self.lock.release()
+            if VERBOSITY>0 or True:
+                print('CARRIER: buf=',buf,type(buf))
+            return int(buf)
+
+        else:
+            
+            print('\nSetting modem carrier ...',frq)
+            self.lock.acquire()
+            buf=self.s.modem.set_carrier(int(frq))
+            self.lock.release()
+            if VERBOSITY>0 or True:
+                print('CARRIER: buf=',buf,type(buf))
+            return int(buf)
+
 
     def mic_setting(self,m,iopt,src=None,lvl=None,prt=None):
         if VERBOSITY>0:

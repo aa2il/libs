@@ -1535,7 +1535,10 @@ class direct_connect:
                 print('DUAL_WATCH: Invalid rig',self.rig_type2)
             return 0
     
-    
+
+    # Dummy
+    def modem_carrier(self,frq):
+        return 0
 
     # Routine to put rig into split mode
     def split_mode(self,opt):

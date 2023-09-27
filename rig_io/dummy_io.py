@@ -215,6 +215,11 @@ class no_connect:
             logging.info('Ignoring call')
         return [None,None]
 
+    def modem_carrier(self,frq):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
+        return 0
+
     def split_mode(self,opt):
         if VERBOSITY>0:
             logging.info('Ignoring call')
