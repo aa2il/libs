@@ -87,7 +87,7 @@ def Oh_Canada(dx_station):
     NT 
     """
 
-    # For Cali QSO Party:
+    # For Cali QSO Party - PRIOR to 2023 but not anymore:
     # MR = Maritime provinces plus Newfoundland and Labrador (NB, NL, NS, PE)
     
     qth=''
@@ -135,13 +135,14 @@ def Oh_Canada(dx_station):
             qth='PE'
             secs=[qth]
         else:
-            print('OH CANADA3 - Hmmmm',prefix)
+            print('OH CANADA - Hmmmm',prefix)
             pprint(vars(dx_station))
             sys.exit(0)
             
     else:
         print('OH CANADA - I dont know what I am doing here')
-        
+
+    #print('OH CANADA:',qth,secs)
     return qth,secs
 
 
@@ -439,5 +440,48 @@ def process_exists(process_name):
 
 """
 
+
+
+############################################################################################
+
+# Function to convert a list of BCD hex values to an integer
+def bcd2int(x,ireverse=0):
+
+    mult= 1
+    val = 0
+    if ireverse:
+        #x.reverse()
+        x=x[::-1];
+    for xx in x:
+        xxx = xx.replace('0x','')
+        val  += mult*int(xxx)
+        mult *= 100
+
+    return val
+
+
+# Function to convert an integer to a list of BCD hex values
+def int2bcd(x,n,ireverse=0):
+
+    y=str(int(x)).zfill(2*n)
+    if ireverse==0:
+        #y.reverse()
+        y=y[::-1];
+    bcd=[]
+    for i in range(n):
+        i2 = 2*i
+        yy = y[i2:(i2+2)]
+        bcd.append(int(yy,16))
+
+    return bcd
+
+
+# Function to return hex values of a list of bytes
+def show_hex(x):
+    #print('SHOW_HEX: x=',x,type(x))
+    if isinstance(x, str):
+        return [hex(ord(c)) for c in x]
+    else:
+        return [hex(c) for c in x]            
 
 

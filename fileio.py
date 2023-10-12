@@ -259,6 +259,8 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False):
 # Function to create entire ADIF record and write it to a file
 def write_adif_record(fp,rec,P,long=False,sort=True):
     VERBOSITY=0
+    if VERBOSITY>=1:
+        print('rec=',rec)
 
     try:
         contest = P.contest_name
@@ -381,13 +383,14 @@ def write_adif_log(qsos,fname,P,SORT_KEYS=True):
             print('\nqso=',qso,'\nkeys=',keys)
             
         qso2=OrderedDict()
+        #print('qso=',qso)
         for key in keys:
             if VERBOSITY>0:
                 print('key=',key)
             if key=='X-Notes' and True:
                 continue
             if key in qso:
-                # Fill in any missing fields that LoTW requires 
+                # Fill in any missing fields that LoTW requires
                 if key=='qso_date' and len(qso[key])==0:
                     qso[key] = qso['qso_date_off']
                 if key=='time_on' and len(qso[key])==0:
