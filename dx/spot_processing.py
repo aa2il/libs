@@ -43,15 +43,23 @@ class ChallengeData:
         self.slots=[]
         self.nrows1=0
         self.nrows2=0
+        self.cwops_worked=[]
         if fname==None:
             return
 
-        # Read XLS format spreadsheet and pull out sheet we want
+        # Read XLS format spreadsheet and pull out sheets we want
         book  = xlrd.open_workbook(fname,formatting_info=True)
         self.sheet1 = book.sheet_by_name('Challenge')
         self.nrows1 = self.sheet1.nrows
         self.sheet2 = book.sheet_by_name('Modes')
         self.nrows2 = self.sheet2.nrows
+
+        # Read sheet with CWops members we've worked
+        self.sheet3 = book.sheet_by_name('CWops')
+        for i in range(1,self.sheet3.nrows):
+            call = self.sheet3.cell(i,12).value
+            if len(call)>0:
+                self.cwops_worked.append(call)
 
         # Read in spreadsheet with band slots - much faster this way
         for i in range(1, self.sheet1.nrows):
