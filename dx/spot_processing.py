@@ -310,14 +310,17 @@ class Station(object):
 
                     # Fix-up quirks
                     # Calls from Club Gitmo are 2x2, rest are from the U.S.
-                    # Scicily is not a separate DXCC
+                    # Scicily and African Itally are not separate DXCCs
+                    # European and Asiatic Turkey are not separate DXCCs
                     if self.country:
                         if self.country=='Guantanamo Bay' and len(self.call_suffix)!=2:
                             self.country='United States'
-                        elif self.country=='Sicily':
+                        elif 'Sicily' in self.country or 'Italy' in self.country:
                             self.country='Italy'
                         elif 'Germany' in self.country:
                             self.country='Germany'
+                        elif 'Turkey' in self.country:
+                            self.country='Turkey'
                                         
         #------------------STATIC Variables --------------------
         dxcc = ""
