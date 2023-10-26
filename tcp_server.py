@@ -50,7 +50,9 @@ def dummy_msg_handler(self,sock,msg):
 def open_udp_client(P,port,msg_handler,BUFFER_SIZE=1024):
 
     if not port:
-        port = KEYER_UDP_PORT
+        #port = KEYER_UDP_PORT
+        print('OPEN_UDP_CLIENT - Must specify port',port)
+        sys.exit(0)
     
     try:
         
@@ -162,9 +164,9 @@ class TCP_Server(Thread):
                     readable.append(conn)
                     self.socks.append(conn)
 
-                    print('LISTENER: New socket:',conn,addr)
-                    print('\tSock Name=',conn.getsockname())
-                    print('\tPeer Name=',conn.getpeername())
+                    print('TCP_SERVER->LISTENER: New socket:',conn,addr)
+                    print('\tSock Name=',conn.getsockname(),
+                          '\tPeer Name=',conn.getpeername())
                     #print('\tName Info=',conn.getnameinfo())
 
                     # Send my name & query name of this client
@@ -177,6 +179,7 @@ class TCP_Server(Thread):
                     else:
                         name='NoName'
                     msg='Name:'+name+'\nName:?\n'
+                    print('TCP_SERVER->LISTENER: Sending respons:',msg)
                     conn.send(msg.encode())
 
                 else:
@@ -253,6 +256,10 @@ class TCP_Server(Thread):
         # Get list of sockets
         try:
             readable,writeable,inerror = select.select([],self.socks,[],0)
+            if False:
+                print('BROADCAST: readable =',readable)
+                print('BROADCAST: writeable=',writeable)
+                print('BROADCAST: inerror =',inerror)
         except:
             writeable=[]
         if len(writeable)==0:
@@ -265,8 +272,8 @@ class TCP_Server(Thread):
             addr = sock.getsockname()
             if False:
                 print('BROADCASTing',msg.strip(),'to',addr,'...')
-                print('\tSock Name=',sock.getsockname())
-                print('\tPeer Name=',sock.getpeername())
+                print('\tSock =',sock.getsockname(),
+                      '\tPeer =',sock.getpeername())
             try:
                 sock.send(msg.encode())
             except:
