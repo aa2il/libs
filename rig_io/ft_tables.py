@@ -158,8 +158,8 @@ ARRL_SECS = ['CT','EMA','ME','NH','RI','VT','WMA',  \
              'AZ','EWA','ID','MT','NV','OR','UT','WWA','WY','AK', \
              'MI','OH','WV','IL','IN','WI', \
              'CO','IA','KS','MN','MO','NE','ND','SD', \
-             'NS','NB','NL','QC','ONE','ONN','ONS','GH','MB','SK','AB','BC','TER','PE']
-#             'MAR','NL','QC','ONE','ONN','ONS','GTA','MB','SK','AB','BC','NT','PE']
+             'NS','NB','NL','QC','ONE','ONN','ONS','GH','MB','SK','AB','BC','TER','PE']  # As of 2023
+#             'MAR','NL','QC','ONE','ONN','ONS','GTA','MB','SK','AB','BC','NT','PE']     # Prior to 2023
 
 FD_SECS = ARRL_SECS + ['DX']
 

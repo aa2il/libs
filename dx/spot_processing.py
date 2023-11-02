@@ -44,6 +44,7 @@ class ChallengeData:
         self.nrows1=0
         self.nrows2=0
         self.cwops_worked=[]
+        self.cwops_nums=[]
         if fname==None:
             return
 
@@ -60,6 +61,8 @@ class ChallengeData:
             call = self.sheet3.cell(i,12).value
             if len(call)>0:
                 self.cwops_worked.append(call)
+                num = self.sheet3.cell(i,11).value
+                self.cwops_nums.append(num)
 
         # Read in spreadsheet with band slots - much faster this way
         for i in range(1, self.sheet1.nrows):

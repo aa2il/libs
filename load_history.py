@@ -131,6 +131,10 @@ def load_history(history,DEBUG_CALL=None):
                 HIST[call]['state']  = state.upper()
                 HIST[call]['cwops']  = str( int(number) )
 
+                if False:
+                    status  = str( sheet.iloc[i,1] )
+                    HIST[call]['status']  = status
+
                 if call==DEBUG_CALL:
                     print('\nLOAD_HISTORY 0: call=',call)
                     print('iloc:',sheet.iloc[i,:])
