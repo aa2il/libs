@@ -391,13 +391,19 @@ class ring_buffer2:
         self.buf.put(x)
 
         if self.nsamps>self.size:
-            print('Ringbuffer2: Push overflow',self.tag,self.nsamps,self.size)
+            print('Ringbuffer2: Push overflow - tag=',self.tag,
+                  '\tnsamps=',self.nsamps,'\tlen(x)=',len(x),
+                  '\tBuffer size=',self.size)
             #self.nsamps -= self.size
        
     def pull(self,n,flush=False):
 
-        if self.tag=='Audio1' and False:
-            print(self.tag,'- Pull',n,flush)
+        #if self.tag=='Audio1':
+        #    print(self.tag,'- Pull',n,flush)
+
+        if self.nsamps<n:
+            print('Ringbuffer2 PULL - WARNING! - Not enough data! - tag=',self.tag,
+                  '\tn=',n,'\tnsamps=',self.nsamps,'\tflush=',flush)
             
         if flush:
 
@@ -407,8 +413,8 @@ class ring_buffer2:
                 try:
                     xxx = self.buf.get(timeout=1.0)
                 except Exception as e:
-                    print('PULL: Exception Raised:\n',e)
-                    #print 'Pull:',len(xx),len(xxx),self.buf.qsize()
+                    print('Ringbuffer 2 PULL: Exception Raised:\n',e)
+                    #print('\tlen(xx)=',len(xx),'\tlen(xxx)=',len(xxx),'\tqsiz=',self.buf.qsize())
                     break
                 xx = np.concatenate( (xx, xxx) )
                 self.buf.task_done()
@@ -1042,19 +1048,19 @@ class AudioIO():
         if status!=0 and not Stopper:
             print("AudioPlayCB:",rb.tag,frame_count,time_info,status)
             if status == pyaudio.paOutputUnderflow:
+                delay=self.P.RB_SIZE/self.P.FS_OUT/4
                 print("Houston, we have an underflow problem ...")
-                print("Stalling until recharge",
-                      rb.tag,rb.nsamps,self.last,self.nchan,rb.Chan)
+                print("Stalling until recharge - tag=",rb.tag,
+                      '\tnsamps=',rb.nsamps,'\tlast=',self.last,
+                      '\n\tnchan=',self.nchan,'\tChan=',rb.Chan,'\tZeroFill=',self.ZeroFill,
+                      '\n\tP.DELAY=',self.P.DELAY,'\tdelay=',delay)
                 #print("See comments in sig_proc.py on how to fix if this persists")
                 
                 # Wait for ring buffer to fill again
-                delay=self.P.RB_SIZE/self.P.FS_OUT/4
-                #print(self.P.RB_SIZE,self.P.FS_OUT,delay)
                 while not rb.ready( self.P.DELAY ) and not self.P.REPLAY_MODE and not Stopper:
-                    #print('Hey')
                     time.sleep(delay)
                     Stopper = (self.P.Stopper and self.P.Stopper.isSet())
-                #print("Recharged on ",rb.tag,rb.nsamps,rb.size/2,self.P.RB_SIZE,N)
+                print("Recharged tag=",rb.tag,'\tnsamps=',rb.nsamps,'\tN=',N)
             
         # First time through, wait for ring buffer to start to fill
         if self.FirstTime:
@@ -1086,12 +1092,14 @@ class AudioIO():
                 x=rb.pull(N1)
                 if DEBUG>=2:
                     print('Pulled:',rb.tag,N1,x.dtype)
+                    
             if nready<N:
                 N2=N-nready
                 x2=np.array(N2*[0.],dtype=x.dtype)
                 x = np.concatenate( (x, x2) )
                 if DEBUG>=1:
                     print('Zeroed:',rb.tag,N2,x.dtype,len(x))
+                    
         else:
             x=rb.pull(N)
             if DEBUG>=2:
