@@ -29,6 +29,7 @@ import Levenshtein
 from fileio import parse_file_name
 import glob 
 from load_history import *
+from dx.spot_processing import Station
 
 ############################################################################################
 
@@ -69,7 +70,15 @@ class SUPER_CHECK_PARTIAL:
         if ext=='.SCP':
             with open(fname) as f:
                 scp = f.readlines()
-            self.calls=[s.strip() for s in scp if '#' not in s]
+            #self.calls=[s.strip() for s in scp if '#' not in s]
+            self.calls=[]
+            for s in scp:
+                if '#' not in s:
+                    call = s.strip()
+                    if '/' in call:
+                        dx = Station(call)
+                        call = dx.homecall
+                    self.calls.append(call)
             self.MAX_DX=1            
         else:
             scp,fname9 = load_history(fname)
@@ -77,6 +86,7 @@ class SUPER_CHECK_PARTIAL:
             self.calls=list(scp.keys())
             self.MAX_DX=1
 
+        self.calls = list( set(self.calls) )
         #print('calls=',self.calls)
         print('No. calls in SCP database=',len(self.calls))
         print(self.calls[0],self.calls[-1])
