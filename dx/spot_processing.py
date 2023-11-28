@@ -11,6 +11,7 @@
 #
 ################################################################################
 
+import sys
 import os
 import re
 import pytz
@@ -114,13 +115,10 @@ class ChallengeData:
         # MARTIN is also in Martinique.  Try fixing these as they come up.
         # The "St."'s should be easy but I left it like this for now to
         # minimize potential issues.
-        #special = ['VIET','GERMANY','NEVIS','LUCIA','EUSTATIUS','FIJI', \
-        #          'SOUTH AFRICA','PIERRE','CHATHAM','BARTHELEMY','MARTIN',\
-        #           'PAUL ISLAND','VINCENT','SAN ANDRES']
         special = ['VIET','GERMANY','NEVIS','EUSTATIUS','FIJI',    \
                    'SOUTH AFRICA','PIERRE','CHATHAM','BARTHELEMY', \
                    'PAUL ISLAND','VINCENT','SAN ANDRES','ROTUMA',  \
-                   'BRUNEI']
+                   'BRUNEI','MAURITIUS']
         needed=True
 
         #print('NEEDED_CHALLENGE:',dxcc,band)
@@ -227,6 +225,7 @@ def get_configured_logger(name):
                 console_handler.setLevel(logging.DEBUG) #adjust level to your needs
                 file_handler = logging.FileHandler("spot_processing.log") #outputs into this file
                 file_handler.setLevel(logging.ERROR) #adjust logging level to your needs
+                file_handler.setLevel(logging.DEBUG) #adjust logging level to your needs
 
                 #Instanciate Root logger
                 logger = logging.getLogger()
@@ -287,6 +286,7 @@ class Station(object):
                         self.valid = False
                         if not self.mm and not self.am:
                             self._logger.warning("Busted Prefix: '"+ str(self.prefix) + "' of " + self.call + " could not be decoded")
+                            #sys.exit(0)
                     else:
                         #print(self.call,self.prefix)
                         cty_info = self.lookup_cty_info(self.prefix)
@@ -405,11 +405,15 @@ class Station(object):
         
         
         def obtain_prefix(self, call):
-            #print call
+            #print('OBTAIN_PREFIX: call=',call)
+            #if call=='2Q0CVN/70':
+            #    call='2Q0CVN/P'
+            #print('OBTAIN_PREFIX: call=',call)
+            
             try:
                 entire_call = call.upper()
                 self.appendix=''
-                #self._logger.debug("obtain_prefix(): call " + call)
+                self._logger.debug("obtain_prefix(): call " + call)
                 if re.search('[/A-Z0-9\-]{3,15}', entire_call, re.I):  #make sure the call has at least 3 characters
                                 
                     if re.search('\-\d{1,3}$', entire_call, re.I): #cut off any -10 / -02 appendixes
@@ -418,7 +422,7 @@ class Station(object):
                     if re.search('/[A-Z0-9]{2,4}/[A-Z0-9]{1,4}$', call):
                         call = re.sub('/[A-Z0-9]{1,4}$', '', call) # cut off 2. appendix DH1TW/HC2/P -> DH1TW/HC2
 
-                    #print call
+                    #print('OBTAIN_PREFIX: call2=',call)
                     if re.search('/[A-Z0-9]{2,4}$', call):  # case call/xxx, but ignoring /p and /m or /5
                         appendix = re.search('/[A-Z0-9]{1,4}$', call)
                         appendix = re.sub('/', '', appendix.group(0))
@@ -453,19 +457,22 @@ class Station(object):
                         else:
                             
                             # Look for "bogus" appendices that are often used in state QPs
-                            valid_app=False
+                            has_digit=False
                             for i in range(len(appendix)):
-                                valid_app = valid_app or appendix[i].isdigit()
-                            #print('=============',appendix,valid_app)
+                                has_digit = has_digit or appendix[i].isdigit()
+                            bogus = len(appendix)>1 and (appendix.isdigit() or not has_digit)
 
-                            if valid_app:
+                            if not bogus:
                                 # It looks like a valid appendix
                                 prefix = self.__iterate_prefix(re.sub('/', '', appendix))   #check if the appendix is a valid country prefix
+                                #print('===== Valid - prefix=',prefix)
                             else:
                                 # Its probably bogus
                                 #prefix = self.homecall
                                 call = re.sub('/'+appendix, '', call)
                                 prefix = self.__iterate_prefix(call)
+                                #print('===== Bogux - prefix=',prefix,'\tcall=',call)
+                            #print("OBTAIN_PREFIX: call=",call,"\tprefix: " + str(prefix) + " using appendix: " + appendix )
                             self._logger.debug("obtain_prefix(): prefix: " + str(prefix) + " using appendix: " + appendix )
                         
                     elif re.search('/[A-Z0-9]$', call):  # case call/p or /b /m or /5 etc.
@@ -521,10 +528,11 @@ class Station(object):
                     return(prefix) #everything went well - return prefix
                 
                 else:
-                    return(False)
                     self._logger.debug("obtain_prefix(): return False; No Prefix found for " + call )
+                    return(False)
                    
             except Exception as e:
+                print('OBTAIN_PREFIX: Exception',str(e))
                 self._logger.warning(str(e))
                 self._logger.warning("obtain_prefix(): Exception with call:" +call )
                 return(False)
