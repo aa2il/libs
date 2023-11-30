@@ -8,12 +8,12 @@
 #
 # see dump_wsjtx_packets.py example for some simple usage
 #
+
 import socket
 import struct
 import pywsjtx
 import logging
 import ipaddress
-#from rig_io.util import convert_freq2band
 from utilities import freq2band
 import re
 import datetime
@@ -227,19 +227,14 @@ class SimpleServer(object):
             frq = 1e-3*self.old_status.dial_frequency
         except:
             frq=14074.
-
-        #return convert_freq2band(frq,True)
         return freq2band(frq*1e-3)
 
     def wsjt_status(self):
         try:
             frq = 1e-3*self.old_status.dial_frequency
             mode=self.old_status.mode
-            #band=convert_freq2band(frq,True)            
             band=freq2band(frq*1e-3)
         except:
-            #frq=14074.
-            #mode='FT8'
             frq=None
             band=None
             mode=None

@@ -131,7 +131,7 @@ def load_history(history,DEBUG_CALL=None):
                 HIST[call]['state']  = state.upper()
                 HIST[call]['cwops']  = str( int(number) )
 
-                if False:
+                if True:
                     status  = str( sheet.iloc[i,1] )
                     HIST[call]['status']  = status
 

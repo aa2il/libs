@@ -1,7 +1,7 @@
 ################################################################################
 #
 # WSJT Helper - Rev 1.0
-# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Objects for deciphering the ALL.TXT file produced by WSJTX
 #
@@ -32,7 +32,7 @@ import os
 #      123456789 12345678  123456789012 123456789 123456789 123456789 
 #DX de AA2IL-#:    3574.0  K0APC        FT8 -8 dB                      0335Z
 
-# These are stillused in wsmap.py
+# These are still used in wsmap.py
 WSJT_LOGFILE  = os.path.expanduser('~/.local/share/WSJT-X/ALL.TXT')
 WSJT_LOGFILE2 = os.path.expanduser('~/.local/share/WSJT-X - SDR/ALL.TXT')
 WSJT_LOGFILE3 = os.path.expanduser('~/.local/share/WSJT-X - SDR1/ALL.TXT')

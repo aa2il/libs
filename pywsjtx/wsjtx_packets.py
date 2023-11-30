@@ -338,25 +338,35 @@ class DecodePacket(GenericWSJTXPacket):
     
     def format_spot(self,old_status,my_call,FREQ=None):
 
-        print('Format Spot: msg=',self.message)
-        msg=self.message.split(" ")
+        print('format_spot: message=',self.message)
+
+        # Look for compound messages
+        if ';' in self.message:
+            # Only process second part of a compound message since the first part is probably RR73
+            msg=self.message.split(";")[1].strip().split(" ")
+            print('format_spot: Compuond messge - msg=',msg)
+        else:
+            # Normal message
+            msg=self.message.strip().split(" ")
+            
+        # Bail out if we can't figure it out
         if msg==None or len(msg)<=1:
-            return ''                    # Bail out if we can't figure it out
+            return ''
         
+        # We dont really care about station being called ...
         if False:
-            # Dont really care about station being called?
             if msg[0]=='CQ':
                 call1=''
             else:
-                call1=msg[0]
+                call1=msg[0].replace('>','').replace('<','')
 
-        # But we do care about station calling, which we can hear
+        # ... But we do care about station calling, which we can hear
         if len(msg[1])>2:
             idx=1
         else:
             idx=2
         try:
-            call2=msg[idx]
+            call2=msg[idx].replace('>','').replace('<','')
         except: 
             return ''                    # Bail out if we can't figure it out
 
