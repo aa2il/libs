@@ -133,8 +133,8 @@ STATES  = LOWER48 + ['AK','HI']
 # NB (VE9),        NF & LB (VO1 and VO2),
 # NU (VY0),        YT (VY1), PEI (VY2)
 
-#PROVINCES = ['NB', 'NS', 'BC','AB','SK','MB','ON', 'QC', 'NWT', 'NF', 'LB', 'NU', 'YT', 'PEI']
-PROVINCES = ['NB', 'NS', 'BC','AB','SK','MB','ON', 'QC', 'NT', 'NL', 'NU', 'YT', 'PE']
+PROVINCES1 = ['NB', 'NS', 'BC','AB','SK','MB','ON', 'QC', 'NWT', 'NF', 'LB', 'NU', 'YT', 'PEI']
+PROVINCES2 = ['NB', 'NS', 'BC','AB','SK','MB','ON', 'QC', 'NT', 'NL', 'NU', 'YT', 'PE']
 
 # Mexican states
 XE_STATES=['AGS','BAC','BCS','CAM','CHI','CHH','CMX','COA','COL','DGO','EMX','GTO','GRO','HGO', \
@@ -142,12 +142,13 @@ XE_STATES=['AGS','BAC','BCS','CAM','CHI','CHH','CMX','COA','COL','DGO','EMX','GT
            'TLX','VER','YUC','ZAC']
 
 NA_COUNTRIES=['AK','PR','ZF','VI','HI','XE','V3','TI','8P','DX','KP4','HR','CY9','HP','KP2','HH','DR','CM']
-NAQP_SECS = STATES + PROVINCES + NA_COUNTRIES + ['DC']
-SST_SECS  = STATES + PROVINCES  + ['CWA','DX','AUS','NT','DC','PR']
-CQ_STATES = LOWER48 + PROVINCES + ['DC']
+NAQP_SECS = STATES + PROVINCES2 + NA_COUNTRIES + ['DC']
+SST_SECS  = STATES + PROVINCES2  + ['CWA','DX','AUS','NT','DC','PR']
+CQ_STATES = LOWER48 + PROVINCES2 + ['DC']
 
-RU_SECS = LOWER48 + PROVINCES + ['DC']
-TEN_METER_SECS = STATES + PROVINCES + XE_STATES + ['DC']
+FTRU_SECS = LOWER48 + PROVINCES1 + ['DC']
+RTTYRU_SECS = LOWER48 + PROVINCES2 + ['DC']
+TEN_METER_SECS = STATES + PROVINCES2 + XE_STATES + ['DC']
 
 ARRL_SECS = ['CT','EMA','ME','NH','RI','VT','WMA',  \
              'ENY','NLI','NNJ','NNY','SNJ','WNY',  \

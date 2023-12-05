@@ -115,6 +115,9 @@ class fldigi_xlmrpc(direct_connect):
         if len(a)==0:
             print('FLDIGI_IO - OPEN: Unknown rig type')
             sys.exit(0)
+
+        self.available_modes = self.s.rig.get_modes()
+        print('Available modes=',self.available_modes)
             
         print("\nFLRIG active - Rig info: ",info,'\tinfo0=',a[0])
         self.rig_type2 = a[0][2:]
@@ -211,6 +214,20 @@ class fldigi_xlmrpc(direct_connect):
 
         if self.flrig_active :
             self.get_rig_type()
+
+            # Probing around ...
+            """
+            info = self.s.rig.get_info()
+            print('Rig info=',info)
+            update = self.s.rig.get_update()
+            print('Rig update=',update)
+            self.available_modes = self.s.rig.get_modes()
+            print('Avail modes=',self.available_modes)
+            bws = self.s.rig.get_bws()
+            print('Avail bandwidths=',bws)
+            bw = self.s.rig.get_bw()
+            print('Current bandwidth=',bw)
+            """
             
         if self.fldigi_active:
             # Looking for something that distinguishes the rigs ...
@@ -598,7 +615,7 @@ class fldigi_xlmrpc(direct_connect):
 
     # Function to set rig mode - return old mode
     def set_mode(self,mode,VFO='A',Filter=None):
-        #VERBOSITY=1
+        VERBOSITY=1
         if VERBOSITY>0:
             print("FLDIGI_IO - SET_MODE mode=",mode,'\tVFO=',VFO,self.v4,'\tFilter=',Filter)
         mode2=mode       # Fldigi mode needs to match rig mode
@@ -607,10 +624,24 @@ class fldigi_xlmrpc(direct_connect):
         if mode==None or mode=='IQ':
             return
         if mode in ['PKTUSB','RTTY','DIGITA','DIGITAL','FT8','FT4'] or mode.find('PSK')>=0 or mode.find('JT')>=0:
+
+            # There are some issues with the various versions of flrig
+            # Need to add some code to get all available modes & select the right one?!
+            """
             if not self.v4 or self.flrig_active:
+            #if not (self.v4 or self.flrig_active):
                 mode='PSK-U'           # For some reason, this was changed in version 4
             else:
-                mode='PKT-U'    
+                mode='PKT-U'           # Another inconsistency vs version???
+            """
+            if self.flrig_active:
+                if 'PSK-U' in self.available_modes:
+                    mode='PSK-U' 
+                else:
+                    mode='PKT-U' 
+            else:
+                mode='PKT-U'           # Another inconsistency vs version???
+                
         elif mode in ['CW','CW-U','CWUSB','CW-USB']:
             if self.flrig_active:
                 if self.rig_type2 == 'FT991a':
@@ -631,7 +662,7 @@ class fldigi_xlmrpc(direct_connect):
             print('FLDIGI_IO - SET_MODE: mode=',mode,self.v4)
 
         # Translate fldigi mode into something fldigi understands
-        if mode2 in ['DIGITAL','DIGITA','FT8','FT4'] or mode2.find('JT')>=0 or mode2=='FT8':
+        if mode2 in ['DIGITAL','DIGITA','FT8','FT4'] or mode2.find('JT')>=0:
             mode2='RTTY'
         elif mode2=='USB' or mode2=='LSB' or mode2=='AM':
             mode2='SSB'
@@ -741,6 +772,7 @@ class fldigi_xlmrpc(direct_connect):
                         self.s.log.set_name(fields['Name'])
                     elif key=='QTH':
                         self.s.log.set_qth(fields['QTH'])
+                        self.s.log.set_locator(fields['QTH'])
                     elif key=='RST_out':
                         self.s.log.set_rst_out(fields['RST_out'])
                     elif key=='Exchange':
@@ -758,6 +790,8 @@ class fldigi_xlmrpc(direct_connect):
             call    = self.s.log.get_call()
             name    = self.s.log.get_name()
             qth     = self.s.log.get_qth()
+            if qth=='':
+                qth     = self.s.log.get_locator()
             rst_in  = self.s.log.get_rst_in()
             rst_out = self.s.log.get_rst_out()
             ser_in  = self.s.log.get_serial_number()

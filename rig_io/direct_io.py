@@ -500,6 +500,7 @@ class direct_connect:
                 self.tuner(0)
 
     def get_PLtone(self):
+        #VERBOSITY=1
         if VERBOSITY>0:
             print('DIRECT Get PL Tone ...')
         if self.rig_type=='Kenwood':
@@ -537,9 +538,16 @@ class direct_connect:
             else:
                 print('DIRECT GET_PL_TONE: Unknown rig',self.rig_type2)
                 return 0                
-            
-            buf = self.get_response(cmd1)
-            on_off = int(buf[3])
+
+            try:
+                buf = self.get_response(cmd1)
+                on_off = int(buf[3])
+            except Exception as e: 
+                print('DIRECT GET_PL_TONE: Problem reading PL tone - giving up')
+                print(e)
+                print('buf=',buf)
+                return 0
+                
             if VERBOSITY>0:
                 print('DIRECT GET_PL_TONE: CT buf=',buf,on_off)
             if on_off==0:

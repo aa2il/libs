@@ -224,7 +224,7 @@ def load_history(history,DEBUG_CALL=None):
                             elif 'fists' in fname and item==row[-1]:
                                 key=''
                             KEYS.append( key )
-                    print('KEYS=',KEYS)
+                    #print('KEYS=',KEYS)
                     #if 'skcc' in history:
                     #    sys.exit(0)
 

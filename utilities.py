@@ -181,6 +181,7 @@ def find_resource_file(f):
 
 ############################################################################
 
+# Function to list all of the serial devices
 def list_all_serial_devices():
     ports = lp.comports()
     print('LIST ALL SERIAL DEVICES: ports=',ports,'\n')
@@ -190,6 +191,7 @@ def list_all_serial_devices():
         pprint(vars(port))
         print("\nport={}: desc={} hwid=[{}]".format(port.device, port.description, port.hwid))
 
+# Function to find a particular serial device        
 def find_serial_device(device_name,device_number,VERBOSITY=0):
 
     try:
