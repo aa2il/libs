@@ -48,8 +48,9 @@ def load_history(history,DEBUG_CALL=None):
     # Init
     COMMENT_CHARS=['#','!']
     HIST = OrderedDict()
-    ALL_FIELDS=['name','state','sec','check','county','cwops', \
-                'fdcat','fdsec','ituz','cqz','grid','skccnr','city','fistsnr','names']
+    ALL_FIELDS=['name','state','sec','check','county','cwops',       \
+                'fdcat','fdsec','ituz','cqz','grid','skccnr','city', \
+                'fistsnr','names','status']
 
     # If no history file, we're done
     if history=='':
