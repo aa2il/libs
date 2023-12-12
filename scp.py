@@ -75,9 +75,12 @@ class SUPER_CHECK_PARTIAL:
             for s in scp:
                 if '#' not in s:
                     call = s.strip()
-                    if '/' in call:
+
+                    # There might be a problem with too many spot_proc loggers - need to fix this
+                    if '/' in call and True:
                         dx = Station(call)
                         call = dx.homecall
+                    
                     self.calls.append(call)
             self.MAX_DX=1            
         else:

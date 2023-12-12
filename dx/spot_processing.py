@@ -28,7 +28,7 @@ from utilities import find_resource_file
 
 #------------------CONSTANTS --------------------
 UTC = pytz.utc
-root_logger = "dxcsucker"
+root_logger_name = "dxcsucker"
 
 # Download this file from http://www.country-files.com/cty/
 cty_dir = os.path.expanduser('~/Python/data/')
@@ -208,12 +208,14 @@ class ChallengeData:
 
             
 def get_configured_logger(name):
+        #print('GET_CONFIGURED_LOGGER 1: name=',name)
         logger = logging.getLogger(name)
-        #print('GET_CONFIGURED_LOGGER: name=',name)
+        #print('logger=',logger)
+        #print('handlers=',logger.handlers)
         if (len(logger.handlers) == 0):
-                #print 'GET_CONFIGURED_LOGGER 2...',name
                 # This logger has no handlers, so we can assume it hasn't yet been configured
                 # (Configure logger)
+                #print('GET_CONFIGURED_LOGGER 2: name=',name)
                 
                 #Define Formatters
                 formatter_simple="[%(levelname)s] [%(module)s]: %(message)s"
@@ -228,7 +230,8 @@ def get_configured_logger(name):
                 file_handler.setLevel(logging.DEBUG) #adjust logging level to your needs
 
                 #Instanciate Root logger
-                logger = logging.getLogger()
+                #logger = logging.getLogger()
+                logger = logging.getLogger(name)
 
                 #Assign Formatter to Handler
                 console_handler.setFormatter(logging.Formatter(formatter_simple))
@@ -252,7 +255,8 @@ class Station(object):
         #------------------Constructor --------------------
         def __init__(self, call):
         #       super(Station, self).__init__()
-                self._logger = get_configured_logger(root_logger)
+                #print('\nSPOT PROC: STATION INIT call=',call)
+                self._logger = get_configured_logger(root_logger_name)
                 self._logger.propagate = True #send all log events to higher logger which has a handler
                 
                 self.valid = None
@@ -279,13 +283,15 @@ class Station(object):
                 self.homecall = self.obtain_homecall(self.call)
                 if not self.homecall:
                     self.valid = False
-                    self._logger.warning("Busted Homecall: '"+ str(self.homecall) + "' of " + self.call + " could not be decoded")
+                    self._logger.warning("Busted Homecall: '"+ str(self.homecall) \
+                                         + "' of " + self.call + " could not be decoded")
                 else:
                     self.prefix = self.obtain_prefix(self.call)
                     if not self.prefix:
                         self.valid = False
-                        if not self.mm and not self.am:
-                            self._logger.warning("Busted Prefix: '"+ str(self.prefix) + "' of " + self.call + " could not be decoded")
+                        if not self.mm and not self.am and self.appendix=='':
+                            self._logger.warning("Busted Prefix: '"+ str(self.prefix) \
+                                                 + "' of " + self.call + " could not be decoded")
                             #sys.exit(0)
                     else:
                         #print(self.call,self.prefix)
@@ -507,8 +513,8 @@ class Station(object):
                             prefix = self.__iterate_prefix(pfx)
                             self._logger.debug("obtain_prefix(): country prefix " + pfx)
                         else:
-                            return(False)
                             self._logger.debug("obtain_prefix(): returning False; Invalid callsign " + call )
+                            return(False)
                     
                     #--------identify Prefix of Callsign ------------
                     
@@ -573,7 +579,7 @@ class Spot(object):
         """Split up a DXCluster line and return the individual fields"""
         def __init__(self, raw_spot):
                 #super(Spot, self).__init__()
-                self._logger = get_configured_logger(root_logger)
+                self._logger = get_configured_logger(root_logger_name)
                 self._logger.propagate = True #send all log events to higher logger which has a handler
                 self.raw_spot = raw_spot
                 self.valid = None
@@ -894,7 +900,7 @@ class WWV(object):
         #------------------Constructor --------------------
         def __init__(self, raw_wwv):
         #       super(Station, self).__init__()
-                self._logger = get_configured_logger(root_logger)
+                self._logger = get_configured_logger(root_logger_name)
                 self._logger.propagate = True #send all log events to higher logger which has a handler
                 self.station = None
                 self.time = None
@@ -983,7 +989,7 @@ class Comment(object):
         #------------------Constructor --------------------
         def __init__(self, raw_comment):
         #       super(Station, self).__init__()
-                self._logger = get_configured_logger(root_logger)
+                self._logger = get_configured_logger(root_logger_name)
                 self._logger.propagate = True #send all log events to higher logger which has a handler
 
                 self.station = None
