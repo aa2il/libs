@@ -938,6 +938,7 @@ class AudioIO():
                 print("Too few samples to start Playback...")
                 return False
 
+        print('\n##############################################################################')
         print("\nStarting audio play back @",self.fs,"Hz\ttag=",self.rb.tag,
               '\n\tnsamps=',self.rb.nsamps,'\trb_size=',self.rb.size,
               '\tdevice=',self.device)

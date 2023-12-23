@@ -463,6 +463,70 @@ class direct_connect:
         #print('Lock released')
         return x
 
+    def set_band(self,b,VFO='A'):
+        if VERBOSITY>0:
+            print('DIRECT SET_BAND: band=',b)
+            
+        if self.rig_type1=='Kenwood' or self.rig_type1=='Icom':
+            print('DIRECT_IO: SET_BAND not support yet for Kenwood/Icom rigs')
+            return 0            
+                        
+        code = bands[b]["Code"]
+        cmd1 = 'BY;BS'+str(code).zfill(2)+';'          # Band select
+        buf=self.get_response(cmd1)
+        
+    def get_band(self,frq=None,VFO='A'):
+        if not frq:
+            if not self.active:
+                return 0
+            frq = self.get_freq(VFO=VFO) * 1e-6
+
+        if frq<0:
+            band=None
+        elif frq<1.7:
+            band='MW'
+        elif frq<3:
+            band=160
+        elif frq<5:
+            band=80
+        elif frq<6:
+            band=60
+        elif frq<9:
+            band=40
+        elif frq<12:
+            band=30
+        elif frq<16:
+            band=20
+        elif frq<20:
+            band=17
+        elif frq<23:
+            band=15
+        elif frq<27:
+            band=12
+        elif frq<40:
+            band=10
+        elif frq<60:
+            band=6
+        elif frq<144:
+            band='AIR'
+        elif frq<200:
+            band=2
+        elif frq<300:
+            band=125
+        elif frq<500:
+            band=70
+        elif frq<1000:
+            band=33
+        elif frq<1300:
+            band=23
+        else:
+            band=0
+            
+        if VERBOSITY>0:
+            print("DIRECT: Current rig freq=",frq," MHz --> ",band,"m")
+
+        return band
+
     def get_ant(self):
         if VERBOSITY>=1:
             print('DIRECT GET_ANT ...')
@@ -485,14 +549,21 @@ class direct_connect:
             #print('DIRECT SET IF SHIFT:',shift,'\tcmd=',cmd)
             buf=self.get_response(cmd)
             #print('buf=',buf)
-            
+
+    # Function to select antenna port and manage tuner
     def set_ant(self,a,VFO='A'):
+
+        # This only make sense on the FTdx3000
         if self.rig_type2=='FTdx3000':
             if VFO=='B':
                 buf=self.get_response('BY;FR4;AN0'+str(a)+';FR0;')
             else:
                 buf=self.get_response('BY;AN0'+str(a)+';')
-            if a==1 or a==2:
+
+            # The 40m ant is temporarily hosed
+            band=self.get_band()
+            #if a==1 or a==2:
+            if band!=40 and (a==1 or a==2):
                 # Make sure ant tuner is on for ports 1 & 2
                 self.tuner(1)
             else:
@@ -1159,70 +1230,6 @@ class direct_connect:
         cmd1 = 'BY;PC'+str(p).zfill(3)+';'          # Power select
         buf=self.get_response(cmd1)
         
-    def set_band(self,b,VFO='A'):
-        if VERBOSITY>0:
-            print('DIRECT SET_BAND: band=',b)
-            
-        if self.rig_type1=='Kenwood' or self.rig_type1=='Icom':
-            print('DIRECT_IO: SET_BAND not support yet for Kenwood/Icom rigs')
-            return 0            
-                        
-        code = bands[b]["Code"]
-        cmd1 = 'BY;BS'+str(code).zfill(2)+';'          # Band select
-        buf=self.get_response(cmd1)
-        
-    def get_band(self,frq=None,VFO='A'):
-        if not frq:
-            if not self.active:
-                return 0
-            frq = self.get_freq(VFO=VFO) * 1e-6
-
-        if frq<0:
-            band=None
-        elif frq<1.7:
-            band='MW'
-        elif frq<3:
-            band=160
-        elif frq<5:
-            band=80
-        elif frq<6:
-            band=60
-        elif frq<9:
-            band=40
-        elif frq<12:
-            band=30
-        elif frq<16:
-            band=20
-        elif frq<20:
-            band=17
-        elif frq<23:
-            band=15
-        elif frq<27:
-            band=12
-        elif frq<40:
-            band=10
-        elif frq<60:
-            band=6
-        elif frq<144:
-            band='AIR'
-        elif frq<200:
-            band=2
-        elif frq<300:
-            band=125
-        elif frq<500:
-            band=70
-        elif frq<1000:
-            band=33
-        elif frq<1300:
-            band=23
-        else:
-            band=0
-            
-        if VERBOSITY>0:
-            print("DIRECT: Current rig freq=",frq," MHz --> ",band,"m")
-
-        return band
-
     def set_log_fields(self,fields):
         if VERBOSITY>0:
             print('*** WARNING *** Ignored call to SET_LOG_FIELDS ***')
