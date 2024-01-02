@@ -560,10 +560,10 @@ class direct_connect:
             else:
                 buf=self.get_response('BY;AN0'+str(a)+';')
 
-            # The 40m ant is temporarily hosed
+            # The 40m ant was temporarily hosed
             band=self.get_band()
-            #if a==1 or a==2:
-            if band!=40 and (a==1 or a==2):
+            if a==1 or a==2:
+            #if band!=40 and (a==1 or a==2):
                 # Make sure ant tuner is on for ports 1 & 2
                 self.tuner(1)
             else:

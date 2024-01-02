@@ -91,6 +91,7 @@ def Oh_Canada(dx_station):
     # MR = Maritime provinces plus Newfoundland and Labrador (NB, NL, NS, PE)
     
     qth=''
+    secs=[]
     #print('Oh Canada ... 1')
     #pprint(vars(dx_station))
     if dx_station.country=='Canada':
