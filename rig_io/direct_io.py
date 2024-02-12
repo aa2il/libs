@@ -1,7 +1,7 @@
 #######################################################################################
 #
 # Direct Rig IO - Rev 1.0
-# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Socket I/O routines related to commanding the radio via a
 # direct USB connection.
@@ -850,7 +850,12 @@ class direct_connect:
         else:            
             print('DIRECT SELECT_VFO Command not yet implemented for non-ICOM rigs')
 
+            
     def set_vfo(self,rx=None,tx=None,op=None):
+        
+        self.set_vfo_direct(rx,tx,op)
+        
+    def set_vfo_direct(self,rx=None,tx=None,op=None):
         #VERBOSITY=1
         if VERBOSITY>0:
             print('DIRECT SET_VFO:',rx,tx)

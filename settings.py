@@ -1,7 +1,7 @@
 #########################################################################################
 #
 # settings.py - Rev. 1.0
-# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Gui for basic settings.
 #
@@ -29,7 +29,7 @@ else:
     from Tkinter import *
     import tkFont
 import time
-from rig_io.ft_tables import SATELLITE_LIST
+from rig_io import SATELLITE_LIST
 
 #from PyQt5 import QtCore
 #from PyQt5.QtWidgets import *

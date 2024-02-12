@@ -1,7 +1,7 @@
 #######################################################################################
 #
 # Load History - Rev 1.0
-# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Function to load a history file
 #
@@ -38,7 +38,7 @@ from dx.spot_processing import Station
 from dx.cluster_connections import get_logger
 from pprint import pprint
 import glob 
-from rig_io.ft_tables import NAQP_SECS,CA_COUNTIES
+from rig_io import NAQP_SECS,CA_COUNTIES
 
 ###################################################################
 

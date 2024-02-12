@@ -1,7 +1,7 @@
 ############################################################################################
 #
 # Fldigi IO - Rev 1.0
-# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Functions to control rig through FLDIGI or FLRIG from python.
 # See methods.txt for list of methods for these two protocols
@@ -453,16 +453,15 @@ class fldigi_xlmrpc(direct_connect):
                 self.s.rig.set_AB('A')
                 time.sleep(DELAY)
                 self.s.rig.set_vfoA(f)
-                time.sleep(DELAY)
             elif VFO=='S':
                 self.s.rig.set_AB('B')
                 time.sleep(DELAY)
                 self.s.rig.set_vfoB(f)
-                time.sleep(DELAY)
             else:
                 print('FLDIGI_IO GET_FREQ - Invalid VFO:',VFO)
                 x=0
             self.lock.release()
+            time.sleep(DELAY)
             #cmd='F'+VFO+str(int(f)).zfill(8)+';'
             #self.send(cmd)
         else:
@@ -574,41 +573,91 @@ class fldigi_xlmrpc(direct_connect):
     def set_vfo(self,rx=None,tx=None,op=None):
         VERBOSITY=1
         if VERBOSITY>0:
-            print('FLDIGI_IO - SET_VFO:',rx,tx)
+            print('FLDIGI_IO - SET_VFO: rx=',rx,'\ttx=',tx,'\top=',op)
+            AB=self.s.rig.get_AB()
+            SP=self.s.rig.get_split()
+            print('\tAB=',AB,'\tSPLIT=',SP)
             
         if self.flrig_active:
+
+            if self.rig_type2=='FT991a':
+                rx='A'
+            
             if rx:
                 try:
                     self.s.rig.set_AB(rx)
+                    #self.s.rig.set_verify_AB('A')           # These verify commands don't seem to work at all!
                     time.sleep(DELAY)
                 except Exception as e: 
                     print('***ERROR *** FLDIGI_IO - SET_VFO - Problem setting RX vfo:',rx,tx)
-                    print(e)
+                    print('e=',e,'\n')
+                    traceback.print_exc()
                     return
             else:
                 rx=self.s.rig.get_AB()
+                time.sleep(DELAY)
+                
             if tx:
                 if rx==tx:
                     opt=0
                 else:
                     opt=1
-                self.s.rig.set_split(opt)
-                time.sleep(DELAY)
+            else:
+                tx=rx
+                opt=0
+            self.s.rig.set_split(opt)
+            #self.s.rig.set_verify_split(opt)
+            time.sleep(DELAY)
 
+            if True:
+                # FLRIG doesn't quite handle this correctly so fudge it for now.
+                # Buttons on FLRIG work fine but not XML commands.  Need to 
+                # dig through source sometime...
+                #if self.rig_type2 == 'FTdx3000':
+                if self.rig_type1 == 'Yaesu':
+                    time.sleep(2*DELAY)
+                    self.set_vfo_direct(rx,tx)
+                    """
+                    if rx in ['A','M']:
+                        cmd='BY;FR0;'
+                    else:
+                        cmd='BY;FR4;'
+                    if tx in ['A','M']:
+                        cmd=cmd+'FT2;'
+                    else:
+                        cmd=cmd+'FT3;'
+                    time.sleep(2*DELAY)
+                    buf = self.get_response(cmd)
+                    print('cmd=',cmd,'\tbuf=',buf)
+                    time.sleep(DELAY)
+                    #buf = self.get_response(cmd)
+                    #print('cmd=',cmd,'\tbuf=',buf)
+                    #time.sleep(DELAY)
+                    """
+                    
             if op:
                 if op=='A->B':
-                    cmd='BY;AB;' 
+                    #cmd='BY;AB;' 
+                    print('FLDIGI_IO->SET VFO: A -> B')
                     self.s.rig.vfoA2B()
                 elif op=='B->A':
-                    cmd='BY;BA;'
+                    #cmd='BY;BA;'
+                    print('FLDIGI_IO->SET VFO - HELP!!!!')
                 elif op=='A<->B':
-                    cmd='BY;SV;'
+                    #cmd='BY;SV;'
+                    print('FLDIGI_IO->SET VFO: Swap')
                     self.s.rig.swap()
-        
+                time.sleep(DELAY)
 
         else:
+            
             # Dummied up for now
             print('SET_VFO not available yet for FLDIGI - assumes A')
+            
+        if VERBOSITY>0:
+            AB=self.s.rig.get_AB()
+            SP=self.s.rig.get_split()
+            print('\tAB=',AB,'\tSPLIT=',SP)
             
         return
 

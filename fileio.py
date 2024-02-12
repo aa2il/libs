@@ -1,7 +1,7 @@
 #######################################################################################
 #
 # File IO - Rev 1.0
-# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Functions related to file io.
 #
@@ -22,7 +22,7 @@
 import sys
 import os
 import re
-from rig_io.ft_tables import *
+#from rig_io.ft_tables import *
 import csv
 from collections import OrderedDict
 from zipfile import ZipFile

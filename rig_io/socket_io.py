@@ -1,7 +1,7 @@
 ############################################################################################
 #
 # Socket IO - Rev 1.0
-# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # This module contains socket I/O routines related to commanding the radio.
 #
@@ -447,6 +447,8 @@ def SetVFO(self,cmd):
     
     if cmd in ['A','B']:
         s.set_vfo(cmd)
+    elif cmd in ['A->B','A<->B']:
+        s.set_vfo(op=cmd)
     elif cmd=='A->B':
         if s.rig_type1=='Icom':
             print('SetVFO - Select A->B - Not implemented on ICOM rigs yet')
@@ -503,12 +505,13 @@ def ClarReset(self,RXClarOn=False):
 
 # Function to set TX split
 def SetTXSplit(self,df_kHz,onoff=True):
-    df=int( df_kHz*1000 )
+    max_df=9999
+    df=max( min(max_df, int( df_kHz*1000 ) ) , -max_df)
     if onoff:
         cmd = 'BY;RC;RT0;XT1;RU'+str(df).zfill(4)+';'
     else:
         cmd = 'BY;RC;RT0;XT0;'
-    print('Set TX CLARiFIER SPLIT:',df,cmd)
+    print('Set TX CLARIFIER SPLIT:',df,cmd)
     self.sock.get_response(cmd)
 
 # Function to get split settings (clarifier)
