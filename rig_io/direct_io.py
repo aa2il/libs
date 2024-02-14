@@ -151,7 +151,8 @@ def try_port(port,baud,verbosity,ICOM=None):
     #except:
     except Exception as e: 
         if verbosity>=1:
-            print(e)
+            print('e=',e,'\n')
+            traceback.print_exc()
             print('...Nope')
         
     
@@ -174,31 +175,10 @@ def try_rig(self,type1,type2,port,baud):
         print('\nTRY_RIG: Trying %s %s\nport=%s\nbaud=%d ...' %
               (type1,type2,port,baud) )
 
-        # Attempting to reset usb device - not working yet
-        if False:
-            print('Hey 11')
-            fp0 = open(port, 'r', os.O_WRONLY)
-            print('Hey 22')
-            fcntl.ioctl(fp0, USBDEVFS_RESET, 0)
-            print('Hey 33')
-
-        # This doesn't do it either
-        if False:
-            print('Hey 11')
-            import termios
-            print('Hey 22')
-            port = '/dev/ttyUSB0'
-            f = open(port)
-            print('Hey 33')
-            attrs = termios.tcgetattr(f)
-            attrs[2] = attrs[2] & ~termios.HUPCL
-            print('Hey 44')
-            termios.tcsetattr(f, termios.TCSAFLUSH, attrs)
-            print('Hey 55')
-            f.close()
-            print('Hey 66')
-            
         self.s = serial.Serial(port,baud,timeout=TimeOut)
+        if not self.s.is_open:
+            print("... Can't open port - giving up!")
+            return False
         self.rig_type  = type1
         self.rig_type1  = type1
         self.rig_type2 = type2
@@ -230,7 +210,8 @@ def try_rig(self,type1,type2,port,baud):
 
     except Exception as e: 
         print("\n... Can't find %s %s ..." % (type1,type2))
-        print(e)
+        print('e=',e,'\n')
+        traceback.print_exc()
         if self.lock.locked():
             self.lock.release()      # Still might have lock if bombed in get_freq
 
@@ -250,61 +231,45 @@ def find_direct_rig(self,port_in,baud_in,force=False):
     
     # The GS232 rotor
     if port_in==232:
-        if False:
-            if try_rig(self,'Yaesu','GS232b',SERIAL_ROTOR,baud):
-                return True
-        else:
-            # New pathway
-            port=find_serial_device('GS232b',0,VERBOSITY=0)
-            if try_rig(self,'Yaesu','GS232b',port,baud):
-                return True
+        port=find_serial_device('GS232b',0,VERBOSITY=0)
+        if try_rig(self,'Yaesu','GS232b',port,baud):
+            return True
 
     # FTdx3000
-    if port_in==0 or port_in==3000:
-        if False:
-            if try_rig(self,'Yaesu','FTdx3000',SERIAL_PORT1,baud):
-                return True
-        else:
-            # New pathway
-            port=find_serial_device('FTdx3000',0,VERBOSITY=0)
-            if try_rig(self,'Yaesu','FTdx3000',port,baud):
-                return True
+    if port_in in [0,3000]:
+        port=find_serial_device('FTdx3000',0,VERBOSITY=0)
+        if try_rig(self,'Yaesu','FTdx3000',port,baud):
+            return True
         
     # FT991a
-    if port_in==0 or port_in==991:
-        if False:
-            if try_rig(self,'Yaesu','FT991a',SERIAL_PORT3,baud):
-                return True
-        else:
-            # New pathway
-            port=find_serial_device('FT991a',0,VERBOSITY=0)
-            if try_rig(self,'Yaesu','FT991a',port,baud):
-                return True
+    if port_in in [0,991]:
+        port=find_serial_device('FT991a',0,VERBOSITY=0)
+        if try_rig(self,'Yaesu','FT991a',port,baud):
+            return True
 
     # IC-9700
-    if port_in [0,9700]:
+    if port_in in [0,9700]:
         port=find_serial_device('IC9700',0,VERBOSITY=0)
         if try_rig(self,'Icom','IC9700',port,baud):
             return True
-    elif port_in [0,7300]:
+    elif port_in in [0,7300]:
         port=find_serial_device('IC7300',0,VERBOSITY=0)
         if try_rig(self,'Icom','IC7300',port,baud):
             return True
 
     # There are two possible connections to the TS-850
     # The first is via my home-brew interface
-    if port_in==0 or port_in==850:
-        #print('Blah!',force)
+    if port_in in [0,850]:
         if try_rig(self,'Kenwood','TS850',SERIAL_PORT5,baud) or force:
             return True
         
     # The other is via the RT-system cable
-    if port_in==0 or port_in==850:
+    if port_in in [0,850]:
         if try_rig(self,'Kenwood','TS850',SERIAL_PORT6,baud):
             return True
 
     # IC-706
-    if port_in==0 or port_in==706:
+    if port_in in [0,706]:
         if try_rig(self,'Icom','IC706',SERIAL_PORT7,baud):
             return True
 
@@ -394,8 +359,14 @@ class direct_connect:
 
 
     def check_port(self,txt,stop=False):
-        #print('txt=',txt)
+        #print('CHECK PORT: txt=',txt,'\ts=',self.s,'\topen=',self.s.is_open)
         #print(self.s.in_waiting)
+
+        # We probably want this but let's not upset the apple cart for now
+        #if (not self.s.is_open):
+        #    print('\n*** CHECK PORT - Port is not open! ***')
+        #    #sys,exit(0)
+        #    return False
         if self.s.in_waiting:
             buf=self.s.read(1024)
             if len(txt)>0:
@@ -430,7 +401,10 @@ class direct_connect:
             txt=' '.join( show_hex(cmd) )
         else:
             txt=str(cmd)
-        self.check_port('GET_RESPONSE:  writing '+txt,True)
+        ok=self.check_port('GET_RESPONSE:  writing '+txt,True)
+        #if not ok:
+        #    self.lock.release()
+        #    return '?'
         if self.rig_type1=='Icom':
             cnt=self.s.write(cmd)
             self.s.flush()
@@ -615,7 +589,8 @@ class direct_connect:
                 on_off = int(buf[3])
             except Exception as e: 
                 print('DIRECT GET_PL_TONE: Problem reading PL tone - giving up')
-                print(e)
+                print('e=',e,'\n')
+                traceback.print_exc()
                 print('buf=',buf)
                 return 0
                 
@@ -728,7 +703,8 @@ class direct_connect:
                 frq = float(buf[2:-1])
             except Exception as e: 
                 print('DIRECT GET_FREQ: Unable to read freq - buf=',buf)
-                print(e)
+                print('e=',e,'\n')
+                traceback.print_exc()
                 frq=0
 
         self.freq=frq
@@ -1719,8 +1695,9 @@ class direct_connect:
                 val=bcd2int(y[1:],1)
                 wpm=int( (48.-6.)/(255.-0)*val + 6 +0.5 )
             except Exception as e: 
-                print(e)
                 print('DIRECT READ_SPEED: Problem reading Rig CW Speed')
+                print('e=',e,'\n')
+                traceback.print_exc()
                 wpm=0
 
                 #if VERBOSITY>0:
