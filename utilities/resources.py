@@ -1,7 +1,7 @@
 ############################################################################
 #
 # resources.py - Rev 1.0
-# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Routine to locate various resources.
 #
@@ -57,7 +57,7 @@ def find_resource_file(f):
     PATH=os.path.realpath(sys.executable)
     #print('FIND_FILE: PATH=',PATH)
     if '/usr/bin/python' in PATH or 'python.exe' in PATH:
-        # Pythin script on linux or Windoz
+        # Python script on linux or Windoz
         #print('FIND_FILE: _file_=',__file__)
         dname = os.path.dirname(__file__)
     elif platform.system()=='Linux':
@@ -65,7 +65,7 @@ def find_resource_file(f):
     elif platform.system()=='Windows':
         dname = os.path.dirname(PATH)
     else:
-        print('FIND RESOURCE FILE: I dont know what I am doing here!')
+        print("FIND RESOURCE FILE: I don't know what I'm doing here!")
         return None
 
     #print('FIND_FILE: argv=',sys.argv)

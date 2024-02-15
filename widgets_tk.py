@@ -29,8 +29,8 @@ if sys.version_info[0]==3:
 else:
     import Tkinter as tk
     import tkFont
-
 from datetime import datetime,time
+from utilities import find_resource_file
     
 ################################################################################
 
@@ -262,20 +262,58 @@ class StatusBar(tk.Frame):
         tk.Frame.__init__(self, master, background = bg_color,relief=relief,borderwidth=2)
 
         self.root=master
-         
         self.label = tk.Label(self, text = "", fg = fg_color, bg = bg_color)
         self.label.pack(side = tk.LEFT)
-        #self.pack(fill=tk.X, side = tk.BOTTOM)
      
     def setText(self, newText):
         self.label.config(text = newText)
-        #self.root.update_idletasks()
         self.root.update()
  
     def clearText(self):
         self.label.config(text = "")
-        #self.root.update_idletasks()
+        self.root.update()
 
+################################################################################
+
+# Splash screen
+class SPLASH_SCREEN():
+    def __init__(self,root,image):
+
+        self.root  = root
+        self.root.withdraw()
+        self.splash  = tk.Toplevel(root)
+        
+        self.splash.title("Splish Splash")
+        if False:
+            if P.PLATFORM=='Linux':
+                self.splash.attributes("-topmost", True,'-type', 'splash')
+            elif P.PLATFORM=='Windows':
+                self.splash.attributes("-topmost", True)
+            else:
+                print('GUI INIT: Unknown OS',P.PLATFORM)
+                sys.exit(0)
+        else:
+            self.splash.overrideredirect(True)           # Remove bvorder
+            self.splash.geometry('+500+500')
+
+        self.splash.update()
+        self.splash.deiconify()
+        
+        fname=find_resource_file(image)
+        print(fname)
+        self.pic = tk.PhotoImage(file=fname)
+        self.lab = tk.Label(self.splash, bg='white', image=self.pic)
+        self.lab.pack()
+        root.update_idletasks()
+        
+        self.status_bar = StatusBar(self.splash,relief=None)
+        self.status_bar.pack(fill=tk.X, side = tk.BOTTOM)
+        self.status_bar.setText("Howdy Ho!")
+        #self.splash.update()
+            
+    def destroy(self):
+        self.splash.destroy()
+    
 ################################################################################
 
 # Test program
@@ -332,6 +370,9 @@ if __name__ == '__main__':
         lcd=MyLCDNumber(root)
         lcd.label.pack()
     elif 1:
+        # Splash screen demo
+        splash  = SPLASH_SCREEN(root,'../pyKeyer/keyer_splash.png')
+    elif 0:
         # Status Bar demo
         #window = Window(root)
         window = Window2(root)
