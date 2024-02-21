@@ -94,7 +94,7 @@ class PLL(object):
 
 # Spectral analysis 
 class spectrum:
-    def __init__(self,fs,chunk_size,NFFT,overlap=0.,demean=False,foffset=0):
+    def __init__(self,fs,chunk_size,NFFT,overlap=0.,demean=False,foffset=0,TAG=0):
         self.fs   = fs
         self.fold = fs/2.
         self.chunk_size = chunk_size
@@ -104,6 +104,7 @@ class spectrum:
         self.frq2 = np.fft.fftshift( np.fft.fftfreq(NFFT, d=1./fs) ) + foffset
         #self.first_time = True
         self.demean = demean
+        self.tag = TAG
 
         # From the numpy docs, here is how the shape parameter of the Kaiser window affects its performance
         # beta	Window shape
@@ -124,6 +125,13 @@ class spectrum:
         self.old_samps = int( chunk_size*overlap )
         self.new_samps = chunk_size - self.old_samps
         self.prev = np.zeros(self.old_samps)
+
+        if True:
+            print('SPECTRUM INIT: tag=',self.tag)
+            print('\tfs=',self.fs)
+            print('\tchunk_size=',self.chunk_size)
+            print('\tNFFT=',self.NFFT)
+            print('\tnew_samps=',self.new_samps)
 
     # Routine to compute PSD estimate as an average of periodograms
     def psd_est(self,x,FORCE_COMPLEX=False):
@@ -375,6 +383,16 @@ class ring_buffer2:
         self.nsamps = 0       # Counter of no. samples aailable
         self.block  = block   # If true, block on over/underflows
         self.prev   = np.array([])      # Overlap from pervious call
+        self.last_push = 0
+
+
+    def push_zeros(self,n):
+        x = np.array(n*[0.],dtype=self.dtype)
+        self.nsamps += n
+        self.buf.put(x)
+        print('Ringbuffer2: Pushed Zeros - tag=',self.tag,
+                  '\tnsamps=',self.nsamps,'\tlen(x)=',n,
+                  '\tBuffer size=',self.size)
 
     # Data write & read functions with robust index checking
     # These allow arbirtrary chunk sizes to be accessed
@@ -387,12 +405,13 @@ class ring_buffer2:
         if DEBUG>=1:
             print( self.tag,'- Push',len(x),x.dtype)
             
-        self.nsamps += len(x)
+        self.last_push = len(x)
+        self.nsamps += self.last_push
         self.buf.put(x)
 
         if self.nsamps>self.size:
             print('Ringbuffer2: Push overflow - tag=',self.tag,
-                  '\tnsamps=',self.nsamps,'\tlen(x)=',len(x),
+                  '\tnsamps=',self.nsamps,'\tlen(x)=',self.last_push,
                   '\tBuffer size=',self.size)
             #self.nsamps -= self.size
        
@@ -401,9 +420,9 @@ class ring_buffer2:
         #if self.tag=='Audio1':
         #    print(self.tag,'- Pull',n,flush)
 
-        if self.nsamps<n:
+        if self.nsamps<n and False:
             print('Ringbuffer2 PULL - WARNING! - Not enough data! - tag=',self.tag,
-                  '\tn=',n,'\tnsamps=',self.nsamps,'\tflush=',flush)
+                  '\tn=',n,'\tnsamps=',self.nsamps,'\tlast=',self.last_push,'\tflush=',flush)
             
         if flush:
 
@@ -447,6 +466,7 @@ class ring_buffer2:
             #print( self.tag,'- Pull',len(self.prev),self.prev.dtype)
         #return x                                   # Old
         #return x.astype(np.float32)               # New but messes up IQ PSD
+        self.dtype = x.dtype
         if np.iscomplexobj(x):
             return x.astype(np.complex64)
         else:

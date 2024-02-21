@@ -9,6 +9,11 @@
 # https://github.com/dh1tw/DX-Cluster-Parser
 # If you recognize this code, please email me so I can give proper attribution.
 #
+# Notes:
+#    The cty.plist file is large (~14 Mb) and takes time to load
+#    Its better to convert this file to binary after downloading it.
+#    See comments in cty.py as to how to do this.
+#
 ################################################################################
 
 import sys
@@ -332,12 +337,15 @@ class Station(object):
                             self.country='Turkey'
                                         
         #------------------STATIC Variables --------------------
+        #Load Country File
         dxcc = ""
-        try: 
-                if os.path.isfile(cty_dir+"cty.plist"):
-                        dxcc = load_cty(cty_dir+"cty.plist")              #Load Country File
+        CTY_FILE='cty.plist'
+        CTY_FILE='cty.bin'
+        try:
+                if os.path.isfile(cty_dir+CTY_FILE):
+                        dxcc = load_cty(cty_dir+CTY_FILE)
                 else:
-                        fname=find_resource_file('cty.plist')
+                        fname=find_resource_file(CTY_FILE)
                         #print('fname=',fname)
                         if os.path.isfile(fname):
                             dxcc = load_cty(fname)              #Load Country File
@@ -348,6 +356,7 @@ class Station(object):
                 #self._logger.exception("CTY.PLIST could not be loaded!")
                 print(e)
                 print("CTY.PLIST could not be loaded!")
+                sys.exit(0)
                 
         #------------------Class Methods --------------------           
         def __iterate_prefix(self, call):

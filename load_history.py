@@ -39,6 +39,7 @@ from dx.cluster_connections import get_logger
 from pprint import pprint
 import glob 
 from rig_io import NAQP_SECS,CA_COUNTIES
+from zipfile import ZipFile
 
 ###################################################################
 
@@ -78,7 +79,7 @@ def load_history(history,DEBUG_CALL=None):
     # Get file extension
     fname=os.path.basename(history)
     ext=os.path.splitext(history)[1]
-    print('\nHistory file=',history,fname,ext)
+    print('\nHistory file=',history,'\tfname=',fname,'\text=',ext)
 
     if ext=='.xlsx':
         if history.find('CWops')>=0:
@@ -152,27 +153,38 @@ def load_history(history,DEBUG_CALL=None):
     # There seems to be a lot of issues trying to use csv reader or pandas to
     # read these files so we'll do it our selves!!!
     print('LOAD HISTORY:',history)
-    with open(history,'r',encoding='utf-8') as csvfile:
-        if 'skcc' in history:
-            delim='|'
-        else:
-            delim=','
+    if 'skcc' in history:
+        delim='|'
+    else:
+        delim=','
 
-        hist = csvfile.read()
-        hist = hist.split("\n")
-        csvfile.close()
+    if ext=='.zip':
+
+        # Added this to handle zipped csv files from the RBN
+        name=os.path.splitext(fname)[0]
+        with ZipFile(history, 'r') as zipf:
+            with zipf.open(name+'.csv', 'r') as csvfile:
+                hist = csvfile.read().decode("utf-8")
+                hist = hist.split("\n")
+                csvfile.close()
+
+    else:
+        
+        with open(history,'r',encoding='utf-8') as csvfile:
+            hist = csvfile.read()
+            hist = hist.split("\n")
+            csvfile.close()
+
+    if True:
         nrows=len(hist)
-
-        """
-        print(nrows)
-        for i in range(10):
-            #row=hist.iloc[i].tolist()
-            row=hist[i].split(delim)
-            print(i,row)
-        print(type(row))
-        sys.exit(0)
-        """
-
+        if False:
+            print(nrows)
+            for i in range(10):
+                #row=hist.iloc[i].tolist()
+                row=hist[i].split(delim)
+                print(i,row)
+            print(type(row))
+            sys.exit(0)
         #print(hist)
 
         for n in range(nrows):

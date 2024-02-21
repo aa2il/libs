@@ -257,8 +257,8 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False):
 
 
 # Function to create entire ADIF record and write it to a file
-def write_adif_record(fp,rec,P,long=False,sort=True):
-    VERBOSITY=0
+def write_adif_record(fp,rec,P,long=False,sort=True,VERBOSITY=0):
+    #VERBOSITY=2
     if VERBOSITY>=1:
         print('rec=',rec)
 
@@ -323,7 +323,12 @@ def write_adif_record(fp,rec,P,long=False,sort=True):
         val = qso[fld]
         if VERBOSITY>1:
             print('WRITE_ADIF_RECORD:',fld,val)
-        if fld=='SAT_NAME':
+
+        if fld in ['FILE_NAME'] and True:
+            # Skip these fields
+            continue
+        
+        elif fld=='SAT_NAME':
             if val!='None' and val!='':
                 if val=='ISS':
                     val='ARISS'
@@ -343,6 +348,7 @@ def write_adif_record(fp,rec,P,long=False,sort=True):
             if len(val)>0:
                 fp.write('<%s:%d>%s%s' % (fld,len(val),val,NL) )
 
+    """
     try:
         val=P.CONTEST_ID
         if val and len(val)>0:
@@ -352,6 +358,7 @@ def write_adif_record(fp,rec,P,long=False,sort=True):
         print('\nADIF WRITE RECORD: Problem writing contest id')
         print('Error msg:\t',getattr(e, 'message', repr(e)))
         print('rec=',rec)
+    """
         
     fp.write('<EOR>\n\n')
     fp.flush()

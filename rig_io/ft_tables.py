@@ -1,7 +1,7 @@
 ############################################################################################
 #
 # FT Tables - Rev 1.0
-# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Tables defining various operating parameters and capabilities
 #
@@ -237,14 +237,15 @@ CQ_ZONES = {'CT' : 5 , \
 
 # Put this here as both pySat and pyKeyer.py reference it.
 # Need the 'None' entry for list box in pyKeyer
-# SK sats: AO-85,91,92, FO-99, CAS-6?, EO-88? ,HO-113?
+# SK sats: AO-85,91,92, FO-99, CAS-6?, EO-88? ,HO-113?, AO-27
 # IO-86 never gets bove the horizon in our part of the world
-SATELLITE_LIST = ['None','ISS','PO-101','SO-50','AO-27', \
+SATELLITE_LIST = ['None','ISS','PO-101','SO-50', \
                   'AO-91','AO-92','AO-109',  \
                   'CAS-4A','CAS-4B','CAS-6', \
                   'XW-2A','XW-2B','XW-2C','XW-2D','XW-2F','RS-44', \
                   'AO-7','JO-97','UVSQ-SAT', \
-                  'LILACSAT-2','FO-29','AO-73',
+                  'LILACSAT-2','FO-29','AO-73','IO-117',
+                  'NO-44','SO-121','TEVEL-5',
                   'Orbicraft-Zorkiy',
                   'Moon']
 

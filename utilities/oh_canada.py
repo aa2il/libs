@@ -19,6 +19,11 @@
 #
 ############################################################################
 
+import sys
+from pprint import pprint
+
+############################################################################
+
 VERBOSITY=0
 
 ############################################################################
@@ -110,7 +115,7 @@ def Oh_Canada(dx_station):
         else:
             print('OH CANADA - Hmmmm',prefix)
             pprint(vars(dx_station))
-            sys.exit(0)
+            #sys.exit(0)
             
     else:
         print('OH CANADA - I dont know what I am doing here')
