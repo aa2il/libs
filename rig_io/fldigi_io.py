@@ -571,12 +571,19 @@ class fldigi_xlmrpc(direct_connect):
             return 'AA'
     
     def set_vfo(self,rx=None,tx=None,op=None):
-        VERBOSITY=1
+        #VERBOSITY=1
         if VERBOSITY>0:
             print('FLDIGI_IO - SET_VFO: rx=',rx,'\ttx=',tx,'\top=',op)
-            AB=self.s.rig.get_AB()
-            SP=self.s.rig.get_split()
-            print('\tAB=',AB,'\tSPLIT=',SP)
+            try:
+                AB=self.s.rig.get_AB()
+                time.sleep(DELAY)
+                SP=self.s.rig.get_split()
+                time.sleep(DELAY)
+                print('\tAB=',AB,'\tSPLIT=',SP)
+            except Exception as e: 
+                print('***ERROR *** FLDIGI_IO - SET_VFO - Problem getting vfo status')
+                print('e=',e,'\n')
+                traceback.print_exc()
             
         if self.flrig_active:
 

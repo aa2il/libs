@@ -97,6 +97,7 @@ class SETTINGS_GUI():
         self.root=root
         if root:
             self.win=Toplevel(root)
+            self.hide()
             #print('Top-level')
         else:
             self.win = Tk()

@@ -31,6 +31,7 @@ if sys.version_info[0]==3:
 else:
     import Queue
 import multiprocessing as mp
+import traceback
 
 #######################################################################################
 
@@ -432,8 +433,9 @@ class ring_buffer2:
                 try:
                     xxx = self.buf.get(timeout=1.0)
                 except Exception as e:
-                    print('Ringbuffer 2 PULL: Exception Raised:\n',e)
+                    print('Ringbuffer 2 PULL: Exception Raised:\ne=',e)
                     #print('\tlen(xx)=',len(xx),'\tlen(xxx)=',len(xxx),'\tqsiz=',self.buf.qsize())
+                    traceback.print_exc()
                     break
                 xx = np.concatenate( (xx, xxx) )
                 self.buf.task_done()
@@ -454,8 +456,10 @@ class ring_buffer2:
             self.nsamps -= n
 
         if len(x)!=n:
-            print(self.tag,'Ringbuffer Queue error - expected',n,' samples, got',len(x))
-            sys,exit(1)
+            print(self.tag,'Ringbuffer2 Queue error - expected',n,' samples, got',len(x))
+            xxx = np.zeros(n-len(x), x.dtype)   
+            x = np.concatenate( (x, xxx) )
+            #sys,exit(1)
         #if self.tag=='RF':
             #print self.tag,self.buf.qsize()
 
@@ -666,8 +670,10 @@ def decimate(x,h,ndec):
     K=len(h)
     try:
         xprev = decimate.xprev
-    except AttributeError:
+    except AttributeError as e:
+        print('DECIMATE: Exception Raised:\ne=',e)
         xprev = 0*x[N-K+1:N];
+        traceback.print_exc()
 
     idx=list(range(0,N,ndec))
     y=np.zeros(len(idx), np.float32)
@@ -1819,6 +1825,9 @@ class Receiver:
         self.USE_CIC = False
         #self.USE_CIC = True
 
+        self.muted=False
+        self.nmute = 0
+
         if P.SOURCE[irx]<0 or P.SOURCE[irx]==irx:
             # Data source for this rx is the SDR
             self.fs = P.SRATE
@@ -1882,6 +1891,37 @@ class Receiver:
         self.agc = Gain_Control(P)
         
 
+    def auto_mute(self,x):
+
+        P     = self.P
+        xmax  = np.max( x.real )
+
+        if xmax>0.5:
+            # Turn on muting
+            mute = True
+            self.muted=True
+            self.nmute = 0
+            print('MUTING ON - xmax=',xmax)
+        elif self.muted:
+            # Already muted but data suggests we can un-mute
+            if self.nmute<P.MUTE_CHUNKS:
+                # Keep muted since we havent been muted long enough
+                self.nmute += 1
+                mute=True
+            else:
+                # We've been muted long enough - un-mute
+                self.muted=False
+                self.nmute = 0
+                mute = False
+        else:
+            # Stay un-muted
+            mute = False
+
+        #print('xmax=',xmax,mute)
+
+        return mute
+
+        
     def demod_data(self,x):
 
         P     = self.P

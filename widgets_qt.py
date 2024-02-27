@@ -25,9 +25,8 @@ if False:
     from PyQt4.QtCore import * 
 else:
     # use Qt5
-    from PyQt5.QtWidgets import QLCDNumber,QLabel
+    from PyQt5.QtWidgets import QLCDNumber,QLabel,QSplashScreen,QRadioButton
     from PyQt5.QtCore import * 
-    from PyQt5.QtWidgets import QSplashScreen
     from PyQt5.QtGui import QPixmap
 
 ################################################################################
@@ -140,6 +139,8 @@ class SPLASH_SCREEN():
     def destroy(self):
         self.splash.destroy()
         
+################################################################################
+
 # Status Bar
 class StatusBar():
     def __init__(self,root,nrows):
@@ -170,4 +171,18 @@ class StatusBar():
 
 ################################################################################
 
+# LED-like indicator
+class LED(QRadioButton):
+    def __init__(self,txt='',color=None,parent=None):
+        QRadioButton.__init__(self,txt,parent)
+        if color:
+            self.setColor(color)
+        
+    def setColor(self,color):
+        self.setStyleSheet("QRadioButton::indicator:unchecked {"
+                           "background-color: "+color+";"  
+                           "border: 2px solid gray; "
+                           "border-radius: 10px; "
+                           "}")
 
+        
