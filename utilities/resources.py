@@ -154,7 +154,13 @@ def get_Host_Name_IP():
         print("Unable to get Hostname and IP")
 
     return host_name,host_ip
- 
+
+# Test ability to ping a host
+# Note - On windoz, use -n instead of -c 
+def ping_test(host):
+    response = os.system("ping -c 1 " + host)
+    return response == 0
+
 ############################################################################
 
 # Routine to get PID of a process by name

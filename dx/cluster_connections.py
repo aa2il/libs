@@ -73,11 +73,15 @@ def connection(TEST_MODE,CLUSTER,MY_CALL,fname=None,ip_addr=None,port=None):
             line=''
             ready=False
             while not Done:
-                if len(line)==0:
-                    txt = tn.read_some()
-                else:
-                    txt = tn.read_eager()
-                #if sys.version_info[0]==3:
+                try:
+                    if len(line)==0:
+                        txt = tn.read_some()
+                    else:
+                        txt = tn.read_eager()
+                except Exception as e: 
+                    print(e)
+                    print("Cluster Connect Failed for ",CLUSTER)
+                    return None
                 txt=txt.decode("utf-8") 
                 #print( '===>',txt.rstrip(),txt=='')
                 if txt=='':
