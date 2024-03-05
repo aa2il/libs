@@ -79,6 +79,7 @@ class fldigi_xlmrpc(direct_connect):
         self.tag        = tag
         self.connection = ''
         self.lock       = threading.Lock()             # Avoid collisions between various threads
+        self.lock2      = threading.Lock()             # Avoid collisions between various threads
 
         self.wpm        = 0
         self.freq       = 0
@@ -584,7 +585,13 @@ class fldigi_xlmrpc(direct_connect):
                 print('***ERROR *** FLDIGI_IO - SET_VFO - Problem getting vfo status')
                 print('e=',e,'\n')
                 traceback.print_exc()
-            
+
+        # Acquire lock
+        acq=self.lock2.acquire(timeout=1.0)
+        if not acq:
+            print('FLDIGI SET VFO: Failed to acquire lock2')
+            return
+                
         if self.flrig_active:
 
             if self.rig_type2=='FT991a':
@@ -599,6 +606,7 @@ class fldigi_xlmrpc(direct_connect):
                     print('***ERROR *** FLDIGI_IO - SET_VFO - Problem setting RX vfo:',rx,tx)
                     print('e=',e,'\n')
                     traceback.print_exc()
+                    self.lock2.release()
                     return
             else:
                 rx=self.s.rig.get_AB()
@@ -665,7 +673,8 @@ class fldigi_xlmrpc(direct_connect):
             AB=self.s.rig.get_AB()
             SP=self.s.rig.get_split()
             print('\tAB=',AB,'\tSPLIT=',SP)
-            
+
+        self.lock2.release()
         return
 
 
