@@ -27,7 +27,7 @@ import csv
 from collections import OrderedDict
 from zipfile import ZipFile
 from io import TextIOWrapper
-import traceback
+from utilities import error_trap
 
 import time
 import numpy as np
@@ -119,7 +119,7 @@ def parse_simple_log(fn,args):
                 try:
                     qso[tags[i].lower()] = row[i]
                 except:
-                    print('Problem parsing simple log - probably caused by bad header line')
+                    error_trap('Problem parsing simple log - probably caused by bad header line')
                     sys.exit(0)
                     
             if args.naqpcw or args.naqprtty or args.cwops:
@@ -299,7 +299,7 @@ def write_adif_record(fp,rec,P,long=False,sort=True,VERBOSITY=0):
         try:
             qso['QSO_DATE'] = qso['QSO_DATE_OFF']
         except:
-            print('FILE_IO - WRITE ADIF REC - Cant figure out QSO Date - giving up')
+            error_trap('FILE_IO->WRITE ADIF REC - Cant figure out QSO Date - giving up')
             print('qso=',qso)
             sys,exit(0)
             

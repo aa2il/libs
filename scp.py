@@ -2,7 +2,7 @@
 ############################################################################################
 #
 # scp.py - Rev 1.0
-# Copyright (C) 2022-3 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2022-4 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Class to make use of Super Check Partial Database
 #

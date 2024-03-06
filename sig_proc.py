@@ -1,7 +1,7 @@
 #######################################################################################
 #
 # Signal Processing - Rev 1.0
-# Copyright (C) 2021-3 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Various routines/objects related to sig processing, demodulation and digital receivers
 #
@@ -23,7 +23,6 @@ import numpy as np
 import scipy.signal as signal
 import pyaudio
 import sys
-#from fractions import gcd            # No longer available on RPi?
 from math import gcd
 import time
 if sys.version_info[0]==3:
@@ -31,7 +30,7 @@ if sys.version_info[0]==3:
 else:
     import Queue
 import multiprocessing as mp
-import traceback
+from utilities import error_trap
 
 #######################################################################################
 
@@ -432,10 +431,8 @@ class ring_buffer2:
                 #xxx = self.buf.get()
                 try:
                     xxx = self.buf.get(timeout=1.0)
-                except Exception as e:
-                    print('Ringbuffer 2 PULL: Exception Raised:\ne=',e)
-                    #print('\tlen(xx)=',len(xx),'\tlen(xxx)=',len(xxx),'\tqsiz=',self.buf.qsize())
-                    traceback.print_exc()
+                except:
+                    error_trap('Ringbuffer 2 PULL: ????',1)
                     break
                 xx = np.concatenate( (xx, xxx) )
                 self.buf.task_done()
@@ -670,10 +667,9 @@ def decimate(x,h,ndec):
     K=len(h)
     try:
         xprev = decimate.xprev
-    except AttributeError as e:
-        print('DECIMATE: Exception Raised:\ne=',e)
+    except:
+        error_trap('DECIMATE: ????',1)
         xprev = 0*x[N-K+1:N];
-        traceback.print_exc()
 
     idx=list(range(0,N,ndec))
     y=np.zeros(len(idx), np.float32)
