@@ -385,7 +385,7 @@ class ring_buffer2:
         self.prev   = np.array([])      # Overlap from pervious call
         self.last_push = 0
 
-
+    # Function to push a bunch of zeros into the buffer
     def push_zeros(self,n):
         x = np.array(n*[0.],dtype=self.dtype)
         self.nsamps += n
@@ -413,7 +413,7 @@ class ring_buffer2:
             print('Ringbuffer2: Push overflow - tag=',self.tag,
                   '\tnsamps=',self.nsamps,'\tlen(x)=',self.last_push,
                   '\tBuffer size=',self.size)
-            self.nsamps -= int( self.size/2 )
+            self.pull(int( self.size/2 ))
        
     def pull(self,n,flush=False):
 
