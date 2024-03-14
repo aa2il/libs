@@ -441,14 +441,42 @@ def get_status(self):
 ############################################################################################
 
 # Function to manipulate VFOs
+# Attempting t use flrig commands but so far no very stable
 def SetVFO(self,cmd):
     s=self.sock
-    print('SetVFO - cmd=',cmd,'\t',s.rig_type,'\t',s.rig_type1)
+    print('SOCKET IO->SetVFO: cmd=',cmd,'\t',s.rig_type,'\t',s.rig_type1)
+
+    if cmd=='A':
+        if s.rig_type1=='Icom':
+            print('SetVFO - Select A - Not implemented on ICOM rigs yet')
+        else:
+            self.sock.get_response("BY;FR0;FT2;")
     
-    if cmd in ['A','B']:
-        s.set_vfo(cmd)
-    elif cmd in ['A->B','A<->B']:
-        s.set_vfo(op=cmd)
+    elif cmd=='B':
+        if s.rig_type1=='Icom':
+            print('SetVFO - Select A - Not implemented on ICOM rigs yet')
+        else:
+            self.sock.get_response("BY;FR4;FT3;")
+    
+    elif cmd in ['A','B']:
+        for itry in range(5):
+            s.set_vfo(cmd)
+            time.sleep(DELAY)
+            s.split_mode(0)
+            time.sleep(DELAY)
+            vfo = s.get_vfo()
+            time.sleep(DELAY)
+            print('SOCKET IO->SetVFO: cmd=',cmd,'\titry=',itry,'\tvfo=',vfo)
+            if vfo==cmd:
+                break
+        ClarReset(self,True)
+        time.sleep(DELAY)
+            
+    #elif cmd in ['SPLIT']:
+    #    s.set_vfo(rx='A',tx='B')
+    #elif cmd in ['A->B','A<->B']:
+    #    s.set_vfo(op=cmd)
+    
     elif cmd=='A->B':
         if s.rig_type1=='Icom':
             print('SetVFO - Select A->B - Not implemented on ICOM rigs yet')
@@ -464,11 +492,11 @@ def SetVFO(self,cmd):
             print('SetVFO - Select A<->B - Not implemented on ICOM rigs yet')
         else:
             self.sock.get_response("BY;SV;")
-    #elif cmd=='SPLIT':
-    #    if s.rig_type1=='Icom':
-    #        print('SetVFO - Select SPLIT - Not implemented on ICOM rigs yet')
-    #    else:
-    #        self.sock.get_response("BY;SV;")
+    elif cmd=='SPLIT':
+        if s.rig_type1=='Icom':
+            print('SetVFO - Select SPLIT - Not implemented on ICOM rigs yet')
+        else:
+            self.sock.get_response("BY;FT3;")
     elif cmd=='TXW':
         if s.rig_type1=='Icom':
             print('SetVFO - TXW - Not implemented on ICOM rigs yet')
@@ -484,8 +512,9 @@ def SetVFO(self,cmd):
 
 # Function to reset clarifier
 def ClarReset(self,RXClarOn=False):
+    VERBOSITY=1
     if VERBOSITY>0:
-        print('Clarifier reset ...')
+        print('Clarifier reset ...',RXClarOn)
     if self.sock.rig_type1=='Kenwood' or self.sock.rig_type1=='Icom':
         print('CLARIFIER RESET not available in',self.sock.rig_type,'command set')
         return
@@ -502,7 +531,20 @@ def ClarReset(self,RXClarOn=False):
         else:
             cmd="BY;RC;RT0;XT0;"
         self.sock.get_response(cmd)
+        #self.sock.set_sub_dial('CLAR')
+        time.sleep(DELAY)
+        SetSubDial(self)
+    if VERBOSITY>0:
+        print('Clarifier reset done.')
 
+# Function to set sub=dial on FTdx3000
+def SetSubDial(self,opt='CLAR'):
+    VERBOSITY=1
+    if VERBOSITY>0:
+        print('Setting Sub-dial ...',opt)
+    self.sock.set_sub_dial(opt)
+
+        
 # Function to set TX split
 def SetTXSplit(self,df_kHz,onoff=True):
     max_df=9999

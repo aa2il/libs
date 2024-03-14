@@ -1544,9 +1544,7 @@ class direct_connect:
 
         # The FT991a always uses VFO A for receiver while the FTdx3000
         # can use either VFO.  For now, we assume the RX is on VFO A
-        # for both rigs since I primarily want to use this for satcom.
-        #- need to update this
-        #if self.rig_type2=='FT991a':
+        # for both rigs.
         if self.rig_type=='Yaesu':
         
             if opt==-1:

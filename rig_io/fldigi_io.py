@@ -26,7 +26,6 @@
 #
 ############################################################################################
 
-import traceback
 import sys
 if sys.version_info[0]==3:
     from xmlrpc.client import ServerProxy, Error
@@ -39,6 +38,7 @@ import threading
 import time
 import socket
 from .ft_tables import DELAY, Decode_Mode, modes
+from utilities import error_trap
 import re
 from .icom_io import icom_civ, show_hex
 
@@ -192,9 +192,8 @@ class fldigi_xlmrpc(direct_connect):
                 self.flrig_probe()
                 if self.flrig_active:
                     print("Connected to FLRIG")
-            except Exception as e: 
-                print( str(e) )
-                print(tag,": Unable to open FLDIGI/FLRIG")
+            except: 
+                error_trap('FLDIGI IO->OPEN: tag='+tag+' Unable to open FLDIGI/FLRIG')
 
         # Determine which rig is on the other end
         self.active = self.fldigi_active or self.flrig_active
@@ -215,7 +214,7 @@ class fldigi_xlmrpc(direct_connect):
 
         if self.flrig_active :
             self.get_rig_type()
-
+            
             # Probing around ...
             """
             info = self.s.rig.get_info()
@@ -378,6 +377,7 @@ class fldigi_xlmrpc(direct_connect):
             print('FLDIGI_IO: GET_FREQ vfo=',VFO)
         
         if self.fldigi_active:
+            
             if VFO=='A':
                 acq=self.lock.acquire(timeout=1.0)
                 if acq:
@@ -391,10 +391,12 @@ class fldigi_xlmrpc(direct_connect):
                 try:
                     x = float(buf[2:-1])
                 except:
-                    print('$$$$$$$$$$$$ Problem with FLDIGI GET_FREQ $$$$$$$$$$$$$$$$')
-                    print('buf=',buf)
+                    error_trap('FLDIGI IO->GET_FREQ ????????')
+                    print('\tbuf=',buf)
                     x=0
+                    
         elif self.flrig_active:
+            
             #print('GET_FREQ:',VFO)
             self.lock.acquire()
             try:
@@ -415,9 +417,8 @@ class fldigi_xlmrpc(direct_connect):
                 else:
                     print('FLDIGI_IO GET_FREQ - Invalid VFO:',VFO)
                     x=0
-            except Exception as e: 
-                print('FLDIGI_IO GET FREQ - Unexpected error')
-                print(e)
+            except: 
+                error_trap('FLDIGI IO->GET FREQ - Unexpected error')
                 x=0
             self.lock.release()
             #buf = self.get_response('F'+VFO+';')
@@ -434,6 +435,7 @@ class fldigi_xlmrpc(direct_connect):
             
         f=float( 1000*frq_KHz )
         if self.fldigi_active:
+            
             if VFO=='A':
                 acq=self.lock.acquire(timeout=1.0)
                 if acq:
@@ -444,7 +446,9 @@ class fldigi_xlmrpc(direct_connect):
             else:
                 cmd='BY;F'+VFO+str(int(f)).zfill(8)+';'
                 self.send(cmd)
+                
         elif self.flrig_active:
+            
             self.lock.acquire()
             if VFO=='A':
                 self.s.rig.set_vfoA(f)
@@ -522,9 +526,8 @@ class fldigi_xlmrpc(direct_connect):
                         m=self.s.rig.get_modeA()
                     else:
                         m=self.s.rig.get_modeB()
-            except Exception as e: 
-                print('*** ERROR *** FLDIGI_IO - GET_MODE - Problem getting vfo')
-                print(e)
+            except: 
+                error_trap('FLDIGI IO->GET_MODE - Problem getting vfo')
                 m=''
             self.lock.release()
         else:
@@ -543,7 +546,7 @@ class fldigi_xlmrpc(direct_connect):
             else:
                 if not self.flrig_active:
                     print('*** FLDIGI_IO: Warning - unable to read modem name ***')
-                m=self.s.rig.get_mode()
+            m=self.s.rig.get_mode()
             self.lock.release()
         else:
             print('FLDIGI GET FLDIGI FREQ: Failed to acquire lock')
@@ -562,9 +565,8 @@ class fldigi_xlmrpc(direct_connect):
                 if VERBOSITY>0:
                     print('FLDIGI_IO: GET_VFO ',vfo)
                 return vfo
-            except Exception as e: 
-                print('*** ERROR *** FLDIGI_IO - GET_VFO - Problem getting vfo')
-                print(e)
+            except: 
+                error_trap('FLDIGI IO->GET_VFO - Problem getting vfo')
                 return 'AA'
         else:
             # Dummied up for now
@@ -581,17 +583,15 @@ class fldigi_xlmrpc(direct_connect):
                 SP=self.s.rig.get_split()
                 time.sleep(DELAY)
                 print('\tAB=',AB,'\tSPLIT=',SP)
-            except Exception as e: 
-                print('***ERROR *** FLDIGI_IO - SET_VFO - Problem getting vfo status')
-                print('e=',e,'\n')
-                traceback.print_exc()
+            except: 
+                error_trap('FLDIGI IO->SET_VFO - Problem getting vfo status')
 
         # Acquire lock
         acq=self.lock2.acquire(timeout=1.0)
         if not acq:
             print('FLDIGI SET VFO: Failed to acquire lock2')
             return
-                
+            
         if self.flrig_active:
 
             if self.rig_type2=='FT991a':
@@ -602,15 +602,20 @@ class fldigi_xlmrpc(direct_connect):
                     self.s.rig.set_AB(rx)
                     #self.s.rig.set_verify_AB('A')           # These verify commands don't seem to work at all!
                     time.sleep(DELAY)
-                except Exception as e: 
-                    print('***ERROR *** FLDIGI_IO - SET_VFO - Problem setting RX vfo:',rx,tx)
-                    print('e=',e,'\n')
-                    traceback.print_exc()
+                except: 
+                    error_trap('FLDIGI IO->SET_VFO - Problem setting RX vfo:')
+                    print('\trx/tx=',rx,tx)
                     self.lock2.release()
                     return
             else:
-                rx=self.s.rig.get_AB()
-                time.sleep(DELAY)
+                try:
+                    rx=self.s.rig.get_AB()
+                    time.sleep(DELAY)
+                except: 
+                    error_trap('FLDIGI IO->SET_VFO - Problem reading RX vfo:')
+                    print('\trx/tx=',rx,tx)
+                    self.lock2.release()
+                    return
                 
             if tx:
                 if rx==tx:
@@ -620,15 +625,23 @@ class fldigi_xlmrpc(direct_connect):
             else:
                 tx=rx
                 opt=0
-            self.s.rig.set_split(opt)
-            #self.s.rig.set_verify_split(opt)
-            time.sleep(DELAY)
+            try:
+                self.s.rig.set_split(opt)
+                #self.s.rig.set_verify_split(opt)
+                time.sleep(DELAY)
+            except: 
+                error_trap('FLDIGI IO->SET_VFO - Problem setting split:')
+                print('\trx=',rx,'\ttx=',tx,'\topt=',opt)
+                self.lock2.release()
+                return
 
             if True:
+                ###################################################################################
                 # FLRIG doesn't quite handle this correctly so fudge it for now.
                 # Buttons on FLRIG work fine but not XML commands.  Need to 
                 # dig through source sometime...
-                #if self.rig_type2 == 'FTdx3000':
+                ###################################################################################
+
                 if self.rig_type1 == 'Yaesu':
                     time.sleep(2*DELAY)
                     self.set_vfo_direct(rx,tx)
@@ -649,20 +662,30 @@ class fldigi_xlmrpc(direct_connect):
                     #print('cmd=',cmd,'\tbuf=',buf)
                     #time.sleep(DELAY)
                     """
-                    
+
             if op:
                 if op=='A->B':
                     #cmd='BY;AB;' 
                     print('FLDIGI_IO->SET VFO: A -> B')
-                    self.s.rig.vfoA2B()
+                    try:
+                        self.s.rig.vfoA2B()
+                    except: 
+                        error_trap('FLDIGI IO->SET_VFO - Problem copying A to B')
+                        self.lock2.release()
+                        return
                 elif op=='B->A':
                     #cmd='BY;BA;'
                     print('FLDIGI_IO->SET VFO - HELP!!!!')
                 elif op=='A<->B':
                     #cmd='BY;SV;'
                     print('FLDIGI_IO->SET VFO: Swap')
-                    self.s.rig.swap()
-                time.sleep(DELAY)
+                    try:
+                        self.s.rig.swap()
+                        time.sleep(DELAY)
+                    except: 
+                        error_trap('FLDIGI IO->SET_VFO - Problem swapping')
+                        self.lock2.release()
+                        return
 
         else:
             
@@ -703,7 +726,7 @@ class fldigi_xlmrpc(direct_connect):
                 if 'PSK-U' in self.available_modes:
                     mode='PSK-U' 
                 else:
-                    mode='PKT-U' 
+                    mode='PKT-U'    
             else:
                 mode='PKT-U'           # Another inconsistency vs version???
                 
@@ -844,7 +867,7 @@ class fldigi_xlmrpc(direct_connect):
                         self.s.log.set_exchange(fields['Exchange'])
                     else:
                         print('SET_LOG_FIELD: %%% Unknwon log field %%%%%%%%%% ',key)
-                self.lock.release()
+                    self.lock.release()
             print('SET_LOG_FIELDS: Done.')
 
     # Function to get log fields
@@ -921,12 +944,10 @@ class fldigi_xlmrpc(direct_connect):
                 else:
                     self.reply = reply
                 #print('SEND: reply=',self.reply)
-            except Exception as e: 
-                print("\n**** FLDIGI SEND FAILURE ***\ncmd=",cmd2,'\nreply=',reply)
-                print('e=',e,'\n')
+            except: 
+                error_trap('FLDIGI IO->SEND FAILURE')
+                print('\tcmd=',cmd2,'\nreply=',reply)
                 #print('reply=',reply,'\n',show_hex(reply) )
-                traceback.print_exc()
-                #traceback.print_exception(*sys.exc_info())
                 self.reply = ''
         else:
             self.reply = ''
@@ -956,9 +977,16 @@ class fldigi_xlmrpc(direct_connect):
         #VERBOSITY=1
         if VERBOSITY>0:
             print('FLDIGI GET_RESPONSE: Sending CMD ... ',cmd)
+            
         #print('Waiting for lock')
         #self.lock.acquire()
-        self.send(cmd)
+        
+        if len(cmd)>0:
+            self.send(cmd)
+        else:
+            print('FLDIGI GET_RESPONSE: Unexpected NULL CMD ... ',cmd,len(cmd))
+            return ''
+
         if VERBOSITY>0:
             print('Waiting for response ...')
         if self.rig_type1 == "Icom":
@@ -966,9 +994,9 @@ class fldigi_xlmrpc(direct_connect):
         else:
             try:
                 buf = self.recv(1024).rstrip()
-            except Exception as e: 
-                print( str(e) )
-                print( 'FLDIGI/RIG IO - GET RESPONSE: Error reading response for cmd=',cmd)
+            except: 
+                error_trap('FLDIGI IO->GET RESPONSE: Error reading response',1)
+                print('\tcmd=',cmd,'\t=len=',len(cmd))
                 buf=''
 
         if VERBOSITY>0:
@@ -1075,7 +1103,7 @@ class fldigi_xlmrpc(direct_connect):
     def split_mode(self,opt):
         if VERBOSITY>0:
             print('FLDIGI_IO - SPLIT_MODE: opt=',opt)
-            
+
         if self.fldigi_active:
             print('FLDIGI_IO: SPLIT_MODE not available yet for FLDIGI')
             return
@@ -1271,7 +1299,7 @@ class fllog_xlmrpc:
                 hlp = self.s.system.methodHelp(m)
                 print(hlp)
             except:
-                print('No help available for method',m)
+                error_trap('FLDIGI IO->FLLOG PROBE - No help available for method -'+m)
 
         print('\nGET RECORD:')
         #rec = self.s.log.get_record('AA2IL')

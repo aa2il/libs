@@ -413,8 +413,9 @@ class ring_buffer2:
             print('Ringbuffer2: Push overflow - tag=',self.tag,
                   '\tnsamps=',self.nsamps,'\tlen(x)=',self.last_push,
                   '\tBuffer size=',self.size)
-            self.pull(int( self.size/2 ))
-       
+            if self.tag=='AF':
+                self.pull(int( self.size/2 ))
+            
     def pull(self,n,flush=False):
 
         #if self.tag=='Audio1':
