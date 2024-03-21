@@ -47,6 +47,15 @@ def read_settings(fname,attr=None):
         
         with open(RCFILE) as json_data_file:
             SETTINGS = json.load(json_data_file)
+
+        for a in KEYER_ATTRIBUTES:
+            attrib='MY_'+a.upper().replace(' ','_')
+            if attrib not in SETTINGS:
+                SETTINGS[attrib]=''                
+            #print(attrib,'\t:\t',SETTINGS[attrib])
+        
+        #print('Settings:',SETTINGS)
+        #sys.exit(0)
             
     else:
         
@@ -88,7 +97,8 @@ class CONFIG_PARAMS:
 #########################################################################################
 
 KEYER_ATTRIBUTES = ['Call','Name','State','Sec','Cat','Grid','City','County',
-                    'CQ Zone','ITU Zone','Prec','Check','Club','SKCC','FISTS','CWops',
+                    'CQ Zone','ITU Zone','Prec','Check','Club',
+                    'CWops','SKCC','FISTS','FOC',
                     'Rig','Ant','Age','Ham Age','Occupation']
 
 class SETTINGS_GUI():

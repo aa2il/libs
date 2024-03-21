@@ -520,10 +520,15 @@ def ClarReset(self,RXClarOn=False):
         return
     if self.sock.rig_type=='Hamlib' and True:
         # These arent working quite right in latest hamlib - patched
-        self.sock.get_response('U RIT 0')
+        print('\n**** WARNING **** CLARIFIER RESET is flaky in hamlib - needs some attention! ***\n')
+        if RXClarOn:
+            self.sock.get_response('U RIT 1')
+        else:
+            self.sock.get_response('U RIT 0')
         self.sock.get_response('U XIT 0')
         self.sock.get_response("J 0")
         self.sock.get_response("Z 0")
+        self.sock.get_response("J 0")             # THis is the problem child and needs to be repeated for some reason
     else:
         # Yaesu rigs
         if RXClarOn:

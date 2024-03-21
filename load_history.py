@@ -51,7 +51,7 @@ def load_history(history,DEBUG_CALL=None):
     HIST = OrderedDict()
     ALL_FIELDS=['name','state','sec','check','county','cwops',       \
                 'fdcat','fdsec','ituz','cqz','grid','skccnr','city', \
-                'fistsnr','names','status']
+                'fistsnr','foc','names','status']
 
     # If no history file, we're done
     if history=='':
@@ -226,6 +226,8 @@ def load_history(history,DEBUG_CALL=None):
                                 key='cqz'
                             elif fname[:6]=='CWOPS_' and key=='exch1':
                                 key='cwops'
+                            elif fname=='foc.txt' and key=='exch1':
+                                key='foc'
                             elif fname[:8]=='K1USNSST' and key=='exch1':
                                 key='state'
                             elif key=='loc1':

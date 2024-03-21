@@ -369,7 +369,7 @@ class ring_buffer3:
                 
 # Defines a ring buffer object - this works fine for a threaded pragma but not for multiprocessing
 class ring_buffer2:
-    def __init__(self,tag,n,block=False):
+    def __init__(self,tag,n,block=False,PREVENT_OVERFLOW=True):
 
         # data_type can be np.float32,np.complex64, etc.
 
@@ -384,6 +384,7 @@ class ring_buffer2:
         self.block  = block   # If true, block on over/underflows
         self.prev   = np.array([])      # Overlap from pervious call
         self.last_push = 0
+        self.no_overflow=PREVENT_OVERFLOW
 
     # Function to push a bunch of zeros into the buffer
     def push_zeros(self,n):
@@ -413,7 +414,8 @@ class ring_buffer2:
             print('Ringbuffer2: Push overflow - tag=',self.tag,
                   '\tnsamps=',self.nsamps,'\tlen(x)=',self.last_push,
                   '\tBuffer size=',self.size)
-            if self.tag=='AF':
+            if self.no_overflow:
+                print('\tDumping half the buffer...')
                 self.pull(int( self.size/2 ))
             
     def pull(self,n,flush=False):

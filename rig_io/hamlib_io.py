@@ -1,7 +1,7 @@
 ############################################################################################
 #
 # Hamlib Rig IO - Rev 1.0
-# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Socket I/O routines related to commanding the radio via hamlib.
 #
@@ -230,6 +230,11 @@ class hamlib_connect(direct_connect):
             cmd2='w '+cmd[:-1]+'\n'
             if VERBOSITY>0:
                 print('HAMLIB GET_RESPONSE: Sending Yaesu/Kenwood',cmd2)
+            print('HAMLIB GET_RESPONSE: Yaesu/Kenwood direct commands not yet supported - whoops!',cmd2)
+            if False:
+                if USE_LOCK:
+                    self.lock.release()
+                return ''
             self.send(cmd2)
         elif cmd[0].lower() in 'fmtvy1_':
             if VERBOSITY>0:
@@ -284,7 +289,7 @@ class hamlib_connect(direct_connect):
 
     
     def get_freq(self,VFO='A'):
-        VERBOSITY=0
+        #VERBOSITY=0
         if VERBOSITY>0:
             print('HAMLIB_IO: GET_FREQ: vfo=',VFO)
         if self.rig_type1 == 'Icom' or False:
@@ -387,76 +392,71 @@ class hamlib_connect(direct_connect):
         print('HAMLIB_IO SET_BAND:',buf)
 
     def set_mode(self,mode,VFO='A',Filter=None):
-        VERBOSITY=1
+        #VERBOSITY=1
         if VERBOSITY>0:
-            print('HAMLIB_IO - SET MODE: mode=',mode,'\tVFO=',VFO)
+            print('HAMLIB_IO - SET MODE: mode=',mode,'\tVFO=',VFO,'\tFilter=',Filter)
 
+        bw=None
+        if Filter and type(Filter) is list:
+            bw=Filter[1]
+            Filter=Filter[0]
+            
         if mode==None:
             return
         elif mode=='RTTY' or mode=='DIGITAL' or mode=='FT8' or mode.find('PSK')>=0 or mode.find('JT')>=0:
             #mode='RTTY'
             mode='PKTUSB'
+            if not bw:
+                bw=2400
         elif mode=='CWUSB' or mode=='CW-USB':
             mode='CW'
+            if not bw:
+                if Filter=='Wide':
+                    bw=500
+                else:
+                    bw=200
         elif mode=='CWLSB' or mode=='CW-LSB' or mode=='CW-R':
             mode='CWR'
-
-        if self.rig_type1 == 'SDR' or self.rig_type1 == 'Icom' or self.rig_type2=='FT991a'  or \
-           self.rig_type2=='Dummy' or True:
-            if VFO in 'AM':
-                cmd  = 'M '+mode+' 0'
-            elif VFO in 'BS':
-                cmd  = 'X '+mode+' 0'
-            else:
-                print('HAMLIB_IO - SET MODE: Unknown VFO',VFO,mode)
-                return
-
+            if not bw:
+                if Filter=='Wide':
+                    bw=500
+                else:
+                    bw=200
         else:
-            # Not sure why we're treating this special - perhaps need to reset VFO on ftdx3000?
-            # Disabled for now - let's see how if works
-            vfo1=self.get_vfo()[0]
-            if vfo1!=VFO:
-                self.select_vfo(VFO)
-            c = modes[mode]["Code"]
-            if mode=='SSB':
-                b=self.get_band()
-                if b>=30:
-                    c='01'
-            cmd  = 'BY;MD'+c+';'
-            print('HAMLIB_IO - SET MODE:',mode,c,cmd,vfo1)
-            
+            if not bw:
+                bw=2400
+
+        # Form hamlib command
+        if VFO in 'AM':
+            # VFO A or Main
+            cmd  = 'M '+mode+' '+str(bw)
+        elif VFO in 'BS':
+            # VFO B or Sub
+            cmd  = 'X '+mode+' '+str(bw)
+        else:
+            print('HAMLIB_IO - SET MODE: Unknown VFO',VFO,mode)
+            return
+
+        # Send command to set mode & filter BW
         buf=self.get_response(cmd)
         if VERBOSITY>0:
             print('HAMLIB_IO - SET MODE: mode,VFO=',mode,VFO,'\tcmd=',cmd)
-            print('HAMLIB_IO - SET MODE: buf=',buf)
+            print('HAMLIB_IO - SET MODE: Response buf=',buf)
 
-        # Hamlib should have this native capability but it doesn't seem to work
-        if self.rig_type1 == 'Yaesu':
-            if mode=='CW':
-                if VERBOSITY>0:
-                    print('HAMLIB_IO - SET MODE: Setting filter for CW:',Filter)
-                if Filter=='Wide':
-                    buf=self.get_response('BY;NA00;')
-                else:
-                    buf=self.get_response('BY;NA01;')
-                if VERBOSITY>0:
-                    print('HAMLIB_IO - SET MODE: buf=',buf)
-            if False and self.rig_type2=='FTdx3000' and vfo1!=VFO:
-                # Disabled for now - let's see if this works
-                print('HAMLIB_IO - Set mode - Selecting VFO: vfo1=',vfo1,VFO)
-                self.select_vfo(vfo1)
-
+        
                 
     def get_mode(self,VFO='A'):
-        #VERBOSITY=1
+        VERBOSITY=1
         if VERBOSITY>0:
             print('HAMLIB_IO: Get mode - vfo=',VFO)
-        
+
+        use_direct=True
+            
         if VFO=='A':
             cmd  = 'm'
         elif VFO=='B':
             # Hamlib interrupts the rig so do it using direct commands instead
-            if self.rig_type1=='Yaesu':
+            if self.rig_type1=='Yaesu' and use_direct:
                 cmd = 'OI;'
                 if self.rig_type2=='FT991a':
                     idx = 21
@@ -472,7 +472,7 @@ class hamlib_connect(direct_connect):
         if VERBOSITY>0:
             print('HAMLIB_IO: GET_MODE: cmd=',cmd,'\tbuf=',buf)
 
-        if VFO=='B' and self.rig_type1=='Yaesu':
+        if VFO=='B' and self.rig_type1=='Yaesu' and use_direct:
             print('idx=',idx)
             mode = Decode_Mode( buf[idx] )
         else:
@@ -483,7 +483,35 @@ class hamlib_connect(direct_connect):
             print('HAMLIB_IO: Get Mode',cmd,mode)
         return mode
 
+
+    def set_filter(self,filt,mode=None):
+        #VERBOSITY=1
+        if VERBOSITY>0:
+            print('\nHAMLIB_IO SET_FILTER: filt=',filt,'\tmode=',mode,mode[0:2])
+
+        if mode==None:
+            mode=self.get_mode()
+            
+        if filt in ['Auto','Narrow','Wide']:
+            if mode in ['USB','SSB','LSB']:
+                filt=['Wide','2400']
+            elif mode[0:2]=='CW':
+                filt=['Narrow','200']           # Was 500
+            elif mode in ['RTTY','DATA']:
+                filt=['Wide','3000']
+            elif filt=='Auto':
+                filt=['Wide']
+                
+        if not type(filt) is list:
+            filt=[filt]
         
+        if VERBOSITY>0:
+            print('\nHAMLIB_IO SET_FILTER: filt=',filt,'\tmode=',mode)
+
+        self.set_mode(mode,Filter=filt)
+        #sys.exit(0)
+        
+    
     def get_ant(self):
         #VERBOSITY=1
         if VERBOSITY>0:
@@ -751,7 +779,7 @@ class hamlib_connect(direct_connect):
             
     # Set rotor position
     def set_position(self,pos):
-        VERBOSITY=1
+        #VERBOSITY=1
         if VERBOSITY>0:
             print('\nHAMLIB - SET_POSITION: pos=',pos)
         if pos[0]==None or pos[1]==None:
@@ -802,7 +830,7 @@ class hamlib_connect(direct_connect):
             
     # Routine to put rig into split mode
     def split_mode(self,opt):
-        VERBOSITY=1
+        #VERBOSITY=1
         if VERBOSITY>0:
             print('HAMLIB - SPLIT_MODE: opt=',opt)
 
@@ -849,9 +877,9 @@ class hamlib_connect(direct_connect):
             return -1
 
 
-    # Function to get active VFO - only works for FTdx3000 so use direct connect instead for now
-    def get_vfo_hamlib(self):
-        VERBOSITY=1
+    # Function to get active VFO
+    def get_vfo(self):
+        #VERBOSITY=1
         buf = self.get_response('v')
         if VERBOSITY>0:
             print('HAMLIB_IO - GET_VFO: buf=',buf)
@@ -859,7 +887,7 @@ class hamlib_connect(direct_connect):
     
     # Function to set active VFO
     def select_vfo(self,VFO):
-        VERBOSITY=1
+        #VERBOSITY=1
         if VERBOSITY>0:
             print('HAMLIB SELECT_VFO:',VFO,self.rig_type2)
 
@@ -933,7 +961,7 @@ class hamlib_connect(direct_connect):
 
     # Function to get monitor level
     def get_monitor_gain(self):
-        VERBOSITY=1
+        #VERBOSITY=1
         buf = self.get_response('l MONITOR_GAIN')
         if VERBOSITY>0:
             print('HAMLIB_IO - GET_MONITOR_GAIN: buf=',buf)
@@ -942,7 +970,7 @@ class hamlib_connect(direct_connect):
         
     # Function to set monitor level
     def set_monitor_gain(self,gain):
-        VERBOSITY=1
+        #VERBOSITY=1
         #print('gain=',gain)
         cmd  = 'L MONITOR_GAIN '+str(.01*float(gain))
         buf=self.get_response(cmd)
@@ -1006,4 +1034,96 @@ class hamlib_connect(direct_connect):
             print('DIRECT SET_DATE_TIME - Unknown rig',self.rig_type2)
             sys.exit(0)
             
-    
+    def set_power(self,p):
+        if VERBOSITY>0:
+            print('HAMLIB_IO SET_POWER: p=',p)
+
+        p=min(max(p,5),100)
+        cmd = 'L RFPOWER '+str(.01*p)
+        buf=self.get_response(cmd)
+        
+            
+    def set_breakin(self,onoff):
+        if VERBOSITY>0:
+            print('HAMLIB_IO SET_BREAKIN: onoff=',onoff)
+        cmd='U FKBIN '+str(onoff)
+        self.get_response(cmd)
+
+
+    def set_if_shift(self,shift):
+        if VERBOSITY>0:
+            print('HAMLIB_IO SET_IF_SHIFT: shift=',shift)
+        cmd='L IF '+str(shift)
+        buf=self.get_response(cmd)
+
+        
+
+
+    def set_vfo(self,rx=None,tx=None,op=None):
+        VERBOSITY=1
+        if VERBOSITY>0:
+            print('HAMLIB_IO SET_VFO: rx=',rx,'\ttx=',tx,'\top=',op)
+
+        if op=='A->B':
+            cmd='CPY'
+        elif op=='B->A':
+            return
+        elif op=='A<->B':
+            cmd='XCHG'
+        
+        else:
+            
+            if self.rig_type2=='FT991a' and rx!='A':
+                print('HAMLIB_IO SET_VFO: *** Warning *** RX is always on VFO A for the FT991a *** rx,tx=',rx,tx)
+                rx='A'
+
+            if rx==None and tx==None:
+                print('HAMLIB_IO SET_VFO: Nothing to see here!')
+                return
+                
+            if rx=='A' or rx=='M':
+                rx='M'
+            elif rx=='B' or rx=='S':
+                rx='S'
+            else:
+                rx='M'                
+                
+            if tx=='A' or tx=='M':
+                tx='M'
+            elif tx=='B' or tx=='S':
+                tx='S'
+            else:
+                tx='M'                
+
+            if tx==rx:
+                cmd='S 0 '+tx
+            else:
+                cmd='S 1 '+tx
+            
+        if VERBOSITY>0:
+            print('HAMLIB_IO SET_VFO: cmd=',cmd)
+        buf = self.get_response(cmd)
+        if VERBOSITY>0:
+            print('HAMLIB_IO SET_VFO: buf=',buf)
+
+        
+
+
+    # Set sub-dial function on Yaesu rigs
+    def set_sub_dial(self,func='CLAR'):
+
+        if False:
+            print('HAMLIB_IO: SET_SUB_DIAL not supported yet for Hamlib IO')
+            return 0            
+            
+        if func=='CLAR':
+            cmd='BY;SF5;'
+        elif func=='VFO-B':
+            cmd='BY;SF4;'
+        else:
+            print('HAMLIB_IO - SET_SUB_DIAL - Unknown Function',func)
+            return
+        
+        buf = self.get_response(cmd)
+        return
+            
