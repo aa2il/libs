@@ -1533,7 +1533,7 @@ class direct_connect:
     
 
     # Dummy
-    def modem_carrier(self,frq):
+    def modem_carrier(self,frq=None):
         return 0
 
     # Routine to put rig into split mode

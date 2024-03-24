@@ -417,6 +417,7 @@ class ring_buffer2:
             if self.no_overflow:
                 print('\tDumping half the buffer...')
                 self.pull(int( self.size/2 ))
+                print('\tnsamps=',self.nsamps)
             
     def pull(self,n,flush=False):
 

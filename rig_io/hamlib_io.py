@@ -78,6 +78,7 @@ class hamlib_connect(direct_connect):
         self.tlast     = 0
         self.pl_tone   = 0
         self.rotor     = False
+        self.last_cmd  = ''
         
         try:
             self.s = socket.socket()
@@ -203,7 +204,8 @@ class hamlib_connect(direct_connect):
         
     def send(self,cmd):
         if VERBOSITY>0:
-            print( 'HAMLIB_IO: SENDing '+cmd)
+            print( 'HAMLIB_IO->SEND: cmd='+cmd)
+        self.last_cmd=cmd
         self.s.send(cmd.encode())
     
     def recv(self,n=1024):
@@ -211,7 +213,13 @@ class hamlib_connect(direct_connect):
         x = self.s.recv(n).decode("utf-8") 
         #self.s.settimeout(None)
         if VERBOSITY>0:
-            print('HAMLIB_IO: Recv',x)
+            print('HAMLIB_IO->RECV: x=',x)
+
+        if x[:4]=='RPRT':
+            print('HAMLIB_IO->RECV: x=',x,'\tlen=',len(x),'\tcmd=',self.last_cmd)
+            if int(x.split(' ')[1])<0:
+                print('HAMLIB_IO->RECV: *** Warning *** Error code returned *** cmd=',self.last_cmd,'\tx=',x)
+            
         return x.rstrip()                     # Remove newline at end
 
     def get_response(self,cmd,N=1,wait=False):
@@ -230,7 +238,7 @@ class hamlib_connect(direct_connect):
             cmd2='w '+cmd[:-1]+'\n'
             if VERBOSITY>0:
                 print('HAMLIB GET_RESPONSE: Sending Yaesu/Kenwood',cmd2)
-            print('HAMLIB GET_RESPONSE: Yaesu/Kenwood direct commands not yet supported - whoops!',cmd2)
+            print('HAMLIB GET_RESPONSE: **** Warning - Yaesu/Kenwood direct commands are flaky !!!!!',cmd2)
             if False:
                 if USE_LOCK:
                     self.lock.release()
@@ -242,7 +250,7 @@ class hamlib_connect(direct_connect):
             self.send(cmd+'\n')
         else:
             if VERBOSITY>0:
-                print('HAMLIB_IO: Get Response - not sure what to do????',cmd)
+                print('HAMLIB_IO: Get Response - **** Warning - not sure what to do????',cmd)
             self.send(cmd+'\n')
             
         x=self.recv(N*1024)
@@ -403,19 +411,18 @@ class hamlib_connect(direct_connect):
             
         if mode==None:
             return
-        elif mode=='RTTY' or mode=='DIGITAL' or mode=='FT8' or mode.find('PSK')>=0 or mode.find('JT')>=0:
-            #mode='RTTY'
+        elif mode in ['RTTY','DIGITAL','FT8'] or mode.find('PSK')>=0 or mode.find('JT')>=0:
             mode='PKTUSB'
             if not bw:
                 bw=2400
-        elif mode=='CWUSB' or mode=='CW-USB':
+        elif mode in ['CW','CWUSB','CW-USB']:
             mode='CW'
             if not bw:
                 if Filter=='Wide':
                     bw=500
                 else:
                     bw=200
-        elif mode=='CWLSB' or mode=='CW-LSB' or mode=='CW-R':
+        elif mode in ['CWLSB','CW-LSB','CW-R']:
             mode='CWR'
             if not bw:
                 if Filter=='Wide':
@@ -446,7 +453,7 @@ class hamlib_connect(direct_connect):
         
                 
     def get_mode(self,VFO='A'):
-        VERBOSITY=1
+        #VERBOSITY=1
         if VERBOSITY>0:
             print('HAMLIB_IO: Get mode - vfo=',VFO)
 
@@ -879,7 +886,7 @@ class hamlib_connect(direct_connect):
 
     # Function to get active VFO
     def get_vfo(self):
-        #VERBOSITY=1
+        VERBOSITY=1
         buf = self.get_response('v')
         if VERBOSITY>0:
             print('HAMLIB_IO - GET_VFO: buf=',buf)
@@ -1082,18 +1089,18 @@ class hamlib_connect(direct_connect):
                 return
                 
             if rx=='A' or rx=='M':
-                rx='M'
+                rx='Main'
             elif rx=='B' or rx=='S':
-                rx='S'
+                rx='Sub'
             else:
-                rx='M'                
+                rx='Main'                
                 
             if tx=='A' or tx=='M':
-                tx='M'
+                tx='Main'
             elif tx=='B' or tx=='S':
-                tx='S'
+                tx='Sub'
             else:
-                tx='M'                
+                tx='Main'                
 
             if tx==rx:
                 cmd='S 0 '+tx
