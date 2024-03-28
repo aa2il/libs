@@ -235,7 +235,12 @@ class hamlib_connect(direct_connect):
             # Yaseu/Kenwood command
             #print '************************* HAMLIB_IO: GET_RESPONSE - Direct commands not working yet',cmd
             #return ''
-            cmd2='w '+cmd[:-1]+'\n'
+            #cmd2='w '+cmd[:-1]+'\n'
+            cmd2='w '+cmd[:-1]
+            if cmd2[-1]!=';':
+                cmd2+=';\n'
+            else:
+                cmd2+='\n'
             if VERBOSITY>0:
                 print('HAMLIB GET_RESPONSE: Sending Yaesu/Kenwood',cmd2)
             print('HAMLIB GET_RESPONSE: **** Warning - Yaesu/Kenwood direct commands are flaky !!!!!',cmd2)
@@ -457,7 +462,7 @@ class hamlib_connect(direct_connect):
         if VERBOSITY>0:
             print('HAMLIB_IO: Get mode - vfo=',VFO)
 
-        use_direct=True
+        use_direct=False     # True
             
         if VFO=='A':
             cmd  = 'm'
@@ -869,7 +874,11 @@ class hamlib_connect(direct_connect):
         if VERBOSITY>0:
             print('HAMLIB - SAT_MODE:',opt)
 
-        if opt==-1:
+        if self.rig_type2!='IC9700':
+            print('SAT_MODE: Noop for rig=',self.rig_type2)
+            return -1
+            
+        elif opt==-1:
             # Read current sat mode setting
             buf=self.get_response('u SATMODE')
             return buf[0]=='1'
@@ -879,7 +888,6 @@ class hamlib_connect(direct_connect):
             buf=self.get_response('U SATMODE '+str(opt))
 
         else:
-
             print('SAT_MODE: Invalid opt',opt)
             return -1
 
@@ -1053,7 +1061,7 @@ class hamlib_connect(direct_connect):
     def set_breakin(self,onoff):
         if VERBOSITY>0:
             print('HAMLIB_IO SET_BREAKIN: onoff=',onoff)
-        cmd='U FKBIN '+str(onoff)
+        cmd='U FBKIN '+str(onoff)
         self.get_response(cmd)
 
 
@@ -1072,11 +1080,12 @@ class hamlib_connect(direct_connect):
             print('HAMLIB_IO SET_VFO: rx=',rx,'\ttx=',tx,'\top=',op)
 
         if op=='A->B':
-            cmd='CPY'
+            cmd='G CPY'
         elif op=='B->A':
+            print('HAMLIB_IO SET_VFO: Warning - B2A not implemented')
             return
         elif op=='A<->B':
-            cmd='XCHG'
+            cmd='G XCHG'
         
         else:
             
