@@ -291,6 +291,7 @@ class direct_connect:
         self.flrig_active  = False
         self.tlast      = None
         self.pl_tone    = 0
+        self.sub_dial_func = None
 
         print('DIRECT_CONNECT: Looking for rig - port=',port,'\tbaud=',baud,'...')
         Found = find_direct_rig(self,port,baud,force)
@@ -1710,10 +1711,10 @@ class direct_connect:
         return wpm
 
     # Set sub-dial function on Yaesu rigs
-    def set_sub_dial(self,func='CLAR'):
+    def set_sub_dial(self,func='CLAR',FORCE=False):
 
-        if self.rig_type1=='Kenwood' or self.rig_type1=='Icom':
-            print('DIRECT_IO: SET_SUB_DIAL not support yet for Kenwood/Icom rigs')
+        if self.rig_type1!='Yaesu':
+            print('*** Warning *** DIRECT SET SUB DIAL only available for Yaesu Rigs')
             return 0            
             
         if func=='CLAR':
@@ -1721,10 +1722,14 @@ class direct_connect:
         elif func=='VFO-B':
             cmd='BY;SF4;'
         else:
+            self.sub_dial_func=None
             print('DIRECT_IO - SET_SUB_DIAL - Unknown Function',func)
             return
         
-        buf = self.get_response(cmd)
+        if self.sub_dial_func!=func or FORCE:
+            buf = self.get_response(cmd)
+        self.sub_dial_func=func
+        
         return
 
 

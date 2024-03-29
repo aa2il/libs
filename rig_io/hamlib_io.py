@@ -79,6 +79,7 @@ class hamlib_connect(direct_connect):
         self.pl_tone   = 0
         self.rotor     = False
         self.last_cmd  = ''
+        self.sub_dial_func=None
         
         try:
             self.s = socket.socket()
@@ -253,6 +254,9 @@ class hamlib_connect(direct_connect):
             if VERBOSITY>0:
                 print('HAMLIB_IO: Get_Response: Single letter command:',cmd)
             self.send(cmd+'\n')
+        elif cmd[0]=='w' and cmd[-1]!=';':
+            cmd2=cmd+';'
+            self.send(cmd2)
         else:
             if VERBOSITY>0:
                 print('HAMLIB_IO: Get Response - **** Warning - not sure what to do????',cmd)
@@ -359,7 +363,8 @@ class hamlib_connect(direct_connect):
     def set_freq(self,frq_KHz,VFO='A'):
         #VERBOSITY=1
         if VERBOSITY>0:
-            print('HAMLIB_IO: Set freq',frq_KHz,VFO,self.freq)
+            print('HAMLIB_IO->SET FREQ: frq=',frq_KHz,'\tVFO=',VFO,
+                  '\tself.freq=',self.freq)
 
         if self.rig_type1 == 'Icom' or False:
             # This actually might work for all rigs but only tested on 9700 so far
@@ -381,7 +386,7 @@ class hamlib_connect(direct_connect):
             # rig so just issue the direct FB command for Yaesu and Kenwood rigs
             # Second FB is just to make sure rig responds
             frq  = int(frq_KHz*1000)
-            cmd = 'w F'+VFO+str(frq).zfill(8)+";FB"
+            cmd = 'w F'+VFO+str(frq).zfill(8)+";FB;"
 
         if VERBOSITY>0:
             print('cmd=',cmd)
@@ -538,7 +543,7 @@ class hamlib_connect(direct_connect):
                     ant = int( self.get_response('y') ) + 1         # V3
                 elif False:
                     # They seemed to have hosed this up in v4.2 so just do it directly for now
-                    buf = self.get_response('w AN0')
+                    buf = self.get_response('w AN0;')
                     ant=int(buf[3])
                 else:
                     # They changed command and response in V4 - ugh!
@@ -1002,11 +1007,11 @@ class hamlib_connect(direct_connect):
         if self.rig_type2 == 'pySDR':
             
             if on_off==None:
-                buf=self.get_response('w REC')
+                buf=self.get_response('w REC;')
             elif on_off:
-                buf=self.get_response('w REC1;REC')
+                buf=self.get_response('w REC1;REC;')
             else:
-                buf=self.get_response('w REC0;REC')
+                buf=self.get_response('w REC0;REC;')
             val = buf[3]=='1'
 
         else:
@@ -1030,12 +1035,12 @@ class hamlib_connect(direct_connect):
         if self.rig_type2=='FT991a':
 
             print('\nSetting Rig Date ...',date)
-            cmd='w DT0'+date+';BY'
+            cmd='w DT0'+date+';BY;'
             buf=self.get_response(cmd)
             print('cmd=',cmd,'\tbuf=',buf)
             
             print('\nSetting Rig Time ...',time)
-            cmd='w DT1'+time+';BY'
+            cmd='w DT1'+time+';BY;'
             buf=self.get_response(cmd)
             print('cmd=',cmd,'\tbuf=',buf)
 
@@ -1126,20 +1131,56 @@ class hamlib_connect(direct_connect):
 
 
     # Set sub-dial function on Yaesu rigs
-    def set_sub_dial(self,func='CLAR'):
+    def set_sub_dial(self,func='CLAR',FORCE=False):
 
-        if False:
-            print('HAMLIB_IO: SET_SUB_DIAL not supported yet for Hamlib IO')
-            return 0            
+        if self.rig_type1!='Yaesu':
+            #if self.rig_type2!='FTdx3000':
+            print('*** Warning *** HAMLIB SET SUB DIAL only available for Yaesu Rigs')
+            return
             
         if func=='CLAR':
             cmd='BY;SF5;'
         elif func=='VFO-B':
             cmd='BY;SF4;'
         else:
+            self.sub_dial_func=None
             print('HAMLIB_IO - SET_SUB_DIAL - Unknown Function',func)
             return
         
-        buf = self.get_response(cmd)
+        if self.sub_dial_func!=func or FORCE:
+            buf = self.get_response(cmd)
+        self.sub_dial_func=func
+        
         return
             
+
+
+
+    # Function to read the clarifier
+    def read_clarifier(self):
+        if VERBOSITY>0:
+            print('HAMLIB_IO: READ_CLARIFIER ...')
+        
+        buf1  = self.get_response('u RIT')
+        onoff = buf.split(':')[1]
+        buf2  = self.get_response('j')
+        shift = buf.split(':')[1]
+        rx    = int(onoff)*int(shift)
+        
+        buf3  = self.get_response('u XIT')
+        onoff = buf.split(':')[1]
+        #buf4  = self.get_response('z')
+        #shift = buf.split(':')[1]
+        tx    = int(onoff)*int(shift)
+        
+        if VERBOSITY>0:
+            print('buf1=',buf1)
+            print('buf2=',buf2)
+            print('buf3=',buf3)
+            #print('buf4=',buf4)
+            print('rx=',rx,'\ttx=',tx,'\tshift=',shift)
+        
+        return rx,tx
+        
+    
+    

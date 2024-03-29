@@ -528,7 +528,7 @@ def ClarReset(self,RXClarOn=False):
         self.sock.get_response('U XIT 0')
         self.sock.get_response("J 0")
         self.sock.get_response("Z 0")
-        self.sock.get_response("J 0")             # THis is the problem child and needs to be repeated for some reason
+        self.sock.get_response("J 0")             # This is the problem child and needs to be repeated for some reason
     else:
         # Yaesu rigs
         if RXClarOn:
@@ -554,12 +554,26 @@ def SetSubDial(self,opt='CLAR'):
 def SetTXSplit(self,df_kHz,onoff=True):
     max_df=9999
     df=max( min(max_df, int( df_kHz*1000 ) ) , -max_df)
-    if onoff:
-        cmd = 'BY;RC;RT0;XT1;RU'+str(df).zfill(4)+';'
+    if self.sock.rig_type=='Hamlib' and True:
+        
+        if onoff:
+            print('Set TX CLARIFIER SPLIT: *ON* df=',df)
+            self.sock.get_response('U RIT 1')
+            self.sock.get_response("Z "+str(df))
+        else:
+            print('Set TX CLARIFIER SPLIT: *OFF* df=',0)
+            self.sock.get_response('U RIT 0')
+            self.sock.get_response("Z 0")
+            
     else:
-        cmd = 'BY;RC;RT0;XT0;'
-    print('Set TX CLARIFIER SPLIT:',df,cmd)
-    self.sock.get_response(cmd)
+        
+        if onoff:
+            cmd = 'BY;RC;RT0;XT1;RU'+str(df).zfill(4)+';'
+        else:
+            cmd = 'BY;RC;RT0;XT0;'
+            
+        print('Set TX CLARIFIER SPLIT: df=',df,'\tcmd=',cmd)
+        self.sock.get_response(cmd)
 
 # Function to get split settings (clarifier)
 #def GetSplit(self,df_kHz):
