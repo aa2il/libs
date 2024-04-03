@@ -295,7 +295,7 @@ def load_history(history,DEBUG_CALL=None):
                             elif len(val)==4:
                                 key='county'
                             else:
-                                print('Warning - skipping blank key',key)
+                                print('LOAD HISTORY *** WARNING *** skipping blank key',key)
                                 print('row=',row)
                                 key=''
                                 

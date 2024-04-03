@@ -545,7 +545,7 @@ class fldigi_xlmrpc(direct_connect):
                 m=self.s.modem.get_name()
             else:
                 if not self.flrig_active:
-                    print('*** FLDIGI_IO: Warning - unable to read modem name ***')
+                    print('*** FLDIGI_IO: *** WARNING *** Unable to read modem name ***')
             m=self.s.rig.get_mode()
             self.lock.release()
         else:
@@ -792,7 +792,7 @@ class fldigi_xlmrpc(direct_connect):
                     print('FLDIGI_IO: SET_MODE - Invalid VFO:',VFO,mode)
                 mout=mode
             else:
-                print('*** FLDIGI_IO: Warning - unable to read modem name ***')
+                print('*** FLDIGI_IO: *** WARNING *** Unable to read modem name ***')
                 mout=self.s.rig.get_mode()
             self.lock.release()
             if VERBOSITY>0:

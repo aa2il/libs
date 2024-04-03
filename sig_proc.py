@@ -425,7 +425,7 @@ class ring_buffer2:
         #    print(self.tag,'- Pull',n,flush)
 
         if self.nsamps<n and False:
-            print('Ringbuffer2 PULL - WARNING! - Not enough data! - tag=',self.tag,
+            print('Ringbuffer2 PULL: *** WARNING *** Not enough data! - tag=',self.tag,
                   '\tn=',n,'\tnsamps=',self.nsamps,'\tlast=',self.last_push,'\tflush=',flush)
             
         if flush:
@@ -821,7 +821,7 @@ class signal_generator:
             lo = self.c + 1j*self.s
         else:
             #if self.fast_mode:
-            #print 'QUAD_MIXER - Warning - expected fast mode',N,self.N
+            #print 'QUAD_MIXER: *** WARNING *** Expected fast mode',N,self.N
             phi = self.phi0 + self.dphi*np.arange(N)
             self.phi0 += N*self.dphi
             lo = np.cos(phi) + 1j*np.sin(phi)
@@ -932,7 +932,7 @@ class AudioIO():
                 print('***')
 
         if len(loopback_devs)==0 and not INFO_ONLY:
-            print('\n*** FIND_LOOP_BACKS - WARNING - None found ***\n')
+            print('\nFIND_LOOP_BACKS: *** WARNING *** None found ***\n')
             print('This might be becuase the default sample rate is not 48k')
             print('To fix this, run start_loopback\n')
             print('If that doesnt work, try eliminating the "and srate" above')
@@ -1068,7 +1068,7 @@ class AudioIO():
         if self.ZeroFill:
             Stopper=True
             if status!=0:
-                print('Warning - AudioPlayCB Non-zero Status')
+                print('AudioPlayCB: *** WARNING *** Non-zero Status')
         else:
             Stopper = (self.P.Stopper and self.P.Stopper.isSet())
             
@@ -1681,7 +1681,7 @@ class CIC_Filter:
             y2 = self.cic_decim_cmplx(x)
             return y2
         else:
-            print('WARNING - CIC_UPDN  is a No-op')
+            print('CIC_UPDN: *** WARNING *** No-op!!!')
             return x
 
     # Compatability wrapper 

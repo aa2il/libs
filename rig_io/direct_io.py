@@ -853,7 +853,7 @@ class direct_connect:
             if self.rig_type2=='FT991a':
                 cmd='BY;'
                 if rx!='A':
-                    print('DIRECT SET_VFO: *** Warning *** RX is always on VFO A for the FT991a *** rx,tx=',rx,tx)
+                    print('DIRECT SET_VFO: *** WARNING *** RX is always on VFO A for the FT991a *** rx,tx=',rx,tx)
             elif rx=='A' or rx=='M':
                 cmd='BY;FR0;'
             elif rx=='B' or rx=='S':
@@ -1714,7 +1714,7 @@ class direct_connect:
     def set_sub_dial(self,func='CLAR',FORCE=False):
 
         if self.rig_type1!='Yaesu':
-            print('*** Warning *** DIRECT SET SUB DIAL only available for Yaesu Rigs')
+            print('*** WARNING *** DIRECT SET SUB DIAL only available for Yaesu Rigs')
             return 0            
             
         if func=='CLAR':

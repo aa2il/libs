@@ -219,7 +219,8 @@ class hamlib_connect(direct_connect):
         if x[:4]=='RPRT':
             print('HAMLIB_IO->RECV: x=',x,'\tlen=',len(x),'\tcmd=',self.last_cmd)
             if int(x.split(' ')[1])<0:
-                print('HAMLIB_IO->RECV: *** Warning *** Error code returned *** cmd=',self.last_cmd,'\tx=',x)
+                print('HAMLIB_IO->RECV: *** WARNING *** Error code returned *** cmd=',
+                      self.last_cmd,'\tresponse=',x)
             
         return x.rstrip()                     # Remove newline at end
 
@@ -244,7 +245,7 @@ class hamlib_connect(direct_connect):
                 cmd2+='\n'
             if VERBOSITY>0:
                 print('HAMLIB GET_RESPONSE: Sending Yaesu/Kenwood',cmd2)
-            print('HAMLIB GET_RESPONSE: **** Warning - Yaesu/Kenwood direct commands are flaky !!!!!',cmd2)
+            print('HAMLIB GET_RESPONSE: **** WARNING *** Yaesu/Kenwood direct commands are flaky !!!!!',cmd2)
             if False:
                 if USE_LOCK:
                     self.lock.release()
@@ -259,7 +260,7 @@ class hamlib_connect(direct_connect):
             self.send(cmd2)
         else:
             if VERBOSITY>0:
-                print('HAMLIB_IO: Get Response - **** Warning - not sure what to do????',cmd)
+                print('HAMLIB_IO: Get Response - **** WARNING *** Not sure what to do????',cmd)
             self.send(cmd+'\n')
             
         x=self.recv(N*1024)
@@ -332,7 +333,7 @@ class hamlib_connect(direct_connect):
             return frq
             
         # Hamlib can be rather slow so do a crude "debouncing"
-        # Not sure why I thought this wa necessary???!!!!  Perhaps for v3.3???
+        # Not sure why I thought this was necessary???!!!!  Perhaps for v3.3???
         # If this works out, get rid of dt and tlast
         dt = time.time() - self.tlast
         #print 'HAMLIB_IO: GET_FREQ: B',dt
@@ -359,6 +360,7 @@ class hamlib_connect(direct_connect):
         self.freq = frq
         #print('HAMLIB_IO: Get Freq',cmd,frq)
         return frq
+    
 
     def set_freq(self,frq_KHz,VFO='A'):
         #VERBOSITY=1
@@ -384,9 +386,9 @@ class hamlib_connect(direct_connect):
         else:
             # Hamlib doesn't seem to have a nice way of changing freq of VFO B without interrupting the
             # rig so just issue the direct FB command for Yaesu and Kenwood rigs
-            # Second FB is just to make sure rig responds
+            # The second FB is just to make sure rig responds
             frq  = int(frq_KHz*1000)
-            cmd = 'w F'+VFO+str(frq).zfill(8)+";FB;"
+            cmd = 'F'+VFO+str(frq).zfill(8)+";FB;"
 
         if VERBOSITY>0:
             print('cmd=',cmd)
@@ -460,6 +462,21 @@ class hamlib_connect(direct_connect):
             print('HAMLIB_IO - SET MODE: mode,VFO=',mode,VFO,'\tcmd=',cmd)
             print('HAMLIB_IO - SET MODE: Response buf=',buf)
 
+        # Set roofing filter also
+        if self.rig_type1=='Yaesu':
+            if mode in ['CW','CWR']:
+                cmd  = 'L ROOFINGFILTER 4'
+            elif mode in ['AM']:
+                cmd  = 'L ROOFINGFILTER 2'
+            elif mode in ['FM']:
+                cmd  = 'L ROOFINGFILTER 1'
+            else:
+                cmd  = 'L ROOFINGFILTER 3'
+
+            buf=self.get_response(cmd)
+            if VERBOSITY>0:
+                print('HAMLIB_IO - SET MODE: Setting roofing filter cmd=',cmd)
+                print('HAMLIB_IO - SET MODE: Response buf=',buf)
         
                 
     def get_mode(self,VFO='A'):
@@ -1087,7 +1104,7 @@ class hamlib_connect(direct_connect):
         if op=='A->B':
             cmd='G CPY'
         elif op=='B->A':
-            print('HAMLIB_IO SET_VFO: Warning - B2A not implemented')
+            print('HAMLIB_IO SET_VFO: WARNING - B2A not implemented')
             return
         elif op=='A<->B':
             cmd='G XCHG'
@@ -1095,7 +1112,7 @@ class hamlib_connect(direct_connect):
         else:
             
             if self.rig_type2=='FT991a' and rx!='A':
-                print('HAMLIB_IO SET_VFO: *** Warning *** RX is always on VFO A for the FT991a *** rx,tx=',rx,tx)
+                print('HAMLIB_IO SET_VFO: *** WARNING *** RX is always on VFO A for the FT991a *** rx,tx=',rx,tx)
                 rx='A'
 
             if rx==None and tx==None:
@@ -1135,7 +1152,7 @@ class hamlib_connect(direct_connect):
 
         if self.rig_type1!='Yaesu':
             #if self.rig_type2!='FTdx3000':
-            print('*** Warning *** HAMLIB SET SUB DIAL only available for Yaesu Rigs')
+            print('*** WARNING *** HAMLIB SET SUB DIAL only available for Yaesu Rigs')
             return
             
         if func=='CLAR':
