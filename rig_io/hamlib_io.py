@@ -547,7 +547,7 @@ class hamlib_connect(direct_connect):
         
     
     def get_ant(self):
-        #VERBOSITY=1
+        VERBOSITY=1
         if VERBOSITY>0:
             print('HAMLIB_IO: Get Ant',self.rig_type,self.rig_type1,self.rig_type2)
         
@@ -560,11 +560,13 @@ class hamlib_connect(direct_connect):
                     ant = int( self.get_response('y') ) + 1         # V3
                 elif False:
                     # They seemed to have hosed this up in v4.2 so just do it directly for now
-                    buf = self.get_response('w AN0;')
+                    buf = self.get_response('AN0;')
                     ant=int(buf[3])
                 else:
                     # They changed command and response in V4 - ugh!
                     # Need my code patch to hamlib for this to work.
+                    if VERBOSITY>0:
+                        print('HAMLIB_IO: Sending y command...')
                     x = self.get_response('y 0').split('\n')
                     if VERBOSITY>0:
                         print('HAMLIB_IO: Get Ant: x=',x)
@@ -1093,8 +1095,6 @@ class hamlib_connect(direct_connect):
         cmd='L IF '+str(shift)
         buf=self.get_response(cmd)
 
-        
-
 
     def set_vfo(self,rx=None,tx=None,op=None):
         VERBOSITY=1
@@ -1175,27 +1175,25 @@ class hamlib_connect(direct_connect):
 
     # Function to read the clarifier
     def read_clarifier(self):
+        VERBOSITY=0
         if VERBOSITY>0:
             print('HAMLIB_IO: READ_CLARIFIER ...')
         
-        buf1  = self.get_response('u RIT')
-        onoff = buf.split(':')[1]
-        buf2  = self.get_response('j')
-        shift = buf.split(':')[1]
-        rx    = int(onoff)*int(shift)
+        buf1  = self.get_response('u RIT')           # On/Off
+        buf2  = self.get_response('j')               # Shift
+        rx    = int(buf1)*int(buf2)
         
         buf3  = self.get_response('u XIT')
-        onoff = buf.split(':')[1]
         #buf4  = self.get_response('z')
         #shift = buf.split(':')[1]
-        tx    = int(onoff)*int(shift)
+        tx    = int(buf3)*int(buf2)
         
         if VERBOSITY>0:
             print('buf1=',buf1)
             print('buf2=',buf2)
             print('buf3=',buf3)
             #print('buf4=',buf4)
-            print('rx=',rx,'\ttx=',tx,'\tshift=',shift)
+            print('rx=',rx,'\ttx=',tx)   # ,'\tshift=',shift)
         
         return rx,tx
         

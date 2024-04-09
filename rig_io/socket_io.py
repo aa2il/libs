@@ -554,15 +554,16 @@ def SetSubDial(self,opt='CLAR'):
 def SetTXSplit(self,df_kHz,onoff=True):
     max_df=9999
     df=max( min(max_df, int( df_kHz*1000 ) ) , -max_df)
-    if self.sock.rig_type=='Hamlib' and True:
+    if self.sock.rig_type=='Hamlib':
         
         if onoff:
             print('Set TX CLARIFIER SPLIT: *ON* df=',df)
-            self.sock.get_response('U RIT 1')
+            self.sock.get_response('U RIT 0')
+            self.sock.get_response('U XIT 1')
             self.sock.get_response("Z "+str(df))
         else:
             print('Set TX CLARIFIER SPLIT: *OFF* df=',0)
-            self.sock.get_response('U RIT 0')
+            self.sock.get_response('U XIT 0')
             self.sock.get_response("Z 0")
             
     else:
