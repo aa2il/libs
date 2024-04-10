@@ -167,8 +167,9 @@ def ping_test(host):
 def get_PIDs(name):
     if platform.system()=='Linux':
         try:
-            pidlist = list(map(int, check_output(["pidof", name]).split()))
-        except  CalledProcessError:
+            cmd=['pidof','-x',name]
+            pidlist = list(map(int, check_output(cmd).split()))
+        except CalledProcessError:
             pidlist = []
     elif platform.system()=='Windows':
         #name='chrome'

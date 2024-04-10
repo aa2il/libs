@@ -1711,7 +1711,11 @@ class direct_connect:
         return wpm
 
     # Set sub-dial function on Yaesu rigs
-    def set_sub_dial(self,func='CLAR',FORCE=False):
+    def set_sub_dial(self,func='CLAR'):
+        VERBOSITY=1
+        if VERBOSITY>0:
+            print('DIRECT - SET SUB DIAL: func=',func,
+                  '\tcurrent=',self.sub_dial_func)
 
         if self.rig_type1!='Yaesu':
             print('*** WARNING *** DIRECT SET SUB DIAL only available for Yaesu Rigs')
@@ -1726,9 +1730,11 @@ class direct_connect:
             print('DIRECT_IO - SET_SUB_DIAL - Unknown Function',func)
             return
         
-        if self.sub_dial_func!=func or FORCE:
-            buf = self.get_response(cmd)
+        buf = self.get_response(cmd)
         self.sub_dial_func=func
+        if VERBOSITY>0:
+            print('DIRECT - SET SUB DIAL: cmd=',cmd)
+            print('DIRECT - SET SUB DIAL: buf=',buf)
         
         return
 

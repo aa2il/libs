@@ -224,14 +224,18 @@ class hamlib_connect(direct_connect):
             
         return x.rstrip()                     # Remove newline at end
 
-    def get_response(self,cmd,N=1,wait=False):
+    def get_response(self,cmd,N=1,wait=False,VERBOSITY=0):
+        USE_TIMEOUT=True
         if VERBOSITY>0:
-            print('HAMLIB_IO: Get response: cmd=',cmd,cmd[-1])
+            print('HAMLIB_IO: Get response: cmd=',cmd,'\t',cmd[-1])
 
         if USE_LOCK:
             if VERBOSITY>0:
                 print('HAMLIB_IO GET_RESPONSE - Waiting for lock')
             self.lock.acquire()
+
+        if USE_TIMEOUT:
+            self.s.settimeout(2.0)
             
         if cmd[-1] == ';':
             # Yaseu/Kenwood command
@@ -264,6 +268,9 @@ class hamlib_connect(direct_connect):
             self.send(cmd+'\n')
             
         x=self.recv(N*1024)
+        
+        if USE_TIMEOUT:
+            self.s.settimeout(None)
 
         if wait:
 
@@ -567,7 +574,7 @@ class hamlib_connect(direct_connect):
                     # Need my code patch to hamlib for this to work.
                     if VERBOSITY>0:
                         print('HAMLIB_IO: Sending y command...')
-                    x = self.get_response('y 0').split('\n')
+                    x = self.get_response('y 0',VERBOSITY=VERBOSITY).split('\n')
                     if VERBOSITY>0:
                         print('HAMLIB_IO: Get Ant: x=',x)
                     xx=x[0]
@@ -1146,9 +1153,9 @@ class hamlib_connect(direct_connect):
 
         
 
-
+    """
     # Set sub-dial function on Yaesu rigs
-    def set_sub_dial(self,func='CLAR',FORCE=False):
+    def set_sub_dial(self,func='CLAR'):
 
         if self.rig_type1!='Yaesu':
             #if self.rig_type2!='FTdx3000':
@@ -1164,12 +1171,11 @@ class hamlib_connect(direct_connect):
             print('HAMLIB_IO - SET_SUB_DIAL - Unknown Function',func)
             return
         
-        if self.sub_dial_func!=func or FORCE:
-            buf = self.get_response(cmd)
+        buf = self.get_response(cmd)
         self.sub_dial_func=func
         
         return
-            
+    """            
 
 
 

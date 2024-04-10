@@ -87,6 +87,7 @@ class fldigi_xlmrpc(direct_connect):
         self.mode       = ''
         self.dead       = False
         self.wpm        = 0
+        self.sub_dial_func=None
 
         self.rig_type  = 'UNKNOWN'
         self.rig_type1 = 'UNKNOWN'
