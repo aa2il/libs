@@ -282,16 +282,17 @@ def find_direct_rig(self,port_in,baud_in,force=False):
 class direct_connect:
     def __init__(self,port,baud,force=False):
 
-        self.wpm        = 0
-        self.freq       = 0
-        self.band       = ''
-        self.mode       = ''
-        self.lock       = threading.Lock()             # Avoid collisions between various threads
+        self.wpm           = 0
+        self.freq          = 0
+        self.band          = ''
+        self.mode          = ''
+        self.lock          = threading.Lock()             # Avoid collisions between various threads
         self.fldigi_active = False
         self.flrig_active  = False
-        self.tlast      = None
-        self.pl_tone    = 0
+        self.tlast         = None
+        self.pl_tone       = 0
         self.sub_dial_func = None
+        self.ntimeouts     = 0
 
         print('DIRECT_CONNECT: Looking for rig - port=',port,'\tbaud=',baud,'...')
         Found = find_direct_rig(self,port,baud,force)

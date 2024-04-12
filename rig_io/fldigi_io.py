@@ -67,7 +67,6 @@ print full_stac()
 
 
 class fldigi_xlmrpc(direct_connect):
-#class fldigi_xlmrpc(no_connect):
     def __init__(self,host,port,tag='',MAX_TRYS=10):
 
         if host==0:
@@ -80,6 +79,7 @@ class fldigi_xlmrpc(direct_connect):
         self.connection = ''
         self.lock       = threading.Lock()             # Avoid collisions between various threads
         self.lock2      = threading.Lock()             # Avoid collisions between various threads
+        self.ntimeouts = 0
 
         self.wpm        = 0
         self.freq       = 0

@@ -33,6 +33,7 @@ import threading
 from datetime import timedelta,datetime
 from pytz import timezone
 from .icom_io import show_hex
+from utilities import error_trap
 
 ############################################################################################
 
@@ -67,6 +68,7 @@ class hamlib_connect(direct_connect):
             else:
                 port = HAMLIB_PORT
         self.port=port
+        self.ntimeouts = 0
 
         self.wpm       = 0
         self.freq      = 0                # in Hz
@@ -204,15 +206,49 @@ class hamlib_connect(direct_connect):
                 
         
     def send(self,cmd):
+        USE_TIMEOUT=True
+        if USE_TIMEOUT:
+            self.s.settimeout(2.0)
         if VERBOSITY>0:
             print( 'HAMLIB_IO->SEND: cmd='+cmd)
         self.last_cmd=cmd
-        self.s.send(cmd.encode())
+        
+        try:
+            self.s.send(cmd.encode())
+        except socket.timeout:
+            error_trap('HAMLIB IO->SEND: Timeout error')
+            self.ntimeouts += 1
+            print('\tNumber of timeouts =',self.ntimeouts)
+            
+        if USE_TIMEOUT:
+            self.s.settimeout(None)
+
     
     def recv(self,n=1024):
-        #self.s.settimeout(1.0)
-        x = self.s.recv(n).decode("utf-8") 
-        #self.s.settimeout(None)
+        USE_TIMEOUT=True
+        if USE_TIMEOUT:
+            self.s.settimeout(2.0)
+            
+        try:
+            x = self.s.recv(n).decode("utf-8")
+        except socket.timeout:
+            error_trap('HAMLIB IO->RECV: Timeout error')
+            self.ntimeouts += 1
+            print('\tNumber of timeouts =',self.ntimeouts)
+            return None
+        #except socket.ConnectionResetError:
+        except socket.error as e:
+            #import errno
+            #if e.errno != errno.ECONNRESET:
+            #    raise # Not error we are looking for
+            error_trap('HAMLIB IO->RECV: Socket Connection Error')
+            print('e=',e,'\t',e.errno)
+            self.ntimeouts += 1
+            return None
+            
+        if USE_TIMEOUT:
+            self.s.settimeout(None)
+
         if VERBOSITY>0:
             print('HAMLIB_IO->RECV: x=',x)
 
@@ -222,6 +258,7 @@ class hamlib_connect(direct_connect):
                 print('HAMLIB_IO->RECV: *** WARNING *** Error code returned *** cmd=',
                       self.last_cmd,'\tresponse=',x)
             
+        self.ntimeouts = 0
         return x.rstrip()                     # Remove newline at end
 
     def get_response(self,cmd,N=1,wait=False,VERBOSITY=0):
@@ -229,14 +266,21 @@ class hamlib_connect(direct_connect):
         if VERBOSITY>0:
             print('HAMLIB_IO: Get response: cmd=',cmd,'\t',cmd[-1])
 
+        if USE_TIMEOUT:
+            self.s.settimeout(2.0)
+            lock_to=2.0
+        else:
+            lock_to=-1
+            
         if USE_LOCK:
             if VERBOSITY>0:
                 print('HAMLIB_IO GET_RESPONSE - Waiting for lock')
-            self.lock.acquire()
+            acq=self.lock.acquire(timeout=lock_to)
+            if not acq:
+                print('Unable to acquire lock - giving up')
+                self.ntimeouts += 1
+                return None                
 
-        if USE_TIMEOUT:
-            self.s.settimeout(2.0)
-            
         if cmd[-1] == ';':
             # Yaseu/Kenwood command
             #print '************************* HAMLIB_IO: GET_RESPONSE - Direct commands not working yet',cmd
@@ -516,9 +560,12 @@ class hamlib_connect(direct_connect):
         if VFO=='B' and self.rig_type1=='Yaesu' and use_direct:
             print('idx=',idx)
             mode = Decode_Mode( buf[idx] )
-        else:
+        elif buf:
             x=buf.split("\n")
             mode=x[0]
+        else:
+            print('HAMLIB_IO: GET_MODE: Unable to determine mode - cmd=',cmd,'\tbuf=',buf)
+            mode=None
 
         if VERBOSITY>0:
             print('HAMLIB_IO: Get Mode',cmd,mode)
@@ -574,14 +621,22 @@ class hamlib_connect(direct_connect):
                     # Need my code patch to hamlib for this to work.
                     if VERBOSITY>0:
                         print('HAMLIB_IO: Sending y command...')
-                    x = self.get_response('y 0',VERBOSITY=VERBOSITY).split('\n')
+                    x = self.get_response('y 0',VERBOSITY=VERBOSITY)
+                    if x==None:
+                        print('HAMLIB IO - GET_ANT: Unable to read antenna - assuming ANT 1')
+                        return 1
+                    x = x.split('\n')
                     if VERBOSITY>0:
                         print('HAMLIB_IO: Get Ant: x=',x)
                     xx=x[0]
-                    if len(xx)==1 and False:
-                        ant=int(xx)
-                    else:
+                    
+                    try:
                         ant=int( xx[3] )
+                    except:
+                        error_trap('HAMLIB IO->GET ANT: Problem determining antenna - assuming ANT 1')
+                        print('x=',x,'\txx=',xx,'\txx[3]=',xx[3])
+                        return 1
+                        
                     if VERBOSITY>0:
                         print('HAMLIB_IO: Get Ant: ant=',ant)
             else:
