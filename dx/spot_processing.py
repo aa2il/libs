@@ -97,7 +97,10 @@ class ChallengeData:
                         val=''
                     else:
                         val = str(int(val))
-                calls.append( unidecode( val ) )
+                try:
+                    calls.append( unidecode( val ) )
+                except:
+                    print('SPOT PROCESSING: Problem with ',i,j)
             self.slots.append(calls)
             #print('CHALLENGE DATA - i=',i,'\tcalls=',calls)
             
