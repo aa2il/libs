@@ -411,7 +411,7 @@ class ring_buffer2:
         self.buf.put(x)
 
         if self.nsamps>self.size:
-            print('Ringbuffer2: Push overflow - tag=',self.tag,
+            print('RINGBUFFER2: PUSH overflow - tag=',self.tag,
                   '\tnsamps=',self.nsamps,'\tlen(x)=',self.last_push,
                   '\tBuffer size=',self.size)
             if self.no_overflow:
@@ -425,18 +425,17 @@ class ring_buffer2:
         #    print(self.tag,'- Pull',n,flush)
 
         if self.nsamps<n and False:
-            print('Ringbuffer2 PULL: *** WARNING *** Not enough data! - tag=',self.tag,
+            print('RINGBUFFER2 PULL: *** WARNING *** Not enough data! - tag=',self.tag,
                   '\tn=',n,'\tnsamps=',self.nsamps,'\tlast=',self.last_push,'\tflush=',flush)
             
         if flush:
 
             xx = self.prev
             while self.buf.qsize()>1 or len(xx)<n:
-                #xxx = self.buf.get()
                 try:
                     xxx = self.buf.get(timeout=1.0)
                 except:
-                    error_trap('Ringbuffer 2 PULL: ????',1)
+                    error_trap('RINGBUFFER2 PULL: Unable to pull next block ????',1)
                     break
                 xx = np.concatenate( (xx, xxx) )
                 self.buf.task_done()
@@ -457,12 +456,13 @@ class ring_buffer2:
             self.nsamps -= n
 
         if len(x)!=n:
-            print(self.tag,'Ringbuffer2 Queue error - expected',n,' samples, got',len(x))
-            xxx = np.zeros(n-len(x), x.dtype)   
-            x = np.concatenate( (x, xxx) )
-            #sys,exit(1)
-        #if self.tag=='RF':
-            #print self.tag,self.buf.qsize()
+            print(self.tag,'RINGBUFFER2 PULL: Queue error - expected',n,' samples, got',len(x))
+            try:
+                xxx = np.zeros(n-len(x), x.dtype)   
+                x = np.concatenate( (x, xxx) )
+            except:
+                error_trap('RINGBUFFER2 PULL: Unable to form packet')
+                x=np.array([])
 
         if self.tag!='Audio1' and False:
             print( self.tag,'- Pull',x,np.iscomplexobj(x))

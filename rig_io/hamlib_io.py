@@ -252,7 +252,7 @@ class hamlib_connect(direct_connect):
         if VERBOSITY>0:
             print('HAMLIB_IO->RECV: x=',x)
 
-        if x[:4]=='RPRT':
+        if x[:4]=='RPRT' and False:
             print('HAMLIB_IO->RECV: x=',x,'\tlen=',len(x),'\tcmd=',self.last_cmd)
             if int(x.split(' ')[1])<0:
                 print('HAMLIB_IO->RECV: *** WARNING *** Error code returned *** cmd=',
