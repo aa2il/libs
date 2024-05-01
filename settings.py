@@ -36,6 +36,11 @@ from rig_io import SATELLITE_LIST
 
 #########################################################################################
 
+KEYER_ATTRIBUTES = ['Call','Name','State','Sec','Cat','Grid','City','County',
+                    'CQ Zone','ITU Zone','Prec','Check','Club',
+                    'CWops','SKCC','FISTS','FOC',
+                    'Rig','Ant','Age','Ham Age','Occupation']
+
 # Function to read config params
 def read_settings(fname,attr=None):
 
@@ -48,15 +53,14 @@ def read_settings(fname,attr=None):
         with open(RCFILE) as json_data_file:
             SETTINGS = json.load(json_data_file)
 
-        for a in KEYER_ATTRIBUTES:
+        if attr==None:
+            attr=KEYER_ATTRIBUTES
+        for a in attr:
             attrib='MY_'+a.upper().replace(' ','_')
             if attrib not in SETTINGS:
                 SETTINGS[attrib]=''                
             #print(attrib,'\t:\t',SETTINGS[attrib])
         
-        #print('Settings:',SETTINGS)
-        #sys.exit(0)
-            
     else:
         
         print(RCFILE,' not found!\n')
@@ -91,15 +95,10 @@ def read_settings(fname,attr=None):
 
 # Structure to contain config params
 class CONFIG_PARAMS:
-    def __init__(self,fname):
-        self.SETTINGS,self.RCFILE=read_settings(fname)
+    def __init__(self,fname,attr=None):
+        self.SETTINGS,self.RCFILE=read_settings(fname,attr)
 
 #########################################################################################
-
-KEYER_ATTRIBUTES = ['Call','Name','State','Sec','Cat','Grid','City','County',
-                    'CQ Zone','ITU Zone','Prec','Check','Club',
-                    'CWops','SKCC','FISTS','FOC',
-                    'Rig','Ant','Age','Ham Age','Occupation']
 
 class SETTINGS_GUI():
     def __init__(self,root,P,attrib=None):
@@ -161,7 +160,7 @@ class SETTINGS_GUI():
         self.SETTINGS = {}
         for attr,box in zip(self.ATTRIBUTES,self.boxes):
             attr2='MY_'+attr.upper().replace(' ','_')
-            self.SETTINGS[attr2] = box.get().upper()
+            self.SETTINGS[attr2] = box.get()          # .upper()
 
         if self.P:
             self.SETTINGS['MY_QTH']=self.SETTINGS['MY_CITY']+', ' \
