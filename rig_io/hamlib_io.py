@@ -286,11 +286,10 @@ class hamlib_connect(direct_connect):
             #print '************************* HAMLIB_IO: GET_RESPONSE - Direct commands not working yet',cmd
             #return ''
             #cmd2='w '+cmd[:-1]+'\n'
-            cmd2='w '+cmd[:-1]
-            if cmd2[-1]!=';':
-                cmd2+=';\n'
+            if cmd[0]=='w':
+                cmd2=cmd+'\n'
             else:
-                cmd2+='\n'
+                cmd2='w '+cmd+'\n'
             if VERBOSITY>0:
                 print('HAMLIB GET_RESPONSE: Sending Yaesu/Kenwood',cmd2)
             print('HAMLIB GET_RESPONSE: **** WARNING *** Yaesu/Kenwood direct commands are flaky !!!!!',cmd2)
@@ -304,7 +303,8 @@ class hamlib_connect(direct_connect):
                 print('HAMLIB_IO: Get_Response: Single letter command:',cmd)
             self.send(cmd+'\n')
         elif cmd[0]=='w' and cmd[-1]!=';':
-            cmd2=cmd+';'
+            cmd2=cmd+';\n'
+            print('cmd2=',cmd2)
             self.send(cmd2)
         else:
             if VERBOSITY>0:
@@ -514,7 +514,7 @@ class hamlib_connect(direct_connect):
             print('HAMLIB_IO - SET MODE: Response buf=',buf)
 
         # Set roofing filter also
-        if self.rig_type1=='Yaesu':
+        if self.rig_type2=='FTdx3000':
             if mode in ['CW','CWR']:
                 cmd  = 'L ROOFINGFILTER 4'
             elif mode in ['AM']:
@@ -605,47 +605,38 @@ class hamlib_connect(direct_connect):
         if VERBOSITY>0:
             print('HAMLIB_IO: Get Ant',self.rig_type,self.rig_type1,self.rig_type2)
         
-        if True:
-            # The 'y' command isn't available on all rigs but its really
-            # only useful for the FTdx3000 anyway
-            if self.rig_type2=='FTdx3000':
-                if False:
-                    # V3 
-                    ant = int( self.get_response('y') ) + 1         # V3
-                elif False:
-                    # They seemed to have hosed this up in v4.2 so just do it directly for now
-                    buf = self.get_response('AN0;')
-                    ant=int(buf[3])
-                else:
-                    # They changed command and response in V4 - ugh!
-                    # Need my code patch to hamlib for this to work.
-                    if VERBOSITY>0:
-                        print('HAMLIB_IO: Sending y command...')
-                    x = self.get_response('y 0',VERBOSITY=VERBOSITY)
-                    if x==None:
-                        print('HAMLIB IO - GET_ANT: Unable to read antenna - assuming ANT 1')
-                        return 1
-                    x = x.split('\n')
-                    if VERBOSITY>0:
-                        print('HAMLIB_IO: Get Ant: x=',x)
-                    xx=x[0]
-                    
-                    try:
-                        ant=int( xx[3] )
-                    except:
-                        error_trap('HAMLIB IO->GET ANT: Problem determining antenna - assuming ANT 1')
-                        print('x=',x,'\txx=',xx,'\txx[3]=',xx[3])
-                        return 1
-                        
-                    if VERBOSITY>0:
-                        print('HAMLIB_IO: Get Ant: ant=',ant)
+        # The 'y' command isn't available on all rigs but its really
+        # only useful for the FTdx3000 anyway
+        if self.rig_type2=='FTdx3000':
+            if False:
+                # They seemed to have hosed this up in v4.2 so just do it directly for now
+                buf = self.get_response('AN0;')
+                ant=int(buf[3])
             else:
-                ant = 1
+                # They changed command and response in V4 - ugh!
+                # Need my code patch to hamlib for this to work.
+                if VERBOSITY>0:
+                    print('HAMLIB_IO: Sending y command...')
+                x = self.get_response('y 0',VERBOSITY=VERBOSITY)
+                if x==None:
+                    print('HAMLIB IO - GET_ANT: Unable to read antenna - assuming ANT 1')
+                    return 1
+                x = x.split('\n')
+                if VERBOSITY>0:
+                    print('HAMLIB_IO: Get Ant: x=',x)
+                xx=x[0]
+                    
+                try:
+                    ant=int( xx[3] )
+                except:
+                    error_trap('HAMLIB IO->GET ANT: Problem determining antenna - assuming ANT 1')
+                    print('x=',x,'\txx=',xx,'\txx[3]=',xx[3])
+                    return 1
+                        
+                if VERBOSITY>0:
+                    print('HAMLIB_IO: Get Ant: ant=',ant)
         else:
-            try:
-                ant = int( self.get_response('y') ) + 1
-            except:
-                ant = 1
+            ant = 1
 
         if VERBOSITY>0:
             print('HAMLIB_IO GET_ANT: buf=',ant)

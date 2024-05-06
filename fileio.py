@@ -193,38 +193,23 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False):
     try:
         
         if line==None:
-            if True:
-                if not parse_adif.fp:
-                    #fp=open(fname)
-                    parse_adif.fp=codecs.open(fname, 'r', encoding='utf-8',
+            if not parse_adif.fp:
+                parse_adif.fp=codecs.open(fname, 'r', encoding='utf-8',
                                               errors='ignore')
-                raw1 = re.split('<eoh>(?i)',parse_adif.fp.read() )
-                if not REVISIT:
-                    parse_adif.fp.close()
-                    parse_adif.fp=None
-            else:
-                # Old
-                with codecs.open(fname, 'r', encoding='utf-8',
-                                 errors='ignore') as fp:
-                    raw1 = re.split('<eoh>(?i)',fp.read() )
-            
+            raw1 = re.split('(?i)<eoh>',parse_adif.fp.read() )
+            if not REVISIT:
+                parse_adif.fp.close()
+                parse_adif.fp=None
         else:
-            raw1 = re.split('<eoh>(?i)',line )
+            raw1 = re.split('(?i)<eoh>',line )
             
-    except Exception as e:
+    except:
         
-        print('PARSE_ADIF: *** Unable to open file or other error in PARSE_ADIF ***')
+        error_trap('FILE_IO->PARSE_ADIF: *** Unable to open file or other error')
         print('fname=',fname)
-        print('Error msg:\t',getattr(e, 'message', repr(e)))
-        traceback.print_exc()
         return logbook
         
-    raw = re.split('<eor>(?i)',raw1[-1] )
-
-    #print('raw[0] =',raw[0])
-    #print('raw[1] =',raw[1])
-    #raw.pop(0)  #remove header - this deletes 1st qso if there is no header!!!
-    #raw.pop()   #remove last empty item
+    raw = re.split('(?i)<eor>',raw1[-1] )
 
     for record in raw:
         if verbosity>0:

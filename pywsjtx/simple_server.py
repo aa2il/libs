@@ -14,7 +14,7 @@ import struct
 import pywsjtx
 import logging
 import ipaddress
-from utilities import freq2band
+from utilities import freq2band, error_trap
 import re
 import datetime
 
@@ -86,6 +86,7 @@ class SimpleServer(object):
                                                             pywsjtx.QCOLOR.COLORS(bg),
                                                             pywsjtx.QCOLOR.COLORS(fg),
                                                             True)
+        print('HIGHLIGH SPOT: ADDR=',self.addr_port)
         self.send_packet(self.addr_port, color_pkt)
 
     # Routine to configure some of the WSJT parameters - TYPE 15
@@ -93,16 +94,17 @@ class SimpleServer(object):
         # At startup, this doesn't work so just trap error
         try:
             print('CONFIGURE_WSJT: NewMode=',NewMode,'\tRxDF=',RxDF,\
-                  '\tDxCall=',DxCall)
+                  '\tDxCall=',DxCall,'\tADDR=',self.addr_port)
             config_pkt = pywsjtx.ConfigurePacket.Builder(self.wsjtx_id,
                                                          Mode=NewMode,
                                                          RXDF=int(RxDF),
                                                          DXCall=DxCall, DXGrid=DxGrid)
             self.send_packet(self.addr_port, config_pkt)
             return True
-        except Exception as e: 
-            print('\nCONFIGURE_WSJT: Unable to configure WSJT')
-            print(e,'\n')
+        except:
+            #except Exception as e: 
+            error_trap('CONFIGURE_WSJT: Unable to configure WSJT')
+            #print(e,'\n')
             return False
 
 
@@ -117,6 +119,7 @@ class SimpleServer(object):
             
             # Save these if we need to respond to this packet,e.g. highlight color
             self.addr_port = addr_port
+            print('GET_SPOT2: ADDR=',self.addr_port)
             try:
                 self.wsjtx_id  = the_packet.wsjtx_id
             except:

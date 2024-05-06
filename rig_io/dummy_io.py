@@ -1,7 +1,7 @@
 ############################################################################################
 #
 # Dummy Rig IO - Rev 1.0
-# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Dummied-up socket I/O routines so codes will work if there is not a
 # rig connection.
@@ -30,12 +30,14 @@ VERBOSITY=0
 
 # Setup basic logging
 logging.basicConfig(
-    format="%(asctime)-15s [%(levelname)s] DUMMY_IO:%(funcName)s:\t%(message)s",
+    format="%(asctime)-15s [%(levelname)s] %(funcName)s:\t%(message)s",
     level=logging.INFO)
 
 # Object with dummy connection
 class no_connect:
     def __init__(self,host=0,port=0):
+        print('DUMMY_IO->NO CONNECT: Init ...')
+
         self.s          = None
         self.active     = False
         self.connection = 'NONE'

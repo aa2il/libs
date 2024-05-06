@@ -1110,7 +1110,7 @@ def read_mic_gain(self):
     itries=0
     while not Done:
         buf=self.sock.get_response(cmd)
-        print("cmd=",cmd,"\t\tbuf=",buf)
+        print("READ MIC GAIN: cmd=",cmd,"\t\tbuf=",buf)
         try:
             if cmd=='MG;':
                 self.gain = int(buf[2:5])
