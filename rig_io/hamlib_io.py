@@ -477,7 +477,10 @@ class hamlib_connect(direct_connect):
         elif mode in ['RTTY','DIGITAL','FT8'] or mode.find('PSK')>=0 or mode.find('JT')>=0:
             mode='PKTUSB'
             if not bw:
-                bw=2400
+                if self.rig_type2=='FT991a':
+                    bw=3000
+                else:
+                    bw=2400
         elif mode in ['CW','CWUSB','CW-USB']:
             mode='CW'
             if not bw:

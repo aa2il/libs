@@ -104,10 +104,13 @@ def int2bcd(x,n,ireverse=0):
 
 # Function to return hex values of a list of bytes
 def show_hex(x):
-    #print('SHOW_HEX: x=',x,type(x))
     if isinstance(x, str):
         return [hex(ord(c)) for c in x]
     else:
         return [hex(c) for c in x]            
+
+# Function to return ascii values of a list of bytes
+def show_ascii(x):
+    return [ord(c) for c in x]
 
 

@@ -237,12 +237,13 @@ CQ_ZONES = {'CT' : 5 , \
 
 # Put this here as both pySat and pyKeyer.py reference it.
 # Need the 'None' entry for list box in pyKeyer
-# SK sats: AO-85,91,92, FO-99, CAS-6?, EO-88? ,HO-113?, AO-27
+# SK sats: AO-85,92,109? FO-99, CAS-6?, EO-88? ,HO-113?, AO-27
+#          XW-2A?, 2F?
 # IO-86 never gets bove the horizon in our part of the world
 SATELLITE_LIST = ['None','ISS','PO-101','SO-50', \
-                  'AO-91','AO-92','AO-109',  \
+                  'AO-91',  \
                   'CAS-4A','CAS-4B','CAS-6', \
-                  'XW-2A','XW-2B','XW-2C','XW-2D','XW-2F','RS-44', \
+                  'XW-2B','XW-2C','XW-2D','RS-44', \
                   'AO-7','JO-97','UVSQ-SAT', \
                   'LILACSAT-2','FO-29','AO-73','IO-117',
                   'NO-44','SO-121','TEVEL-5',
@@ -405,6 +406,7 @@ bands["6m"] = {"Code" : 10,
                 "FT8"  : 50313,
                 "FT8C" : 0,
                 "FT4"  : 50318,
+                "MSK144"  : 50260,
                 "PSK"  : 50290, "MicGain": 13,
                 "CONTEST" : False}
 bands["2m"] = {"Code" : 15, 
@@ -414,6 +416,7 @@ bands["2m"] = {"Code" : 15,
                 "FT8"  : 144174,
                 "FT8C" : 0,
                 "FT4"  : 144170,
+                "MSK144"  : 144360,
                 "PSK"  : 144290, "MicGain": 0,
                 "CONTEST" : False}
 bands["1.25m"] = {"Code" : -1, 
@@ -432,6 +435,7 @@ bands["70cm"] = {"Code" : 16,
                  "FT8"  : 0,
                  "FT8C" : 0,
                  "FT4"  : 0,
+                 "MSK144"  : 432360,
                  "PSK"  : 430000, "MicGain": 0,
                  "CONTEST" : False}
 bands["33cm"] = {"Code" : -1, 

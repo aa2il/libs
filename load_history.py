@@ -259,7 +259,7 @@ def load_history(history,DEBUG_CALL=None):
 
                     if call in HIST.keys():
                         print('\nLOAD_HISTORY: Call already seen in this file',call)
-                        print('HIST=',HIST[call])
+                        #print('HIST=',HIST[call])
                     else:
                         HIST[call] = OrderedDict()
                         for field in ALL_FIELDS:
