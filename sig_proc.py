@@ -170,7 +170,12 @@ class spectrum:
             xx = xx - np.mean(xx)
             
         #print 'PERIODOGRAM 3',len(x),len(self.win),self.NFFT
-        if np.iscomplexobj(x) or FORCE_COMPLEX:
+        if len(xx)!=len(self.win):
+            print('\n*** Problem in PSD - data and window lengths dont match! ***\n',
+                  len(xx),len(self.win))
+            #PSD = np.fft.rfft(self.win , self.NFFT)     # Fill with junk for now
+            PSD = np.fft.fftshift( np.fft.fft(self.win , self.NFFT) )
+        elif np.iscomplexobj(x) or FORCE_COMPLEX:
             #print 'PERIODOGRAM 3a - complex FFT'
             PSD = np.fft.fftshift( np.fft.fft(xx * self.win , self.NFFT) )
             self.frq = self.frq2
@@ -435,7 +440,7 @@ class ring_buffer2:
                 try:
                     xxx = self.buf.get(timeout=1.0)
                 except:
-                    error_trap('RINGBUFFER2 PULL: Unable to pull next block ????',1)
+                    error_trap('RINGBUFFER2 PULL: Unable to pull next block ????',True)
                     break
                 xx = np.concatenate( (xx, xxx) )
                 self.buf.task_done()
@@ -461,7 +466,7 @@ class ring_buffer2:
                 xxx = np.zeros(n-len(x), x.dtype)   
                 x = np.concatenate( (x, xxx) )
             except:
-                error_trap('RINGBUFFER2 PULL: Unable to form packet')
+                error_trap('RINGBUFFER2 PULL: Unable to form packet',True)
                 x=np.array([])
 
         if self.tag!='Audio1' and False:
@@ -1073,7 +1078,8 @@ class AudioIO():
             Stopper = (self.P.Stopper and self.P.Stopper.isSet())
             
         if status!=0 and not Stopper:
-            print("AudioPlayCB:",rb.tag,frame_count,time_info,status)
+            print("AudioPlayCB: tag=",rb.tag,'\tframe count=',frame_count,
+                  '\ttime=',time_info,'\tstauts=',status)
             if status == pyaudio.paOutputUnderflow:
                 delay=self.P.RB_SIZE/self.P.FS_OUT/4
                 print("Houston, we have an underflow problem ...")

@@ -163,8 +163,9 @@ class SETTINGS_GUI():
             self.SETTINGS[attr2] = box.get()          # .upper()
 
         if self.P:
-            self.SETTINGS['MY_QTH']=self.SETTINGS['MY_CITY']+', ' \
-                +self.SETTINGS['MY_STATE']
+            if 'MY_CITY' in self.SETTINGS and 'MY_STATE' in self.SETTINGS:
+                self.SETTINGS['MY_QTH']=self.SETTINGS['MY_CITY']+', ' \
+                    +self.SETTINGS['MY_STATE']
             self.P.SETTINGS=self.SETTINGS
             print('Writing settings to',self.P.RCFILE,'...')
             print(self.P.SETTINGS)
