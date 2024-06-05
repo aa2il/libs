@@ -70,7 +70,7 @@ class ChallengeData:
                 call = self.sheet3.cell(i,12).value
                 if len(call)>0:
                     self.cwops_worked.append(call)
-                    num = self.sheet3.cell(i,11).value
+                    num = int( self.sheet3.cell(i,11).value )
                     self.cwops_nums.append(num)
             except:
                 print('Problem reading CWOPS member data - giving up')

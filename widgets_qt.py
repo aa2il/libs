@@ -152,6 +152,7 @@ class StatusBar():
             self.setText("Howdy Ho!")
         else:
             # Normal QT gui
+            print('Normal satus bar ...')
             self.label = QLabel("Howdy Ho!")
             root.grid.addWidget(self.label,nrows,0)
             self.splish_splash = False

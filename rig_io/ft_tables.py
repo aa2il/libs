@@ -246,8 +246,8 @@ SATELLITE_LIST = ['None','ISS','PO-101','SO-50', \
                   'AO-7','JO-97','UVSQ-SAT', \
                   'LILACSAT-2','FO-29','HO-68','IO-117','IO-86',
                   'NO-44','SO-114','SO-121',
-                  'TEVEL-2','TEVEL-3','TEVEL-4','TEVEL-5','TEVEL-6',
-                  'TEVEL-7','TEVEL-8',
+                  'TEVEL-1','TEVEL-2','TEVEL-3','TEVEL-4','TEVEL-5',
+                  'TEVEL-6','TEVEL-7','TEVEL-8',
                   'XW-2B','XW-2C','XW-2D', \
                   'Moon']
 

@@ -427,11 +427,11 @@ class hamlib_connect(direct_connect):
             #return
             
         self.tlast = time.time()
-        if VFO=='A' or self.rig_type1 == 'Icom':
+        if VFO=='A':     #  or self.rig_type1 == 'Icom':
             # Change freq of VFO A using regular hamlib F command
             self.freq  = frq_KHz*1e3
             cmd='F '+str( int(self.freq) ).zfill(8)
-        elif VFO=='B' and self.rig_type1 == 'Dummy':
+        elif VFO=='B' and self.rig_type1 in['Dummy','Icom']:
             frq  = int( frq_KHz*1000 )
             cmd='I '+str( int(frq) ).zfill(8)
         else:
@@ -854,7 +854,8 @@ class hamlib_connect(direct_connect):
     # Read rotor position - if at first we don't succeed, try try again
     def get_position(self):
         ntries=0
-        while ntries<3:
+        MAX_TRIES=5
+        while ntries<MAX_TRIES:
             x = self.get_response('p').split('\n')
             #print('x=',x,ntries)
             try:
@@ -863,9 +864,12 @@ class hamlib_connect(direct_connect):
                     print('\nHAMLIB - GET_POSITION:',pos)
                 return pos
             except:
+                error_trap('HAMLIB GET POSITION: Problem reading rotor position')
+                print('x=',x)
                 ntries+=1
+                time.sleep(0.1)
         else:
-            print('\nHAMLIB - GET_POSITION - Unable to read rotor position')
+            print('\nHAMLIB - GET_POSITION - Unable to read rotor position after',MAX_TRIES,'tries!')
             return [None,None]
 
             
@@ -1254,3 +1258,114 @@ class hamlib_connect(direct_connect):
         
     
     
+
+
+    # Routine to put rig into dual watch
+    def dual_watch(self,opt):
+        VERBOSITY=1
+        if VERBOSITY>0:
+            print('HAMLIB_IO - DUAL_WATCH:',opt,'\trig_type2=',self.rig_type2)
+
+        if self.rig_type2=='IC9700':
+        
+            if opt==-1:
+                # Read current sat mode setting
+                #cmd =  'u SATMODE'
+                cmd =  'u DUALWATCH'
+                if VERBOSITY>0:
+                    print('\tcmd=',cmd)
+                x=self.get_response(cmd)
+                if VERBOSITY>0:
+                    print('\tx=',x)
+
+                return int( x )
+    
+            elif opt<2:
+                # Turn it on/off
+                #cmd =  'U SATMODE '+str(opt)
+                cmd =  'U DUALWATCH '+str(opt)
+                if VERBOSITY>0:
+                    print('\tcmd=',cmd)
+                x=self.get_response(cmd)
+                if VERBOSITY>0:
+                    print('\tx=',x)
+                
+                return opt
+
+            else:
+
+                print('DUAL_WATCH: Invalid opt',opt)
+                return 0
+            
+        else:
+
+            if VERBOSITY>0:
+                print('DUAL_WATCH: Invalid rig',self.rig_type2)
+            return 0
+    
+    
+
+
+
+    def frontend(self,opt,pamp=0,atten=0):
+        VERBOSITY=1
+        if VERBOSITY>0:
+            print('HAMLIB_IO FRONTEND: opt=',opt,'\tpamp=',pamp,'\tatten=',atten,
+                  '\trig1=',self.rig_type1)
+            
+        if opt==0:
+                
+            # Read current settings - need to test this
+            cmd = 'l PREAMP'
+            x   = self.get_response(cmd)
+            on_off1 = int( x )
+
+            cmd = 'l ATT'
+            x   = self.get_response(cmd)
+            on_off2 = int( x )
+                
+            return [on_off1,on_off2]
+
+        elif opt==1:
+                
+            # Set pre-amp and/or attenator
+            if pamp in [0,1]:
+                print('HAMLIB_IO FRONT-END: Setting P-AMP on MAIN RX')
+                cmd = 'L PREAMP '+str(pamp)
+                x = self.get_response(cmd)
+                print('HAMLIB_IO FRONTEND: x   =',x)
+
+            if atten in [0,1]:         
+                print('HAMLIB_IO FRONT-END: Setting ATT on MAIN RX')
+                cmd = 'L ATT '+str(atten)
+                x = self.get_response(cmd)
+                print('HMLIB FRONTEND: x   =',x)
+
+            # Icom - assumes IC9700
+            if self.rig_type1=='Icom':
+                    print('HAMLIB_IO FRONT-END: Swapping MAIN and SUB RXs')
+                    cmd = 'G XCHG'
+                    x   = self.get_response(cmd)
+                    print('DIRECT FRONTEND: x   =',x)
+                    
+                    if pamp in [0,1]:
+                        print('HAMLIB_IO FRONT-END: Setting P-AMP on SUB RX')
+                        cmd = 'L PREAMP '+str(pamp)
+                        x = self.get_response(cmd)
+                        print('HAMLIB_IO FRONTEND: x   =',x)
+
+                    if atten in [0,1]:         
+                        print('HAMLIB_IO FRONT-END: Setting ATT on SUB RX')
+                        cmd = 'L ATT '+str(atten)
+                        x = self.get_response(cmd)
+                        print('HMLIB FRONTEND: x   =',x)
+
+                    print('HAMLIB_IO FRONT-END: Swapping MAIN and SUB RXs')
+                    cmd = 'G XCHG'
+                    x   = self.get_response(cmd)
+                    print('DIRECT FRONTEND: x   =',x)
+                    
+        else:
+            print('DIRECT FRONTEND: Unknown option',opt)
+            
+        
