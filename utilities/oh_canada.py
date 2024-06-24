@@ -95,7 +95,7 @@ def Oh_Canada(dx_station):
             qth='BC'
             secs=[qth]
         elif prefix in ['VE8']:
-            qth='NT'
+            qth='TER'                 # Formerly NT
             secs=[qth]
         elif prefix in ['VE9']:
             qth='NB'
@@ -107,7 +107,7 @@ def Oh_Canada(dx_station):
             qth='NU'
             secs=[qth]
         elif prefix in ['VY1']:
-            qth='YT'
+            qth='TER'                  # Formerly YT
             secs=[qth]
         elif prefix in ['VY2']:
             qth='PE'
