@@ -1494,19 +1494,22 @@ class direct_connect:
 
     # Routine to put rig into dual watch
     def dual_watch(self,opt):
-        #VERBOSITY=1
+        VERBOSITY=1
         if VERBOSITY>0:
-            print('DIRECT - DUAL_WATCH:',opt)
+            print('DIRECT - DUAL_WATCH:',opt,'\trig_type2=',self.rig_type2)
 
         if self.rig_type2=='IC9700':
         
             if opt==-1:
                 # Read current sat mode setting
                 cmd =  self.civ.icom_form_command([0x16,0x59])  
-                x=self.get_response(cmd)
-                y=self.civ.icom_response(cmd,x)
                 if VERBOSITY>0:
                     print('\tcmd=',show_hex(cmd))
+                x=self.get_response(cmd)
+                if VERBOSITY>0:
+                    print('\tx=',show_hex(x))
+                y=self.civ.icom_response(cmd,x)
+                if VERBOSITY>0:
                     print('\ty=',y)
 
                 return int( y[1],16 )

@@ -258,8 +258,9 @@ def load_history(history,DEBUG_CALL=None):
                         continue
 
                     if call in HIST.keys():
-                        print('\nLOAD_HISTORY: Call already seen in this file',call)
-                        #print('HIST=',HIST[call])
+                        if False:
+                            print('\nLOAD_HISTORY: Call already seen in this file',call)
+                            #print('HIST=',HIST[call])
                     else:
                         HIST[call] = OrderedDict()
                         for field in ALL_FIELDS:
@@ -295,8 +296,9 @@ def load_history(history,DEBUG_CALL=None):
                             elif len(val)==4:
                                 key='county'
                             else:
-                                print('LOAD HISTORY *** WARNING *** skipping blank key',key)
-                                print('row=',row)
+                                if False:
+                                    print('LOAD HISTORY *** WARNING *** skipping blank key',key)
+                                    print('row=',row)
                                 key=''
                                 
                         if key in ALL_FIELDS:

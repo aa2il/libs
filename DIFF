@@ -32,7 +32,7 @@ set old=${ROOT}${PTH}
 echo OLD=$old
 
 rm -f DIFFS
-foreach i (*.py rig_io/*py dx/*py pywsjtx/*py DIFF *.bat *.txt)
+foreach i (*.py */*py  DIFF *.bat *.txt)
     echo $i
     set n=`diff -w $old/$i $i | wc -l`
     if( !( -e $old/$i ) )then

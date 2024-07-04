@@ -54,6 +54,7 @@ class no_connect:
         self.rig_type1  = None
         self.rig_type2  = 'None'
         self.tlast      = None
+        self.ntimeouts = 0
 
     def get_band(self,frq=None,VFO='A'):
         if frq==None or frq<0:

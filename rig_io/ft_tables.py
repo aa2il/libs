@@ -126,6 +126,10 @@ LOWER48 = ['AL','AR','AZ','CA','CO','CT','DE','FL','GA', \
            'VA','WA','WV','WI','WY']
 STATES  = LOWER48 + ['AK','HI']
 
+# 13 Colonies SE stations
+THIRTEEN_COLONIES=['K2A','K2B','K2C','K2D','K2E','K2F','K2G','K2H','K2I','K2J','K2K',
+                   'K2L','K2M','WM3PEN','GB13COL','TM13COL']
+
 # Canadian provinces/territories: 
 # NS ((VE1, VA1, CY9, CYØ),         QC (VE2 VA2),
 # ON (VE3 VA3),    MB (VE4 VA4),    SK (VE5 VA5),
