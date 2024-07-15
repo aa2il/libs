@@ -27,7 +27,7 @@ import logging
 from pprint import pprint
 import xlrd
 from unidecode import unidecode
-from utilities import find_resource_file
+from utilities import find_resource_file, error_trap
 
 ################################################################################
 
@@ -73,7 +73,7 @@ class ChallengeData:
                     num = int( self.sheet3.cell(i,11).value )
                     self.cwops_nums.append(num)
             except:
-                print('Problem reading CWOPS member data - giving up')
+                error_trap('Problem reading CWOPS member data - giving up')
                 print(i,self.sheet3.nrows)
                 break
 
@@ -107,7 +107,8 @@ class ChallengeData:
                 try:
                     calls.append( unidecode( val ) )
                 except:
-                    print('SPOT PROCESSING: Problem with ',i,j)
+                    error_trap('SPOT PROCESSING - Challenge Data: Problem unpacking cell')
+                    print('i=',i,'\tj=',j)
             self.slots.append(calls)
             #print('CHALLENGE DATA - i=',i,'\tcalls=',calls)
             
@@ -352,21 +353,21 @@ class Station(object):
         CTY_FILE='cty.plist'
         CTY_FILE='cty.bin'
         try:
-                if os.path.isfile(cty_dir+CTY_FILE):
-                        dxcc = load_cty(cty_dir+CTY_FILE)
+            if os.path.isfile(cty_dir+CTY_FILE):
+                dxcc = load_cty(cty_dir+CTY_FILE)
+            else:
+                fname=find_resource_file(CTY_FILE)
+                #print('fname=',fname)
+                if os.path.isfile(fname):
+                    dxcc = load_cty(fname)              #Load Country File
                 else:
-                        fname=find_resource_file(CTY_FILE)
-                        #print('fname=',fname)
-                        if os.path.isfile(fname):
-                            dxcc = load_cty(fname)              #Load Country File
-                        else:
-                            self._logger.critical("CTY.PLIST could not be loaded!")
-                            raise Exception("cty.plist not found!")
-        except Exception as e:
-                #self._logger.exception("CTY.PLIST could not be loaded!")
-                print(e)
-                print("CTY.PLIST could not be loaded!")
-                sys.exit(0)
+                    #self._logger.critical(CTY_FILE+" could not be loaded!")
+                    raise Exception(CTY_FILE+" not found!")
+        except:
+            error_trap('SPOT PROCESSING - Station: '+CTY_FILE+' could not be loaded!')
+            #self._logger.exception("CTY.PLIST could not be loaded!")
+            print('cty_dir=',cty_dir)
+            sys.exit(0)
                 
         #------------------Class Methods --------------------           
         def __iterate_prefix(self, call):
