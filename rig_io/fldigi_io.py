@@ -88,6 +88,7 @@ class fldigi_xlmrpc(direct_connect):
         self.dead       = False
         self.wpm        = 0
         self.sub_dial_func=None
+        self.nrx        = 0
 
         self.rig_type  = 'UNKNOWN'
         self.rig_type1 = 'UNKNOWN'
@@ -851,32 +852,42 @@ class fldigi_xlmrpc(direct_connect):
     # Function to set log fields
     def set_log_fields(self,fields):
         if self.fldigi_active:
-            print('SET_LOG_FIELDS: Fields:',fields)
+            #print('SET_LOG_FIELDS: Fields:',fields)
             acq=self.lock.acquire(timeout=1.0)
             if acq:
+                
                 for key in list(fields.keys()):
                     if key=='Call':
                         self.s.log.set_call(fields['Call'])
+                        print('FLDIGI_IO-SET LOG FIELDS: call=',fields['Call'])
                     elif key=='Name':
                         self.s.log.set_name(fields['Name'])
+                        print('FLDIGI_IO-SET LOG FIELDS: name=',fields['Name'])
                     elif key=='QTH':
                         self.s.log.set_qth(fields['QTH'])
                         self.s.log.set_locator(fields['QTH'])
+                        print('FLDIGI_IO-SET LOG FIELDS: qth=',fields['QTH'])
                     elif key=='RST_out':
                         self.s.log.set_rst_out(fields['RST_out'])
+                        print('FLDIGI_IO-SET LOG FIELDS: rst=',fields['RST_out'])
                     elif key=='Exchange':
                         self.s.log.set_exchange(fields['Exchange'])
+                        print('FLDIGI_IO-SET LOG FIELDS: xchange=',fields['Exchange'])
                     else:
                         print('SET_LOG_FIELD: %%% Unknwon log field %%%%%%%%%% ',key)
-                    self.lock.release()
+                        
+                self.lock.release()
             print('SET_LOG_FIELDS: Done.')
 
     # Function to get log fields
-    def get_log_fields(self):
+    def get_log_fields(self,CALL_ONLY=False):
         if self.fldigi_active:
-            print('GET_LOG_FIELDS:')
+            #print('GET_LOG_FIELDS:')
             self.lock.acquire()
             call    = self.s.log.get_call()
+            if CALL_ONLY:
+                self.lock.release()
+                return {'Call':call}
             name    = self.s.log.get_name()
             qth     = self.s.log.get_qth()
             if qth=='':
@@ -885,19 +896,28 @@ class fldigi_xlmrpc(direct_connect):
             rst_out = self.s.log.get_rst_out()
             ser_in  = self.s.log.get_serial_number()
             ser_out = self.s.log.get_serial_number_sent()
+            exch    = self.s.log.get_exchange()
             self.lock.release()
         else:
             call    = ''
+            if CALL_ONLY:
+                self.lock.release()
+                return {'Call':call}
             name    = ''
             qth     = ''
             rst_in  = ''
             rst_out = ''
             ser_in  = ''
             ser_out = ''
+            exch    = ''
 
+        cat=''
+        prec=''
+        check=''
 
         return {'Call':call,'Serial_In':ser_in,'Serial_Out':ser_out,\
-                'Name':name,'QTH':qth,\
+                'Name':name,'QTH':qth,'Exchange':exch,\
+                'Category':cat,'Prec':prec,'Check':check,
                 'RST_in':rst_in,'RST_out':rst_out}
 
     def get_serial_out(self):
@@ -1229,6 +1249,38 @@ class fldigi_xlmrpc(direct_connect):
         self.s.rig.cwio_text(txt)
         #self.s.rig.set_ptt(1)
 
+    def get_rx_buff(self):
+        #print('GET_RX_BUFF...')
+        if True:
+            n = self.s.text.get_rx_length()
+            #print('\tn=',self.nrx,n)
+            if n>self.nrx:
+                s = self.s.text.get_rx(self.nrx,n)
+            else:
+                s=''
+            #print('\t',s)
+            self.nrx=n
+        else:
+            s = self.s.rx.get_data()
+
+        return str(s)
+
+    def put_tx_buff(self,txt):
+        print('PUT_RX_BUFF... txt=',txt)
+        self.lock.acquire()
+        ntries=0
+        while ntries<10:
+            try:
+                ntries+=1
+                self.s.text.add_tx(txt)
+                break
+            except:
+                time.sleep(DELAY)
+        else:
+            print('\nPUT_RX_BUFF: *** ERROR *** Failed to insert txt after 10 tries!!!!!\n')
+        self.lock.release()
+        
+
 ################################################################################################
     
 
@@ -1358,7 +1410,7 @@ class fllog_xlmrpc:
         rec = adif_record(qso)
         print(rec)
         self.s.log.add_record(rec)
-        
+
 
 def adif_record(qso):
 #    qso['freq'] = str( 1e-3*float( qso['freq'] ) )

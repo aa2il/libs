@@ -14,6 +14,7 @@ import sys
 import time
 import numpy as np
 from sig_proc import ring_buffer2
+import pyudev
 
 ############################################################################################
 
@@ -242,7 +243,8 @@ class WaveRecorder(object):
         return wavefile
 
     def list_input_devices(self,dev_name):
-        print("\n---------------------- Record devices -----------------------")
+        print("\n---------------------- Recording devices -----------------------")
+        print('\tLooking for',dev_name,'...')
 
         p = self._pa
         info = p.get_host_api_info_by_index(0)
@@ -250,16 +252,34 @@ class WaveRecorder(object):
         index=None
         for i in range(0, numdevices):
             if (p.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
-                dev = p.get_device_info_by_host_api_device_index(0, i).get('name')
-                print("Input Device id ", i, " - ",dev)
+                dev = p.get_device_info_by_host_api_device_index(0, i)
+                name = dev.get('name')
+                print("Input Device id ", i, " - ",name)
 
-                if dev.find(dev_name)>=0:
+                if name.find(dev_name)>=0:
                     print('*** There it is ***',i)
+                    #print(dev)
+                    self.get_detailed_usb_info(dev_name.replace(' ','_'))
                     index = i
 
         print("-------------------------------------------------------------")
+        #sys.exit(0)
         return index
 
+    def get_detailed_usb_info(self,dev_name):
+
+        context = pyudev.Context()
+        devices = context.list_devices(subsystem='usb')
+
+        for device in devices:
+            if device.get('ID_MODEL')==dev_name:
+                print(f'\tDevice Name: {device.get("ID_VENDOR")} {device.get("ID_MODEL")}')
+                print(f'\tDevice Serial Number: {device.get("ID_SERIAL_SHORT")}')
+                print(f'\tDevice Bus: {device.get("ID_BUS")}')
+                print(f'\tDevice Device: {device.get("ID_PATH")}')
+                print('')
+
+    
 ############################################################################################
 
 # Main program to demo non-blocking usage
