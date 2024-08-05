@@ -770,10 +770,24 @@ class fldigi_xlmrpc(direct_connect):
                 return ' '
                 
             if self.fldigi_active:
-                self.s.rig.set_mode(mode)  
-                mold=self.s.modem.set_by_name(mode2)
-                print('mold=',mold)
-                mout=self.s.modem.get_name()
+                
+                ntries=0
+                while ntries<5:
+                    ntries+=1
+                    try:
+                        self.s.rig.set_mode(mode)  
+                        time.sleep(DELAY)
+                        mold=self.s.modem.set_by_name(mode2)
+                        print('mold=',mold)
+                        time.sleep(DELAY)
+                        mout=self.s.modem.get_name()
+                        time.sleep(DELAY)
+                        break
+                    except:
+                        time.sleep(DELAY)
+                    else:
+                        print('\tSET_MODE: *** ERROR *** Failed to set mode after 5 tries!!!!!\n')
+                        
             elif self.flrig_active:
                 #print('FLDIGI_IO - SET_MODE: Using xlmrpc for FLRIG vfo/mode=',VFO,mode)
                 if VFO=='A':

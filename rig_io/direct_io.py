@@ -1047,7 +1047,7 @@ class direct_connect:
             if VERBOSITY>0:
                 print('DIRECT SET_FILTER: Mode=',m,filt[0])
                 
-            if m in ['RTTY','PKTUSB','PSK-U','DATA-U','DIGITA']:
+            if m in ['RTTY','PKTUSB','PSK-U','DATA-U','DIGITA','BPSK31']:
                 if filt[0]=='Wide':                    
                     filts=FT991A_DATA_FILTERS2
                 else:

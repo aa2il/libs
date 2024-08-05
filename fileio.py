@@ -22,7 +22,6 @@
 import sys
 import os
 import re
-#from rig_io.ft_tables import *
 import csv
 from collections import OrderedDict
 from zipfile import ZipFile
@@ -572,7 +571,7 @@ def limiter(x,a):
     return np.maximum( np.minimum(x,a) ,-a)
 
 
-class SDR_FILEIO:
+class sdr_fileio:
     def __init__(self,fname,rw,P=None,nchan=2,tag=''):
         self.P     = P
         self.fname = fname

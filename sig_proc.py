@@ -171,10 +171,10 @@ class spectrum:
             
         #print 'PERIODOGRAM 3',len(x),len(self.win),self.NFFT
         if len(xx)!=len(self.win):
-            print('\n*** Problem in PSD - data and window lengths dont match! ***\n',
+            print('\n*** ERROR in PSD Periodogram - data and window lengths dont match! ***\n',
                   len(xx),len(self.win))
-            #PSD = np.fft.rfft(self.win , self.NFFT)     # Fill with junk for now
-            PSD = np.fft.fftshift( np.fft.fft(self.win , self.NFFT) )
+            #PSD = np.fft.fftshift( np.fft.fft(self.win , self.NFFT) )
+            return []
         elif np.iscomplexobj(x) or FORCE_COMPLEX:
             #print 'PERIODOGRAM 3a - complex FFT'
             PSD = np.fft.fftshift( np.fft.fft(xx * self.win , self.NFFT) )
@@ -390,6 +390,7 @@ class ring_buffer2:
         self.prev   = np.array([])      # Overlap from pervious call
         self.last_push = 0
         self.no_overflow=PREVENT_OVERFLOW
+        self.dtype   = None
 
     # Function to push a bunch of zeros into the buffer
     def push_zeros(self,n):
@@ -411,19 +412,22 @@ class ring_buffer2:
         if DEBUG>=1:
             print( self.tag,'- Push',len(x),x.dtype)
             
+        self.dtype = x.dtype
         self.last_push = len(x)
-        self.nsamps += self.last_push
-        self.buf.put(x)
-
-        if self.nsamps>self.size:
+        nsamps2 = self.nsamps + self.last_push
+        
+        if nsamps2 >self.size:
             print('RINGBUFFER2: PUSH overflow - tag=',self.tag,
                   '\tnsamps=',self.nsamps,'\tlen(x)=',self.last_push,
                   '\tBuffer size=',self.size)
             if self.no_overflow:
                 print('\tDumping half the buffer...')
                 self.pull(int( self.size/2 ))
-                print('\tnsamps=',self.nsamps)
-            
+                print('\tAfter nsamps=',self.nsamps)
+
+        self.nsamps += self.last_push
+        self.buf.put(x)
+                
     def pull(self,n,flush=False):
 
         #if self.tag=='Audio1':
@@ -441,6 +445,10 @@ class ring_buffer2:
                     xxx = self.buf.get(timeout=1.0)
                 except:
                     error_trap('RINGBUFFER2 PULL: Unable to pull next block ????',True)
+                    print('\ttag    =',self.tag)
+                    print('\tn      =',n)
+                    print('\tnsamps =',self.nsamps)
+                    print('\tlast   =',self.last_push,'\tflush=',flush)
                     break
                 xx = np.concatenate( (xx, xxx) )
                 self.buf.task_done()
@@ -461,9 +469,9 @@ class ring_buffer2:
             self.nsamps -= n
 
         if len(x)!=n:
-            print(self.tag,'RINGBUFFER2 PULL: Queue error - expected',n,' samples, got',len(x))
+            print('RINGBUFFER2 PULL: Queue error, tag=',self.tag,' - expected n=',n,' samples, got',len(x))
             try:
-                xxx = np.zeros(n-len(x), x.dtype)   
+                xxx = np.zeros(n-len(x), self.dtype)   
                 x = np.concatenate( (x, xxx) )
             except:
                 error_trap('RINGBUFFER2 PULL: Unable to form packet',True)
@@ -485,11 +493,16 @@ class ring_buffer2:
     def ready(self,n):
         if self.nsamps < n:
             if n>self.size:
-                print('RING BUFFER READY - looking for too many samples!',n,self.size)
+                print('RING BUFFER2 READY - looking for too many samples!',n,self.size)
                 sys,exit(1)
             return False
         else:
             return True
+
+    def clear(self):
+        print('RING BUFFER2 CLEAR: Before n=',self.nsamps,'...')
+        x=self.pull(self.nsamps)
+        print('... After n=',self.nsamps)
 
 ###################################################################
 
