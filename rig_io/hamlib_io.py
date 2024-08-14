@@ -463,7 +463,7 @@ class hamlib_connect(direct_connect):
         print('HAMLIB_IO SET_BAND:',buf)
 
     def set_mode(self,mode,VFO='A',Filter=None):
-        #VERBOSITY=1
+        VERBOSITY=1
         if VERBOSITY>0:
             print('HAMLIB_IO - SET MODE: mode=',mode,'\tVFO=',VFO,'\tFilter=',Filter)
 
@@ -500,12 +500,13 @@ class hamlib_connect(direct_connect):
                 bw=2400
 
         # Form hamlib command
+        bw=str(bw).replace('Hz','')
         if VFO in 'AM':
             # VFO A or Main
-            cmd  = 'M '+mode+' '+str(bw)
+            cmd  = 'M '+mode+' '+bw
         elif VFO in 'BS':
             # VFO B or Sub
-            cmd  = 'X '+mode+' '+str(bw)
+            cmd  = 'X '+mode+' '+bw
         else:
             print('HAMLIB_IO - SET MODE: Unknown VFO',VFO,mode)
             return
@@ -513,11 +514,11 @@ class hamlib_connect(direct_connect):
         # Send command to set mode & filter BW
         buf=self.get_response(cmd)
         if VERBOSITY>0:
-            print('HAMLIB_IO - SET MODE: mode,VFO=',mode,VFO,'\tcmd=',cmd)
+            print('HAMLIB_IO - SET MODE: mode,VFO,bw=',mode,VFO,bw,'\tcmd=',cmd)
             print('HAMLIB_IO - SET MODE: Response buf=',buf)
 
         # Set roofing filter also
-        if self.rig_type2=='FTdx3000':
+        if self.rig_type2=='FTdx3000' and True:
             if mode in ['CW','CWR']:
                 cmd  = 'L ROOFINGFILTER 4'
             elif mode in ['AM']:
@@ -576,9 +577,9 @@ class hamlib_connect(direct_connect):
 
 
     def set_filter(self,filt,mode=None):
-        #VERBOSITY=1
+        VERBOSITY=0
         if VERBOSITY>0:
-            print('\nHAMLIB_IO SET_FILTER: filt=',filt,'\tmode=',mode,mode[0:2])
+            print('\nHAMLIB_IO SET_FILTER: filt=',filt,'\tmode=',mode)
 
         if mode==None:
             mode=self.get_mode()
@@ -600,7 +601,6 @@ class hamlib_connect(direct_connect):
             print('\nHAMLIB_IO SET_FILTER: filt=',filt,'\tmode=',mode)
 
         self.set_mode(mode,Filter=filt)
-        #sys.exit(0)
         
     
     def get_ant(self):

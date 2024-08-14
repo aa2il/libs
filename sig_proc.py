@@ -484,7 +484,8 @@ class ring_buffer2:
             #print( self.tag,'- Pull',len(self.prev),self.prev.dtype)
         #return x                                   # Old
         #return x.astype(np.float32)               # New but messes up IQ PSD
-        self.dtype = x.dtype
+        if len(x)>0:
+            self.dtype = x.dtype
         if np.iscomplexobj(x):
             return x.astype(np.complex64)
         else:

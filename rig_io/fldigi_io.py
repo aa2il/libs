@@ -707,7 +707,7 @@ class fldigi_xlmrpc(direct_connect):
     def set_mode(self,mode,VFO='A',Filter=None):
         VERBOSITY=1
         if VERBOSITY>0:
-            print("FLDIGI_IO - SET_MODE mode=",mode,'\tVFO=',VFO,self.v4,'\tFilter=',Filter)
+            print("FLDIGI_IO - SET_MODE: mode=",mode,'\tVFO=',VFO,self.v4,'\tFilter=',Filter)
         mode2=mode       # Fldigi mode needs to match rig mode
 
         # Translate rig mode into something rig understands
@@ -748,8 +748,6 @@ class fldigi_xlmrpc(direct_connect):
                     mode='CW-R'
             else:
                 mode='CWR'
-        if VERBOSITY>0:
-            print('FLDIGI_IO - SET_MODE: mode=',mode,self.v4)
 
         # Translate fldigi mode into something fldigi understands
         if mode2 in ['DIGITAL','DIGITA','FT8','FT4'] or mode2.find('JT')>=0:
@@ -759,7 +757,7 @@ class fldigi_xlmrpc(direct_connect):
         elif mode2=='PSK':
             mode2='BPSK31'
         if VERBOSITY>0:
-            print('FLDIGI_IO: mode2=',mode2)
+            print('FLDIGI_IO - SET_MODE: mode=',mode,'\tmode2=',mode2,'\tVersion 4=',self.v4)
 
         if VFO=='A' or self.flrig_active:
             #print('FLDIGI_IO - SET_MODE: Using xlmrpc mode=',mode)
@@ -1152,21 +1150,46 @@ class fldigi_xlmrpc(direct_connect):
                 print('SPLIT: buf=',buf)
             return buf==1
 
-        elif opt==0:
+        elif opt in [0,1]:
             
             self.lock.acquire()
-            buf=self.s.rig.set_split(0)
-            self.lock.release()
-                
-        elif opt==1:
-            
-            self.lock.acquire()
-            buf=self.s.rig.set_split(1)
+            buf=self.s.rig.set_split(byte(opt))
             self.lock.release()
                 
         else:
             
             print('FLDIGI_IO - SPLIT_MODE: Invalid opt',opt)
+            return -1
+            
+
+    # Routine to get/put rig split mode
+    def squelch_mode(self,opt):
+        VERBOSITY=1
+        if VERBOSITY>0:
+            print('FLDIGI_IO - SQUELCH_MODE: opt=',opt)
+
+        if self.flrig_active:
+            print('FLDIGI_IO: SPLIT_MODE not available yet for FLRIG')
+            return
+
+        if opt==-1:
+            #print('\nQuerying split ...')
+            self.lock.acquire()
+            buf=self.s.main.get_squelch()
+            self.lock.release()
+            if VERBOSITY>0:
+                print('SQUELCH: buf=',buf)
+            return buf==1
+            
+        elif opt in [0,1]:
+                
+            self.lock.acquire()
+            buf=self.s.main.set_squelch(opt==1)
+            self.lock.release()
+                
+        else:
+            
+            print('FLDIGI_IO - SQUELCH_MODE: Invalid opt',opt)
             return -1
             
 
@@ -1293,6 +1316,8 @@ class fldigi_xlmrpc(direct_connect):
         else:
             print('\nPUT_RX_BUFF: *** ERROR *** Failed to insert txt after 10 tries!!!!!\n')
         self.lock.release()
+
+        
         
 
 ################################################################################################
