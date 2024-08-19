@@ -287,6 +287,7 @@ class direct_connect:
         self.band          = ''
         self.mode          = ''
         self.lock          = threading.Lock()             # Avoid collisions between various threads
+        self.tx_evt        = threading.Event()            # Allow rig quires only when receiving
         self.fldigi_active = False
         self.flrig_active  = False
         self.tlast         = None
@@ -550,8 +551,8 @@ class direct_connect:
         #VERBOSITY=1
         if VERBOSITY>0:
             print('DIRECT Get PL Tone ...')
-        if self.rig_type=='Kenwood':
-            print('GET_PLtone: Function not yet implemented for Kenwood rigs')
+        if self.rig_type=='Kenwood' or self.rig_type1=='Hamlib':
+            print('GET_PLtone: Function not yet implemented for Kenwood or Hamlib  rigs')
             return 0
             
         elif self.rig_type1=='Icom':
@@ -1205,8 +1206,8 @@ class direct_connect:
         if VERBOSITY>0:
             print('DIRECT SET_POWER: p=',p)
 
-        if self.rig_type1=='Kenwood' or self.rig_type1=='Icom':
-            print('DIRECT_IO: SET_POWER not support yet for Kenwood/Icom rigs')
+        if self.rig_type1=='Kenwood' or self.rig_type1 in ['Icom','Hamlib']:
+            print('DIRECT_IO: SET_POWER not support yet for Kenwood/Icom/Hamlib rigs')
             return 0            
             
         p=min(max(p,5),100)
@@ -1609,6 +1610,15 @@ class direct_connect:
             return -1
     
     
+    # Routine to get/put fldigi squelch mode
+    def squelch_mode99(self,opt):
+        VERBOSITY=1
+        if VERBOSITY>0:
+            print('DIRECT_IO - SQUELCH_MODE: opt=',opt)
+
+        print('DIRECT_IO: SQUELCH_MODE not available yet for DIRECT')
+        return
+
 
     def init_keyer(self):
         #VERBOSITY=1

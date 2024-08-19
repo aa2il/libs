@@ -21,6 +21,7 @@
 ############################################################################################
 
 import logging               
+import threading
 
 ############################################################################################
 
@@ -55,6 +56,7 @@ class no_connect:
         self.rig_type2  = 'None'
         self.tlast      = None
         self.ntimeouts = 0
+        self.tx_evt     = threading.Event()            # Allow rig quires only when receiving
 
     def get_band(self,frq=None,VFO='A'):
         if frq==None or frq<0:
@@ -224,6 +226,11 @@ class no_connect:
         return 0
 
     def split_mode(self,opt):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
+        return 0
+
+    def squelch_mode99(self,opt):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0

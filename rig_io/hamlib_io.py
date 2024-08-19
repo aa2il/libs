@@ -59,6 +59,7 @@ class hamlib_connect(direct_connect):
         self.baud=baud
         if USE_LOCK:
             self.lock       = threading.Lock()             # Avoid collisions between various threads
+        self.tx_evt     = threading.Event()            # Allow rig quires only when receiving
 
         if port==0:
             if tag=='ROTOR':
@@ -953,6 +954,16 @@ class hamlib_connect(direct_connect):
             return -1
             
 
+    # Routine to get/put fldigi squelch mode
+    def squelch_mode99(self,opt):
+        VERBOSITY=1
+        if VERBOSITY>0:
+            print('HAMLIB_IO - SQUELCH_MODE: opt=',opt)
+
+        print('HAMLIB_IO: SQUELCH_MODE not available yet for HAMLIB')
+        return
+
+        
     # Routine to put rig into sat mode
     def sat_mode(self,opt):
         if VERBOSITY>0:

@@ -79,7 +79,8 @@ class fldigi_xlmrpc(direct_connect):
         self.connection = ''
         self.lock       = threading.Lock()             # Avoid collisions between various threads
         self.lock2      = threading.Lock()             # Avoid collisions between various threads
-        self.ntimeouts = 0
+        self.tx_evt     = threading.Event()            # Allow rig quires only when receiving
+        self.ntimeouts  = 0
 
         self.wpm        = 0
         self.freq       = 0
@@ -174,7 +175,7 @@ class fldigi_xlmrpc(direct_connect):
             # Probe FLRIG interface
             self.fldigi_probe()
             if self.fldigi_active:
-                print("Connected to FLDIGI")
+                print("\nConnected to FLDIGI")
             
         except:
 
@@ -193,7 +194,7 @@ class fldigi_xlmrpc(direct_connect):
                 # Probe FLRIG interface
                 self.flrig_probe()
                 if self.flrig_active:
-                    print("Connected to FLRIG")
+                    print("\nConnected to FLRIG")
             except: 
                 error_trap('FLDIGI IO->OPEN: tag='+tag+' Unable to open FLDIGI/FLRIG')
 
@@ -242,7 +243,22 @@ class fldigi_xlmrpc(direct_connect):
             bw = self.s.rig.get_bandwidth()
             print('Current bandwidth=',bw)
 
-            if 'DATA-FM' in modes:
+            if 'NONE' in modes:
+
+                # FLDIGI attached to FTdx3000 via HAMLIB
+                #Avail modes= ['NONE', 'AM', 'CW', 'USB', 'LSB', 'RTTY', 'FM', 'WFM', 'CWR', 'RTTYR', 'AMS', 'PKTLSB', 'PKTUSB', 'PKTFM', 'SAM', 'SAL', 'SAH']
+                print('Rig appears to be HAMLIB - assuming FTdx3000 for now ???')
+                buf = self.get_response('f')
+                print('buf=',buf)
+                self.rig_type1 = 'Hamlib'
+                self.rig_type2 = 'Hamlib'
+                #self.rig_type1 = 'Yaesu'
+                #self.s.rig.set_name("FTDX-3000")
+                #self.s.rig.set_name("FTdx3000")
+                #self.rig_type2 = 'FTdx3000'
+                #sys.exit(0)
+            
+            elif 'DATA-FM' in modes:
                 # ['LSB', 'USB', 'CW-USB', 'FM', 'AM', 'RTTY-LSB', 'CW-LSB', 'DATA-LSB', 'RTTY-USB', 'DATA-FM', 'FM-N', 'DATA-USB', 'AM-N']
                 print('Rig appears to be FT991a')
                 self.s.rig.set_name("FT991a")
@@ -297,12 +313,14 @@ class fldigi_xlmrpc(direct_connect):
         print("\nProbing FLDIGI interface:")
         print(self.s)
             
-        print('FLDIGI Methods:')
+        print('\nProgram name    =',self.s.fldigi.name_version() )
+        print('Config Dir      =',self.s.fldigi.config_dir() )
+                
+        print('\nFLDIGI Methods:')
         methods = self.s.fldigi.list()
         for m in methods:
             print(m['name'],'\t',m)
 
-                
     # Test function to probe FLRIG interface
     def flrig_probe(self):
         print("\nProbing FLRIG interface:")
@@ -515,14 +533,17 @@ class fldigi_xlmrpc(direct_connect):
 
     # Function to read rig mode 
     def get_mode(self,VFO='A'):
+        VERBOSITY=1
         if VERBOSITY>0:
-            print('FLDIGI_IO: GET_MODE vfo=',VFO)
+            print('FLDIGI_IO: GET_MODE vfo=',VFO,'...')
             
         acq=self.lock.acquire(timeout=1.0)
         if acq:
             try:
                 if self.fldigi_active:
+                    print('Hey1')
                     m=self.s.rig.get_mode()
+                    print('Hey2',m)
                 else:
                     if VFO=='A':
                         m=self.s.rig.get_modeA()
@@ -536,6 +557,8 @@ class fldigi_xlmrpc(direct_connect):
             print('FLDIGI GET FREQ: Failed to acquire lock')
             m=''
             
+        if VERBOSITY>0:
+            print('FLDIGI_IO: ... mode=',m)
         return m
 
     # Function to read fldigi mode 
@@ -1007,7 +1030,7 @@ class fldigi_xlmrpc(direct_connect):
         return 0
 
     def get_response(self,cmd):
-        #VERBOSITY=1
+        VERBOSITY=1
         if VERBOSITY>0:
             print('FLDIGI GET_RESPONSE: Sending CMD ... ',cmd)
             
@@ -1048,11 +1071,12 @@ class fldigi_xlmrpc(direct_connect):
             self.s.main.abort()
         self.lock.release()
 
-    # Function to turn PTT on and off
+    # Function to turn PTT on and off or to query T/R state
     def ptt(self,on_off,VFO='A'):
         #VERBOSITY=1
         if VERBOSITY>0:
-            print('FLDIGI_IO PTT:',on_off,VFO)
+            print('FLDIGI_IO PTT: on/off=',on_off,'\tVFO=',VFO)
+        state=None
             
         if self.flrig_active:
 
@@ -1060,7 +1084,10 @@ class fldigi_xlmrpc(direct_connect):
             print('FLDIGI_IO PTT - Using flrig - on/off=',on_off, \
                   '\tvfo=',VFO)
             self.lock.acquire()
-            if on_off:
+            if on_off<0:
+                print('FLRIG PTT - Need to add some code to query t/r state')
+                return None
+            elif on_off:
                 # Need to set both TX&RX VFOs to get ant correct if
                 # monitoring different bands
                 ntries=0
@@ -1072,15 +1099,17 @@ class fldigi_xlmrpc(direct_connect):
                 
                     vfo2=self.get_vfo()
                     if vfo2!=VFO:
-                        print('FLDIGI PTT - Houston, we have a problem!',VFO,vfo2,ntries)
+                        print('FLRIG PTT - Houston, we have a problem!',VFO,vfo2,ntries)
                     else:
                         break
                     
+                self.tx_evt.set()
                 self.s.rig.set_ptt(1)
                 
             else:
                 
                 self.s.rig.set_ptt(0)
+                self.tx_evt.clear()
                 time.sleep(DELAY)
                 
                 ntries=0
@@ -1101,22 +1130,40 @@ class fldigi_xlmrpc(direct_connect):
         elif VFO=='A':
 
             if VERBOSITY>0:
-                print('FLDIGI_IO PTT - Using fl - on/off, vfo=:',\
-                      on_off,VFO,self.fldigi_active)
+                print('FLDIGI_IO PTT - Using fl - on/off=',on_off,'\tVFO=',VFO)
             
             self.lock.acquire()
-            if on_off:
+            if on_off<0:
+
+                # Query
+                #print('FLDIGI_IO PTT - Query ...')
+                buf=self.s.main.get_trx_status()
+                #print('\tbuf=',buf)
+                state= buf=='tx'
+                if state and not self.tx_evt.is_set():
+                    self.tx_evt.set()
+                if not state and self.tx_evt.is_set():
+                    self.tx_evt.clear()
+            
+            elif on_off:
+
+                # Key down
+                self.tx_evt.set()
                 if self.fldigi_active:
                     self.s.main.tx()
                 else:
                     # Shouldn't get here anymore
                     self.s.rig.set_ptt(1)
+                    
             else:
+                
+                # Key up
                 if self.fldigi_active:
                     self.s.main.rx()
                 else:
                     # Shouldn't get here anymore
                     self.s.rig.set_ptt(0)
+                self.tx_evt.clear()
             self.lock.release()
 
         else:
@@ -1124,13 +1171,16 @@ class fldigi_xlmrpc(direct_connect):
             if VERBOSITY>0:
                 print('FLDIGI_IO PTT - Using direct - on/off, vfo=:',on_off,VFO)
             if on_off:
+                self.tx_evt.set()
                 self.send('FT3;TX1;')
             else:
                 self.send('TX0;')
                 time.sleep(DELAY)
                 self.send('FT2;')
+                self.tx_evt.clear()
                 
         print('FLDIGI/FLRIG PTT Done.')
+        return state
 
     # Routine to get/put rig split mode
     def split_mode(self,opt):
@@ -1162,14 +1212,14 @@ class fldigi_xlmrpc(direct_connect):
             return -1
             
 
-    # Routine to get/put rig split mode
+    # Routine to get/put fldigi squelch mode
     def squelch_mode(self,opt):
         VERBOSITY=1
         if VERBOSITY>0:
             print('FLDIGI_IO - SQUELCH_MODE: opt=',opt)
 
         if self.flrig_active:
-            print('FLDIGI_IO: SPLIT_MODE not available yet for FLRIG')
+            print('FLDIGI_IO: SQUELCH_MODE not available yet for FLRIG')
             return
 
         if opt==-1:
@@ -1370,7 +1420,7 @@ class fllog_xlmrpc:
         # Look for fllog - need to add error trapping 
         info = self.s.system.listMethods()
         print(info)
-        print("Connected to FLLOG")
+        print("\nConnected to FLLOG")
         
         self.fllog_active=True
         #print tag,": Unable to open FLLOG"

@@ -447,14 +447,14 @@ def SetVFO(self,cmd):
     print('SOCKET IO->SetVFO: cmd=',cmd,'\t',s.rig_type,'\t',s.rig_type1)
 
     if cmd=='A':
-        if s.rig_type1=='Icom':
-            print('SetVFO - Select A - Not implemented on ICOM rigs yet')
+        if s.rig_type1 in ['Icom','Hamlib']:
+            print('SetVFO - Select A - Not implemented on ICOM or Hamlib rigs yet')
         else:
             self.sock.get_response("BY;FR0;FT2;")
     
     elif cmd=='B':
-        if s.rig_type1=='Icom':
-            print('SetVFO - Select A - Not implemented on ICOM rigs yet')
+        if s.rig_type1 in ['Icom','Hamlib']:
+            print('SetVFO - Select A - Not implemented on ICOM or Hamlib rigs yet')
         else:
             self.sock.get_response("BY;FR4;FT3;")
     
@@ -478,27 +478,27 @@ def SetVFO(self,cmd):
     #    s.set_vfo(op=cmd)
     
     elif cmd=='A->B':
-        if s.rig_type1=='Icom':
+        if s.rig_type1 in ['Icom','Hamlib']:
             print('SetVFO - Select A->B - Not implemented on ICOM rigs yet')
         else:
             self.sock.get_response("BY;AB;")
     elif cmd=='B->A':
-        if s.rig_type1=='Icom':
+        if s.rig_type1 in ['Icom','Hamlib']:
             print('SetVFO - Select B->A - Not implemented on ICOM rigs yet')
         else:
             self.sock.get_response("BY;BA;")
     elif cmd=='A<->B':
-        if s.rig_type1=='Icom':
+        if s.rig_type1 in ['Icom','Hamlib']:
             print('SetVFO - Select A<->B - Not implemented on ICOM rigs yet')
         else:
             self.sock.get_response("BY;SV;")
     elif cmd=='SPLIT':
-        if s.rig_type1=='Icom':
+        if s.rig_type1 in ['Icom','Hamlib']:
             print('SetVFO - Select SPLIT - Not implemented on ICOM rigs yet')
         else:
             self.sock.get_response("BY;FT3;")
     elif cmd=='TXW':
-        if s.rig_type1=='Icom':
+        if s.rig_type1 in ['Icom','Hamlib']:
             print('SetVFO - TXW - Not implemented on ICOM rigs yet')
         else:
             txw=self.sock.get_response("TS;")
@@ -515,7 +515,7 @@ def ClarReset(self,RXClarOn=False):
     VERBOSITY=1
     if VERBOSITY>0:
         print('Clarifier reset ...',RXClarOn)
-    if self.sock.rig_type1=='Kenwood' or self.sock.rig_type1=='Icom':
+    if self.sock.rig_type1=='Kenwood' or self.sock.rig_type1 in ['Icom'',Hamlib']:
         print('CLARIFIER RESET not available in',self.sock.rig_type,'command set')
         return
     if self.sock.rig_type=='Hamlib' and True:
@@ -931,7 +931,7 @@ def set_tx_pwr(self,tx_pwr=None):
         tx_pwr = self.tx_pwr
     print(("SET_TX_PWR: Setting TX Power %s " % tx_pwr))
 
-    if s.rig_type1=='Kenwood' or s.rig_type1=='Icom':
+    if s.rig_type1=='Kenwood' or s.rig_type1 in ['Icom','Hamlib']:
         print('SET_TX_POWER not available in',s.rig_type,s.rig_type2,'command set')
         return
     
@@ -953,7 +953,7 @@ def set_tx_pwr(self,tx_pwr=None):
     
 def set_mic_gain(self,gain=None):
     s = self.sock
-    if s.rig_type1=='Kenwood' or s.rig_type1=='Icom' or \
+    if s.rig_type1=='Kenwood' or s.rig_type1 in ['Icom','Hamlib'] or \
        (s.rig_type=='Hamlib' and s.rig_type2!='FTdx3000' and s.rig_type2!='FT991a'):
         print('SET_MIC_GAIN not available in',s.rig_type,s.rig_type2,'command set')
         return
@@ -987,7 +987,7 @@ def set_mic_gain(self,gain=None):
     
 def set_mon_level(self,gain=None):
     s = self.sock
-    if s.rig_type1=='Kenwood' or s.rig_type1=='Icom':
+    if s.rig_type1=='Kenwood' or s.rig_type1 in ['Icom','Hamlib']:
         print('SET_MON_LEVEL not available in',s.rig_type,s.rig_type2,'command set')
         return
     if not gain:
@@ -1009,7 +1009,7 @@ def set_mon_level(self,gain=None):
 def read_monitor_level(self):
     s = self.sock
     self.mon_level=0
-    if s.rig_type1=='Kenwood' or s.rig_type1=='Icom':
+    if s.rig_type1=='Kenwood' or s.rig_type1 in ['Icom','Hamlib']:
         print('READ_MONITOR_LEVEL not available in',s.rig_type,s.rig_type2,'command set')
         return self.mon_level
 
@@ -1047,7 +1047,7 @@ def read_monitor_level(self):
 def read_tx_pwr(self):
     self.tx_pwr = 0
     s = self.sock
-    if s.rig_type2=='TS850' or s.rig_type1=='Icom':
+    if s.rig_type2 in ['TS850'] or s.rig_type1 in ['Icom','Hamlib']:
         print('SOCKET_IO: READ_TX_PWR not available in',s.rig_type1,s.rig_type2,
               'command set')
         return self.tx_pwr
@@ -1082,7 +1082,7 @@ def read_tx_pwr(self):
 def read_mic_gain(self):
     s = self.sock
     self.gain=0
-    if s.rig_type1=='Kenwood' or s.rig_type1=='Icom' or \
+    if s.rig_type1=='Kenwood' or s.rig_type1 in ['Icom','Hamlib'] or \
        (s.rig_type=='Hamlib' and s.rig_type2!='FTdx3000' and s.rig_type2!='FT991a'):
         print('READ_MIC_GAIN not available in',s.rig_type,s.rig_type2,'command set')
         return self.gain
