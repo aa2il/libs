@@ -19,11 +19,11 @@
 #
 ############################################################################
 
-if False:
-    # use Qt4 
-    from PyQt4.QtGui import QLCDNumber,QLabel
-    from PyQt4.QtCore import * 
-else:
+try:
+    from PySide6.QtWidgets import QLCDNumber,QLabel,QSplashScreen,QRadioButton
+    from PySide6.QtCore import * 
+    from PySide6.QtGui import QPixmap
+except ImportError:
     # use Qt5
     from PyQt5.QtWidgets import QLCDNumber,QLabel,QSplashScreen,QRadioButton
     from PyQt5.QtCore import * 

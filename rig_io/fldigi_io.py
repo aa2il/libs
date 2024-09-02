@@ -535,15 +535,16 @@ class fldigi_xlmrpc(direct_connect):
     def get_mode(self,VFO='A'):
         VERBOSITY=1
         if VERBOSITY>0:
-            print('FLDIGI_IO: GET_MODE vfo=',VFO,'...')
+            print('FLDIGI_IO GET_MODE: vfo=',VFO,'...')
             
         acq=self.lock.acquire(timeout=1.0)
         if acq:
             try:
                 if self.fldigi_active:
-                    print('Hey1')
-                    m=self.s.rig.get_mode()
-                    print('Hey2',m)
+                    #print('Hey1')
+                    #m=self.s.rig.get_mode()    # Rig mode - not really helpful
+                    m=self.s.modem.get_mode()   # Modem mode - what we really want
+                    #print('Hey2',m)
                 else:
                     if VFO=='A':
                         m=self.s.rig.get_modeA()
@@ -554,11 +555,11 @@ class fldigi_xlmrpc(direct_connect):
                 m=''
             self.lock.release()
         else:
-            print('FLDIGI GET FREQ: Failed to acquire lock')
+            print('FLDIGI GET_MODE: Failed to acquire lock')
             m=''
             
         if VERBOSITY>0:
-            print('FLDIGI_IO: ... mode=',m)
+            print('FLDIGI_IO GET_MODE: ... mode=',m)
         return m
 
     # Function to read fldigi mode 
@@ -1073,9 +1074,9 @@ class fldigi_xlmrpc(direct_connect):
 
     # Function to turn PTT on and off or to query T/R state
     def ptt(self,on_off,VFO='A'):
-        #VERBOSITY=1
+        VERBOSITY=1
         if VERBOSITY>0:
-            print('FLDIGI_IO PTT: on/off=',on_off,'\tVFO=',VFO)
+            print('FLDIGI_IO PTT: on/off=',on_off,'\tVFO=',VFO,'...')
         state=None
             
         if self.flrig_active:
@@ -1136,10 +1137,11 @@ class fldigi_xlmrpc(direct_connect):
             if on_off<0:
 
                 # Query
-                #print('FLDIGI_IO PTT - Query ...')
-                buf=self.s.main.get_trx_status()
-                #print('\tbuf=',buf)
-                state= buf=='tx'
+                print('FLDIGI_IO PTT - Query ... evt set=',self.tx_evt.is_set())
+                #buf=self.s.main.get_trx_status()
+                buf=self.s.main.get_trx_state()
+                print('\tbuf=',buf)
+                state= buf in ['tx','TX']
                 if state and not self.tx_evt.is_set():
                     self.tx_evt.set()
                 if not state and self.tx_evt.is_set():
@@ -1159,11 +1161,15 @@ class fldigi_xlmrpc(direct_connect):
                 
                 # Key up
                 if self.fldigi_active:
+                    print('Hey A')
+                    time.sleep(DELAY)
                     self.s.main.rx()
+                    time.sleep(DELAY)
+                    print('Hey B')
                 else:
                     # Shouldn't get here anymore
                     self.s.rig.set_ptt(0)
-                self.tx_evt.clear()
+                #self.tx_evt.clear()
             self.lock.release()
 
         else:
@@ -1179,7 +1185,9 @@ class fldigi_xlmrpc(direct_connect):
                 self.send('FT2;')
                 self.tx_evt.clear()
                 
-        print('FLDIGI/FLRIG PTT Done.')
+        if VERBOSITY>0:
+            print('... FLDIGI/FLRIG PTT Done.')
+            
         return state
 
     # Routine to get/put rig split mode

@@ -115,7 +115,7 @@ def try_port(port,baud,verbosity,ICOM=None):
             if verbosity>=1:
                 print('TRY_PORT: cmd=%s \t response=%s' % (cmd,buf))
                 
-            if buf=='ID0460;':
+            if 'ID0460;' in buf:
                 self.rig_type  = 'Yaesu'
                 self.rig_type1 = 'Yaesu'
                 self.rig_type2 = 'FTdx3000'
@@ -143,7 +143,7 @@ def try_port(port,baud,verbosity,ICOM=None):
             elif len(buf)>0:
                 print('\nDIRECT TRY_PORT: Trying port %s at %d baud ...' % (port,baud) )
                 print('DIRECT TRY_PORT: Got a response but dont know what to do?!')
-                print('cmd=%s \t response=%s',(cmd,buf))
+                print('cmd=',cmd,'\tresponse=',buf)
                 sys.exit(0)
             else:
                 break

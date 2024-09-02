@@ -843,10 +843,14 @@ class hamlib_connect(direct_connect):
 
     # Function to turn PTT on and off
     def ptt(self,on_off,VFO='A'):
+        VERBOSITY=1
         if VERBOSITY>0:
-            print('\nHAMLIB PTT:',on_off,VFO)
+            print('\nHAMLIB PTT: on_off=',on_off,'\tVFO=',VFO)
 
-        if on_off:
+        if on_off<0:
+            buf=self.get_response('t')
+            return buf
+        elif on_off>0:
             buf=self.get_response('T 1')
         else:
             buf=self.get_response('T 0')
@@ -953,16 +957,16 @@ class hamlib_connect(direct_connect):
             print('HAMLIB - SPLIT_MODE: Invalid opt',opt)
             return -1
             
-
+    """
     # Routine to get/put fldigi squelch mode
-    def squelch_mode99(self,opt):
+    def squelch_mode(self,opt):
         VERBOSITY=1
         if VERBOSITY>0:
             print('HAMLIB_IO - SQUELCH_MODE: opt=',opt)
 
         print('HAMLIB_IO: SQUELCH_MODE not available yet for HAMLIB')
         return
-
+    """
         
     # Routine to put rig into sat mode
     def sat_mode(self,opt):
