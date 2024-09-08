@@ -59,7 +59,7 @@ class hamlib_connect(direct_connect):
         self.baud=baud
         if USE_LOCK:
             self.lock       = threading.Lock()             # Avoid collisions between various threads
-        self.tx_evt     = threading.Event()            # Allow rig quires only when receiving
+        self.tx_evt     = threading.Event()            # Allow rig queres only when receiving
 
         if port==0:
             if tag=='ROTOR':
@@ -233,18 +233,15 @@ class hamlib_connect(direct_connect):
         try:
             x = self.s.recv(n).decode("utf-8")
         except socket.timeout:
-            error_trap('HAMLIB IO->RECV: Timeout error')
+            error_trap('HAMLIB IO->RECV: Timeout error',1)
             self.ntimeouts += 1
             print('\tNumber of timeouts =',self.ntimeouts)
             return None
         #except socket.ConnectionResetError:
-        except socket.error as e:
-            #import errno
-            #if e.errno != errno.ECONNRESET:
-            #    raise # Not error we are looking for
-            error_trap('HAMLIB IO->RECV: Socket Connection Error')
-            print('e=',e,'\t',e.errno)
+        except socket.error:
+            error_trap('HAMLIB IO->RECV: Socket Connection Error',1)
             self.ntimeouts += 1
+            print('\tNumber of timeouts =',self.ntimeouts)
             return None
             
         if USE_TIMEOUT:

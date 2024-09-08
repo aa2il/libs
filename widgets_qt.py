@@ -38,6 +38,12 @@ class MyLCDNumber(QLCDNumber):
         QLCDNumber.__init__(self,parent)
         self.wheelCB = wheelCB
 
+        # Init
+        self.setSegmentStyle(QLCDNumber.Filled)    
+        #self.setSegmentStyle(QLCDNumber.Flat)        # Bolder
+        self.setStyleSheet("""QLCDNumber { 
+        color: black; }""")
+
         # Determine total number of display "digits" including spaced and decimal point
         self.signed  = signed
         self.nfrac   = nfrac                                  # No. fractional position to right of decima

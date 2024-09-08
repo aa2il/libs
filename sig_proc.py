@@ -31,6 +31,7 @@ else:
     import Queue
 import multiprocessing as mp
 from utilities import error_trap
+import threading
 
 #######################################################################################
 
@@ -373,6 +374,8 @@ class ring_buffer3:
 
                 
 # Defines a ring buffer object - this works fine for a threaded pragma but not for multiprocessing
+USE_LOCK=False
+#USE_LOCK=True
 class ring_buffer2:
     def __init__(self,tag,n,block=False,PREVENT_OVERFLOW=True):
 
@@ -391,6 +394,8 @@ class ring_buffer2:
         self.last_push = 0
         self.no_overflow=PREVENT_OVERFLOW
         self.dtype   = None
+        if USE_LOCK:
+            self.lock       = threading.Lock()             # Avoid collisions between various threads
 
     # Function to push a bunch of zeros into the buffer
     def push_zeros(self,n):
@@ -411,27 +416,50 @@ class ring_buffer2:
             print( self.tag,'- Push',x)
         if DEBUG>=1:
             print( self.tag,'- Push',len(x),x.dtype)
-            
+
+        if USE_LOCK:
+            if DEBUG>=1:
+                print('PUSH - Waiting for lock ...')
+            acq=self.lock.acquire(timeout=1.0)
+            if not acq:
+                print('PUSH - Unable to acquire lock - giving up')
+                sys.exit(0)
+                return None                
+
         self.dtype = x.dtype
         self.last_push = len(x)
         nsamps2 = self.nsamps + self.last_push
         
         if nsamps2 >self.size:
-            print('RINGBUFFER2: PUSH overflow - tag=',self.tag,
+            print('\nRINGBUFFER2: PUSH overflow - tag=',self.tag,
                   '\tnsamps=',self.nsamps,'\tlen(x)=',self.last_push,
                   '\tBuffer size=',self.size)
             if self.no_overflow:
-                print('\tDumping half the buffer...')
-                self.pull(int( self.size/2 ))
+                ndump=int( self.size/4 )
+                print('\tDumping a quarter of the buffer...',ndump,self.size)
+                self.pull(ndump)
                 print('\tAfter nsamps=',self.nsamps)
 
         self.nsamps += self.last_push
         self.buf.put(x)
-                
+
+        if USE_LOCK:
+            self.lock.release()
+            
+        
     def pull(self,n,flush=False):
 
         #if self.tag=='Audio1':
         #    print(self.tag,'- Pull',n,flush)
+
+        if USE_LOCK:
+            #if VERBOSITY>0:
+            #    print('PULL - Waiting for lock ...')
+            acq=self.lock.acquire(timeout=1.0)
+            if not acq:
+                print('PULL - Unable to acquire lock - giving up')
+                sys.exit(0)
+                return None                
 
         if self.nsamps<n and False:
             print('RINGBUFFER2 PULL: *** WARNING *** Not enough data! - tag=',self.tag,
@@ -448,6 +476,7 @@ class ring_buffer2:
                     print('\ttag    =',self.tag)
                     print('\tn      =',n)
                     print('\tnsamps =',self.nsamps)
+                    print('\tqsize  =', self.buf.qsize(),'\tlen(xx)=',len(xx))
                     print('\tlast   =',self.last_push,'\tflush=',flush)
                     break
                 xx = np.concatenate( (xx, xxx) )
@@ -486,16 +515,21 @@ class ring_buffer2:
         #return x.astype(np.float32)               # New but messes up IQ PSD
         if len(x)>0:
             self.dtype = x.dtype
+
+        if USE_LOCK:
+            self.lock.release()
+                          
         if np.iscomplexobj(x):
             return x.astype(np.complex64)
         else:
             return x.astype(np.float32)
 
+                          
     def ready(self,n):
         if self.nsamps < n:
             if n>self.size:
-                print('RING BUFFER2 READY - looking for too many samples!',n,self.size)
-                sys,exit(1)
+                print('RING BUFFER2 READY - looking for too many samples - EXITTING!',n,self.size)
+                sys.exit(1)
             return False
         else:
             return True
