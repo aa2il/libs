@@ -596,8 +596,8 @@ def GetInfo(self):
         try:
             frx = 1e-3*self.sock.get_freq()
         except:
-            whoami()
-            print('******* SOCKET_IO - GetInfo - Unxcepted error')
+            #whoami()
+            error_trap('******* SOCKET_IO - GetInfo - Cant get freq?!',1)
             frx=0
         return (frx,frx)
 

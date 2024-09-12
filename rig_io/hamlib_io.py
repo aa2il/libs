@@ -111,7 +111,8 @@ class hamlib_connect(direct_connect):
                 return
                 
         except socket.error:
-            print('\nHAMLIB_IO: *** Socket Error - Unable to create HAMLIB socket on host',host,' @ port',port,'***')
+            error_trap('\nHAMLIB_IO: *** Socket Error - Unable to create HAMLIB socket',1)
+            print('\thost=',host,' @ port =',port)
             self.active=False
             return
 
@@ -275,8 +276,9 @@ class hamlib_connect(direct_connect):
                 print('HAMLIB_IO GET_RESPONSE - Waiting for lock')
             acq=self.lock.acquire(timeout=lock_to)
             if not acq:
-                print('Unable to acquire lock - giving up')
+                error_trap('HAMLIB_IO GET_RESPONSE: Unable to acquire lock - giving up')
                 self.ntimeouts += 1
+                print('\tntimeots=',self.ntimeouts)
                 return None                
 
         if cmd[-1] == ';':
@@ -375,7 +377,8 @@ class hamlib_connect(direct_connect):
             try:
                 frq = float(buf[2:-1])
             except:
-                print('HAMLIB GET_FREQ: Unable to read freq - buf=',buf)
+                error_trap('HAMLIB GET_FREQ: Unable to read freq',1)
+                print('\tbuf=',buf)
                 frq=0
 
             self.freq=frq
@@ -401,7 +404,8 @@ class hamlib_connect(direct_connect):
                 x=a[0]
             frq=float(x)
         except:
-            print('HAMLIB_IO: GET_FREQ: Unable to read freq',x)
+            error_trap('HAMLIB_IO: GET_FREQ: Unable to read freq',1)
+            print('\tx=',x)
             return -1
         if VERBOSITY>0:
             print('HAMLIB_IO: Get freq',frq,VFO)
