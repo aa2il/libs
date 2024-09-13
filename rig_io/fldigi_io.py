@@ -1211,7 +1211,8 @@ class fldigi_xlmrpc(direct_connect):
         elif opt in [0,1]:
             
             self.lock.acquire()
-            buf=self.s.rig.set_split(byte(opt))
+            #buf=self.s.rig.set_split(byte(opt))
+            buf=self.s.rig.set_split(opt)
             self.lock.release()
                 
         else:
