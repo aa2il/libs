@@ -38,7 +38,7 @@ import threading
 import time
 import socket
 from .ft_tables import DELAY, Decode_Mode, modes
-from utilities import error_trap
+from utilities import error_trap,show_ascii
 import re
 from .icom_io import icom_civ, show_hex
 
@@ -1346,15 +1346,17 @@ class fldigi_xlmrpc(direct_connect):
         #self.s.rig.set_ptt(1)
 
     def get_rx_buff(self):
-        #print('GET_RX_BUFF...')
+        VERBOSITY=1
+        if VERBOSITY>0:
+            print('GET_RX_BUFF...')
         if True:
             n = self.s.text.get_rx_length()
-            #print('\tn=',self.nrx,n)
+            print('\tn=',self.nrx,n)
             if n>self.nrx:
                 s = self.s.text.get_rx(self.nrx,n)
             else:
                 s=''
-            #print('\t',s)
+            print('\t',s,show_ascii(str(s)))
             self.nrx=n
         else:
             s = self.s.rx.get_data()

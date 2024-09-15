@@ -514,8 +514,8 @@ def SetVFO(self,cmd):
 def ClarReset(self,RXClarOn=False):
     VERBOSITY=1
     if VERBOSITY>0:
-        print('Clarifier reset ...',RXClarOn)
-    if self.sock.rig_type1=='Kenwood' or self.sock.rig_type1 in ['Icom'',Hamlib']:
+        print('Clarifier reset ...',RXClarOn,self.sock.rig_type,self.sock.rig_type1)
+    if self.sock.rig_type1=='Kenwood' or self.sock.rig_type1 in ['Icom','Hamlib']:
         print('CLARIFIER RESET not available in',self.sock.rig_type,'command set')
         return
     if self.sock.rig_type=='Hamlib' and True:
