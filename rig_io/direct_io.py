@@ -37,7 +37,7 @@ import serial
 from .icom_io import *
 from datetime import timedelta,datetime
 from pytz import timezone
-from utilities import find_serial_device
+from utilities import find_serial_device,error_trap,show_ascii
 
 #######################################################################################
 
@@ -273,7 +273,7 @@ def find_direct_rig(self,port_in,baud_in,force=False):
         if try_rig(self,'Icom','IC706',SERIAL_PORT7,baud):
             return True
 
-    print("\n*** Can't find any rigs - giving up - PORT =",port_in,'***')
+    print("\n*** FIND_DIRECT: Can't find any rigs - giving up - PORT =",port_in,'***')
     return False
 
 ############################################################################################
@@ -315,9 +315,9 @@ class direct_connect:
             self.active = True
 
         else:
-            print("\n*** Unable to open DIRECT connection to rig ***")
+            print("\n*** DIRECT_CONNECT: Unable to open DIRECT connection to rig ***")
             self.active=False
-            print(port,baud)
+            print('\tport=',port,'\tbaud=',baud)
             
 
         # Test to make sure USB port is still alive
@@ -683,9 +683,7 @@ class direct_connect:
             try:
                 frq = bcd2int(y)
             except Exception as e: 
-                print("\n**** DIRECT IO -> GET_FREQ ERROR ***")
-                print('e=',e,'\n')
-                traceback.print_exc()
+                error_trap("**** DIRECT IO -> GET_FREQ ERROR ***")
 
                 frq=0
                 print('DIRECT Icom get freq - problem reading freq')
