@@ -411,8 +411,8 @@ class fldigi_xlmrpc(direct_connect):
                 try:
                     x = float(buf[2:-1])
                 except:
-                    error_trap('FLDIGI IO->GET_FREQ ????????')
-                    print('\tbuf=',buf)
+                    error_trap('FLDIGI IO->GET_FREQ ????????',1)
+                    print('\tbuf=',buf,'\tlen=',len(buf))
                     x=0
                     
         elif self.flrig_active:

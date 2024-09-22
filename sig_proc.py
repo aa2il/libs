@@ -35,6 +35,10 @@ import threading
 
 #######################################################################################
 
+DEBUG=0
+
+#######################################################################################
+
 # A phase locked loop
 class PLL(object):
     def __init__(self, fs, bandwidth,damping):
@@ -375,7 +379,7 @@ class ring_buffer3:
                 
 # Defines a ring buffer object - this works fine for a threaded pragma but not for multiprocessing
 USE_LOCK=False
-#USE_LOCK=True
+USE_LOCK=True
 class ring_buffer2:
     def __init__(self,tag,n,block=False,PREVENT_OVERFLOW=True):
 
@@ -396,6 +400,7 @@ class ring_buffer2:
         self.dtype   = None
         if USE_LOCK:
             self.lock       = threading.Lock()             # Avoid collisions between various threads
+            self.locker     = None
 
     # Function to push a bunch of zeros into the buffer
     def push_zeros(self,n):
@@ -410,8 +415,6 @@ class ring_buffer2:
     # These allow arbirtrary chunk sizes to be accessed
     def push(self,x):
 
-        DEBUG=0
-
         if DEBUG>=2:
             print( self.tag,'- Push',x)
         if DEBUG>=1:
@@ -423,8 +426,14 @@ class ring_buffer2:
             acq=self.lock.acquire(timeout=1.0)
             if not acq:
                 print('PUSH - Unable to acquire lock - giving up')
+                print('\ttag    =',self.tag)
+                print('\tlocker =',self.locker)
+                print('\tn      =',n)
+                print('\tnsamps =',self.nsamps)
                 sys.exit(0)
-                return None                
+                return None
+            else: 
+                self.locker     = 'PUSH in'
 
         self.dtype = x.dtype
         self.last_push = len(x)
@@ -437,7 +446,7 @@ class ring_buffer2:
             if self.no_overflow:
                 ndump=int( self.size/4 )
                 print('\tDumping a quarter of the buffer...',ndump,self.size)
-                self.pull(ndump)
+                self.pull(ndump,override_lock=True)
                 print('\tAfter nsamps=',self.nsamps)
 
         self.nsamps += self.last_push
@@ -445,21 +454,28 @@ class ring_buffer2:
 
         if USE_LOCK:
             self.lock.release()
+            self.locker     = 'PUSH out'
             
         
-    def pull(self,n,flush=False):
+    def pull(self,n,flush=False,override_lock=False):
 
         #if self.tag=='Audio1':
         #    print(self.tag,'- Pull',n,flush)
 
-        if USE_LOCK:
+        if USE_LOCK and not override_lock:
             #if VERBOSITY>0:
             #    print('PULL - Waiting for lock ...')
             acq=self.lock.acquire(timeout=1.0)
             if not acq:
-                print('PULL - Unable to acquire lock - giving up')
+                print('RINGBUFFER 2 PULL - Unable to acquire lock - giving up!')
+                print('\ttag    =',self.tag)
+                print('\tlocker =',self.locker)
+                print('\tn      =',n)
+                print('\tnsamps =',self.nsamps)
                 sys.exit(0)
-                return None                
+                return None
+            else:
+                self.locker     = 'PULL in'
 
         if self.nsamps<n and False:
             print('RINGBUFFER2 PULL: *** WARNING *** Not enough data! - tag=',self.tag,
@@ -490,7 +506,16 @@ class ring_buffer2:
             xx = self.prev
             while len(xx)<n:
                 #xx = np.concatenate( (xx, self.buf.get()) )
-                xxx = self.buf.get()
+                try:
+                    xxx = self.buf.get(timeout=1.0)
+                except:
+                    error_trap('RINGBUFFER2 PULL: Timeout trying to pull next block ????',True)
+                    print('\ttag    =',self.tag)
+                    print('\tn      =',n)
+                    print('\tnsamps =',self.nsamps)
+                    print('\tqsize  =', self.buf.qsize(),'\tlen(xx)=',len(xx))
+                    print('\tlast   =',self.last_push,'\tflush=',flush)
+                    break
                 xx = np.concatenate( (xx, xxx) )
                 self.buf.task_done()
             x = xx[0:n]
@@ -516,8 +541,9 @@ class ring_buffer2:
         if len(x)>0:
             self.dtype = x.dtype
 
-        if USE_LOCK:
+        if USE_LOCK and not override_lock:
             self.lock.release()
+            self.locker     = 'PULL out'
                           
         if np.iscomplexobj(x):
             return x.astype(np.complex64)
@@ -535,9 +561,30 @@ class ring_buffer2:
             return True
 
     def clear(self):
-        print('RING BUFFER2 CLEAR: Before n=',self.nsamps,'...')
-        x=self.pull(self.nsamps)
-        print('... After n=',self.nsamps)
+        print('RING BUFFER2 CLEAR: Before tag=',self.tag,'\tn=',self.nsamps,'...')
+        
+        if USE_LOCK:
+            if DEBUG>=1:
+                print('CLEAR - Waiting for lock ...')
+            acq=self.lock.acquire(timeout=1.0)
+            if not acq:
+                print('CLEAR - Unable to acquire lock - giving up')
+                print('\ttag    =',self.tag)
+                print('\tlocker =',self.locker)
+                print('\tn      =',n)
+                print('\tnsamps =',self.nsamps)
+                sys.exit(0)
+                return None
+            else:
+                self.locker     = 'CLEAR in'
+
+        x=self.pull(self.nsamps,override_lock=True)
+
+        if USE_LOCK:
+            self.lock.release()
+            self.locker     = 'CLEAR out'
+        
+        print('\t... After n=',self.nsamps)
 
 ###################################################################
 
@@ -1080,8 +1127,6 @@ class AudioIO():
     # Callback to retrieve data for a hungry sound card.
     # Finally know how to do this without an external function!!!!
     def AudioPlayCB(self,in_data, frame_count, time_info, status):
-
-        DEBUG = 0
 
         rb=self.rb
         N=int(frame_count)
