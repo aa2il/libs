@@ -36,7 +36,8 @@ from rig_io import SATELLITE_LIST
 
 #########################################################################################
 
-KEYER_ATTRIBUTES = ['Call','Name','State','Sec','Cat','Grid','City','County',
+KEYER_ATTRIBUTES = ['Call','Operator',
+                    'Name','State','Sec','Cat','Grid','City','County',
                     'CQ Zone','ITU Zone','Prec','Check','Club',
                     'CWops','SKCC','FISTS','FOC',
                     'Rig','Ant','Age','Ham Age','Occupation']
@@ -82,6 +83,8 @@ def read_settings(fname,attr=None):
             json.dump(SETTINGS, outfile)
 
     # Fill in the blanks
+    if SETTINGS['MY_OPERATOR'] == '':
+        SETTINGS['MY_OPERATOR'] == SETTINGS['MY_CALL'] 
     for attr in ['MY_CITY','MY_STATE']:
         if attr not in SETTINGS:
             SETTINGS[attr] = ''

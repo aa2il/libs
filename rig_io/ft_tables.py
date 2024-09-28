@@ -174,6 +174,13 @@ CA_COUNTIES = ['ALAM', 'MARN', 'SMAT', 'ALPI', 'MARP', 'SBAR', 'AMAD', 'MEND', '
                'IMPE', 'RIVE', 'TRIN', 'INYO', 'SACR', 'TULA', 'KERN', 'SBEN', 'TUOL', 'KING', 'SBER', 'VENT', \
                'LAKE', 'SDIE', 'YOLO', 'LASS', 'SFRA', 'YUBA', 'LANG', 'SJOA', 'MADE', 'SLUI']
 
+#CQP_VE_CALL_AREAS =   ['MR','QC','ON','MB','SK','AB','BC','NT']    # B4 2023
+#CQP_MULTS  = STATES + CQP_VE_CALL_AREAS
+#CQP_STATES = STATES + PROVINCES + CA_COUNTIES + ['MR','NT']
+CQP_MULTS  = STATES + PROVINCES2
+CQP_STATES = STATES + PROVINCES2 + CA_COUNTIES
+CQP_COUNTRIES=['United States','Canada','Alaska','Hawaii'] 
+
 CQ_ZONES = {'CT' : 5 , \
             'ME' : 5 , \
             'MA' : 5 , \

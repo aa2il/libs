@@ -401,7 +401,10 @@ class fldigi_xlmrpc(direct_connect):
             if VFO=='A':
                 acq=self.lock.acquire(timeout=1.0)
                 if acq:
-                    x=self.s.main.get_frequency()
+                    try:
+                        x=self.s.main.get_frequency()
+                    except:
+                        error_trap('FLDIGI IO->GET_FREQ - Lock acquired but Cant read freq',1)
                     self.lock.release()
                 else:
                     print('FLDIGI GET FREQ: Failed to acquire lock')
@@ -1349,7 +1352,9 @@ class fldigi_xlmrpc(direct_connect):
         VERBOSITY=1
         if VERBOSITY>0:
             print('GET_RX_BUFF...')
-        if True:
+            
+        acq=self.lock.acquire(timeout=1.0)
+        if acq:
             n = self.s.text.get_rx_length()
             print('\tn=',self.nrx,n)
             if n>self.nrx:
@@ -1358,8 +1363,11 @@ class fldigi_xlmrpc(direct_connect):
                 s=''
             print('\t',s,show_ascii(str(s)))
             self.nrx=n
+            self.lock.release()
         else:
-            s = self.s.rx.get_data()
+            print('FLDIGI GET RX BUFF: Failed to acquire lock')
+            s=''
+            self.nrx=0
 
         return str(s)
 
