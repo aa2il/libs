@@ -1089,7 +1089,7 @@ def read_mic_gain(self):
         return self.gain
 
     mode=s.get_mode()
-    print("SOCKET_IO: READ_MIC_GAIN - Reading Mic Gain ...",mode)
+    print("SOCKET_IO: READ_MIC_GAIN - Reading Mic Gain ... mode=",mode)
     if mode=='CW':
         # There's no mic gain to set in CW!
         return 0

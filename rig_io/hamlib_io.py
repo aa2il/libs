@@ -569,6 +569,8 @@ class hamlib_connect(direct_connect):
         elif buf:
             x=buf.split("\n")
             mode=x[0]
+            #if mode in ['PKTUSB','PSK-U','DATA-U']:
+            #    mode='RTTY'
         else:
             print('HAMLIB_IO: GET_MODE: Unable to determine mode - cmd=',cmd,'\tbuf=',buf)
             mode=None
