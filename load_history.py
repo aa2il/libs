@@ -338,7 +338,8 @@ def load_history(history,DEBUG_CALL=None):
                 HIST[call]['ituz'] = str( dx_station.ituz )
 
         if call==DEBUG_CALL:
-            print('LOAD_HISTORY 3: call=',call,'\nHIST=',HIST[call])
+            print('LOAD_HISTORY 3 - After fix-ups: call=',call,'\nHIST=',HIST[call])
+            pprint(vars(dx_station))
             #sys.exit(0)
                 
     if False:
