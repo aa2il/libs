@@ -1000,7 +1000,12 @@ class direct_connect:
                 filt=['Wide','3000']
             elif filt=='Auto':
                 filt=['Wide']
-                
+        elif type(filt) in [int,float]:
+            if filt<=500:
+                filt=['Narrow',filt]
+            else:
+                filt=['Wide',filt]
+                                
         if not type(filt) is list:
             filt=[filt]
         

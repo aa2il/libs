@@ -592,11 +592,16 @@ class hamlib_connect(direct_connect):
             if mode in ['USB','SSB','LSB']:
                 filt=['Wide','2400']
             elif mode[0:2]=='CW':
-                filt=['Narrow','200']           # Was 500
+                filt=['Narrow','200']   
             elif mode in ['RTTY','DATA']:
                 filt=['Wide','3000']
             elif filt=='Auto':
                 filt=['Wide']
+        elif type(filt) in [int,float]:
+            if filt<=500:
+                filt=['Narrow',filt]
+            else:
+                filt=['Wide',filt]
                 
         if not type(filt) is list:
             filt=[filt]

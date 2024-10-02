@@ -1371,14 +1371,17 @@ class fldigi_xlmrpc(direct_connect):
 
         return str(s)
 
-    def put_tx_buff(self,txt):
+    def put_tx_buff(self,txt,HALT=False):
         print('PUT_RX_BUFF... txt=',txt)
         self.lock.acquire()
         ntries=0
         while ntries<10:
             try:
                 ntries+=1
-                self.s.text.add_tx(txt)
+                if HALT:
+                    self.s.text.clear_tx()
+                else:
+                    self.s.text.add_tx(txt)
                 break
             except:
                 time.sleep(DELAY)

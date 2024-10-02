@@ -104,9 +104,13 @@ class CONFIG_PARAMS:
 #########################################################################################
 
 class SETTINGS_GUI():
-    def __init__(self,root,P,attrib=None):
+    def __init__(self,root,P,attrib=None,refreshCB=None):
 
+        # Init
         self.root=root
+        self.P = P
+        self.refreshCB=refreshCB
+        
         if root:
             self.win=Toplevel(root)
             self.hide()
@@ -116,7 +120,6 @@ class SETTINGS_GUI():
             #print('Root')
         self.win.title("Settings")
 
-        self.P = P
         if P:
             self.SETTINGS=self.P.SETTINGS
         else:
@@ -163,7 +166,10 @@ class SETTINGS_GUI():
         self.SETTINGS = {}
         for attr,box in zip(self.ATTRIBUTES,self.boxes):
             attr2='MY_'+attr.upper().replace(' ','_')
-            self.SETTINGS[attr2] = box.get()          # .upper()
+            if attr in KEYER_ATTRIBUTES:
+                self.SETTINGS[attr2] = box.get().upper()
+            else:
+                self.SETTINGS[attr2] = box.get()
 
         if self.P:
             if 'MY_CITY' in self.SETTINGS and 'MY_STATE' in self.SETTINGS:
@@ -174,6 +180,10 @@ class SETTINGS_GUI():
             print(self.P.SETTINGS)
             with open(self.P.RCFILE, "w") as outfile:
                 json.dump(self.P.SETTINGS, outfile)
+                outfile.write('\n')
+
+        if self.refreshCB:
+            self.refreshCB()
         
         #self.win.destroy()
         self.hide()
