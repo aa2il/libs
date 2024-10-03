@@ -182,20 +182,24 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False):
     logbook =[]
 
     if verbosity>0:
-        print('PARSE_ADIF - Reading',fname,'...')
+        print('PARSE_ADIF: Reading',fname,'...')
 
-    #if not hasattr(parse_adif, "fname"):
-    #    parse_adif.fname=fname
+    # We'll need an attribute to hold the file pointer
     if not hasattr(parse_adif, "fp"):
         parse_adif.fp=None
 
     try:
-        
+
+        # Open adif file
         if line==None:
+            if verbosity>0:
+                print('PARSE_ADIF: Opening',fname,'...')
             if not parse_adif.fp:
                 parse_adif.fp=codecs.open(fname, 'r', encoding='utf-8',
                                               errors='ignore')
             raw1 = re.split('(?i)<eoh>',parse_adif.fp.read() )
+            if verbosity>0:
+                print('PARSE_ADIF: raw1=',raw1)
             if not REVISIT:
                 parse_adif.fp.close()
                 parse_adif.fp=None
@@ -209,10 +213,12 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False):
         return logbook
         
     raw = re.split('(?i)<eor>',raw1[-1] )
+    if verbosity>0:
+        print('PARSE_ADIF: raw=',raw)
 
     for record in raw:
         if verbosity>0:
-            print(record,len(record))
+            print('PARSE_ADIF: rec=',record,len(record))
         if len(record)<=1:
             continue
         
