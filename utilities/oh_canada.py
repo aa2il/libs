@@ -29,7 +29,7 @@ VERBOSITY=0
 ############################################################################
 
 # Routine to give QTH of a Canadian station
-def Oh_Canada(dx_station):
+def Oh_Canada(dx_station,CQP=False):
 
     """
     Prefixes	Province/Territory
@@ -53,7 +53,7 @@ def Oh_Canada(dx_station):
     CY0***	Sable Is.[16]	
     CY9***	St-Paul Is.[16]	
 
-    For the CQP:
+    For the CQP Prior to 2023:
     MR      Maritime provinces plus Newfoundland and Labrador (NB, NL, NS, PE)
     QC      Quebec
     ON      Ontario
@@ -62,11 +62,13 @@ def Oh_Canada(dx_station):
     AB      Alberta
     BC      British Columbia
     NT 
+
+    For the CQP after 2023:
+    NS NB NL NU YT
+    No TER
+    
     """
 
-    # For Cali QSO Party - PRIOR to 2023 but not anymore:
-    # MR = Maritime provinces plus Newfoundland and Labrador (NB, NL, NS, PE)
-    
     qth=''
     secs=[]
     #print('Oh Canada ... 1')
@@ -107,7 +109,10 @@ def Oh_Canada(dx_station):
             qth='NU'
             secs=[qth]
         elif prefix in ['VY1']:
-            qth='TER'                  # Formerly YT
+            if CQP:
+                qth='YT'
+            else:
+                qth='TER'                  # Formerly YT
             secs=[qth]
         elif prefix in ['VY2']:
             qth='PE'

@@ -216,14 +216,22 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False):
     if verbosity>0:
         print('PARSE_ADIF: raw=',raw)
 
+    nrecs=0
     for record in raw:
+        nrecs+=1
         if verbosity>0:
-            print('PARSE_ADIF: rec=',record,len(record))
+            print('PARSE_ADIF: Rec No.',nrecs,len(record),'rec=\n',record)
         if len(record)<=1:
             continue
         
         qso = {}
-        tags = re.findall('<(.*?):(\d+).*?>([^<]+)',record.replace('<RST> <CNTR>','A AA2IL 78 CA'))
+        #tags = re.findall('<(.*?):(\d+).*?>([^<]+)',record.replace('<RST> <CNTR>','A AA2IL 78 CA'))
+        tags = re.findall('<(.*?):(\d+).*?>([^<]+)',record)
+
+        if '# FLAG IT!' in record:
+            print('# FLAG ON THE FIELD!')
+            logbook[-1]['flagged']='1'
+            #print(logbook[-1])
 
         for tag in tags:
             if upper_case:
@@ -243,6 +251,9 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False):
                 if 'time_off' not in qso:
                     qso['time_off'] = qso['time_on']
             logbook.append(qso)
+
+        #else:
+        #    print('Empty record:\n',record)
 
     return logbook
 
