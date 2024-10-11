@@ -55,6 +55,7 @@ class ChallengeData:
             return
 
         # Read XLS format spreadsheet and pull out sheets we want
+        # There are newer modules for this - look into them sometime
         print('CHALLENGE DATA: Opening ',fname,' ...')
         book  = xlrd.open_workbook(fname,formatting_info=True)
         self.sheet1 = book.sheet_by_name('Challenge')
@@ -112,6 +113,9 @@ class ChallengeData:
             self.slots.append(calls)
             #print('CHALLENGE DATA - i=',i,'\tcalls=',calls)
             
+        # JBA - MEM??? - Try this
+        del book
+
     # Work through Challenge sheet
     def needed_challenge(self,dxcc,band,verbosity):
 

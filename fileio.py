@@ -435,7 +435,10 @@ def qso_time(rec):
 
 
 
-def read_csv_file(fname,delim=','):
+def read_csv_file(fname,delim=',',FLAT_DATA=False,VERBOSITY=0):
+
+    if VERBOSITY>0:
+        print('READing CSV FILE ',fname,' ...',FLAT_DATA)
 
     name=os.path.splitext(fname)[0]
     ext=os.path.splitext(fname)[1]
@@ -470,13 +473,25 @@ def read_csv_file(fname,delim=','):
             rows = csv.reader(f,delimiter=delim)
 
             for row in rows:
-                #print(row)
+                if VERBOSITY>0:
+                    print(row,'\tlen=',len(row))
                 if row[0]=='':
                     print('Skipping row=',row)
                 elif row[0][0]=='#':
                     hdr.append(row)
+                    if VERBOSITY>0:
+                        print('hdr=',hdr)
+                elif FLAT_DATA:
+                    line=[]
+                    for val in row:
+                        line.append(float(val))
+                    #if VERBOSITY>0:
+                    #    print('line=',line)
+                    QSOs.append(line)
                 elif keys==None:
                     keys=row
+                    if VERBOSITY>0:
+                        print('keys=',keys)
                 else:
                     qso={}
                     for key,val in zip(keys,row):
@@ -485,6 +500,9 @@ def read_csv_file(fname,delim=','):
                             val=val.replace("'","")
                         qso[key]=val
                     QSOs.append(qso)
+                    
+            if FLAT_DATA:
+                QSOs=np.array(QSOs)
 
     return QSOs,hdr
 
