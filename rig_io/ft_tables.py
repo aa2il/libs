@@ -24,6 +24,7 @@ import os
 import sys
 import csv
 import numpy as np
+from counties import COUNTIES
 
 ############################################################################################
 
@@ -88,34 +89,6 @@ SAT_RIGS    = ['FT991a','IC9700','pySDR']
 
 ############################################################################################
 
-if False:
-    MY_CALL     = 'AA2IL'
-    #MY_CALL     = 'AA2IL/6'            # Use this for state QSO parties!!!
-    MY_STATE    = 'CA'
-    MY_COUNTY   = 'SDIE'
-    MY_SEC      = 'SDG'
-    MY_CAT      = '2E'
-    MY_QTH      = 'SAN DIEGO, CA'
-    MY_NAME     = 'JOE'
-    MY_PREC     = 'A'
-    MY_CQ_ZONE  = '3'
-    MY_ITU_ZONE = '6'
-    MY_CONT     = 'NA'
-    MY_STATE    = 'CA'
-    MY_GRID     = 'DM12'
-    MY_SECTION  = 'SDG'
-    MY_POWER    = 'LOW'
-    MY_CHECK    = '78'
-    MY_CITY     = 'Ramona, CA'
-
-if False:
-    # Overrides for Field day
-    MY_CALL     = 'N6ROR'
-    MY_SEC      = 'SDG'
-    MY_CAT      = '3A'
-
-############################################################################################
-
 CONTEST_BANDS = ['160m','80m','40m','20m','15m','10m']
 NON_CONTEST_BANDS = ['60m','30m','17m','12m','6m']
 
@@ -168,17 +141,18 @@ ARRL_SECS = ['CT','EMA','ME','NH','RI','VT','WMA',  \
 
 FD_SECS = ARRL_SECS + ['DX']
 
-CA_COUNTIES = ['ALAM', 'MARN', 'SMAT', 'ALPI', 'MARP', 'SBAR', 'AMAD', 'MEND', 'SCLA', 'BUTT', 'MERC', 'SCRU', \
-               'CALA', 'MODO', 'SHAS', 'COLU', 'MONO', 'SIER', 'CCOS', 'MONT', 'SISK', 'DELN', 'NAPA', 'SOLA', \
-               'ELDO', 'NEVA', 'SONO', 'FRES', 'ORAN', 'STAN', 'GLEN', 'PLAC', 'SUTT', 'HUMB', 'PLUM', 'TEHA', \
-               'IMPE', 'RIVE', 'TRIN', 'INYO', 'SACR', 'TULA', 'KERN', 'SBEN', 'TUOL', 'KING', 'SBER', 'VENT', \
-               'LAKE', 'SDIE', 'YOLO', 'LASS', 'SFRA', 'YUBA', 'LANG', 'SJOA', 'MADE', 'SLUI']
+# Use COUNTIES['CA'] for this now
+#CA_COUNTIES = ['ALAM', 'MARN', 'SMAT', 'ALPI', 'MARP', 'SBAR', 'AMAD', 'MEND', 'SCLA', 'BUTT', 'MERC', 'SCRU', \
+#               'CALA', 'MODO', 'SHAS', 'COLU', 'MONO', 'SIER', 'CCOS', 'MONT', 'SISK', 'DELN', 'NAPA', 'SOLA', \
+#               'ELDO', 'NEVA', 'SONO', 'FRES', 'ORAN', 'STAN', 'GLEN', 'PLAC', 'SUTT', 'HUMB', 'PLUM', 'TEHA', \
+#               'IMPE', 'RIVE', 'TRIN', 'INYO', 'SACR', 'TULA', 'KERN', 'SBEN', 'TUOL', 'KING', 'SBER', 'VENT', \
+#               'LAKE', 'SDIE', 'YOLO', 'LASS', 'SFRA', 'YUBA', 'LANG', 'SJOA', 'MADE', 'SLUI']
 
 #CQP_VE_CALL_AREAS =   ['MR','QC','ON','MB','SK','AB','BC','NT']    # B4 2023
 #CQP_MULTS  = STATES + CQP_VE_CALL_AREAS
 #CQP_STATES = STATES + PROVINCES + CA_COUNTIES + ['MR','NT']
 CQP_MULTS  = STATES + PROVINCES2
-CQP_STATES = STATES + PROVINCES2 + CA_COUNTIES
+CQP_STATES = STATES + PROVINCES2 + COUNTIES['CA']
 CQP_COUNTRIES=['United States','Canada','Alaska','Hawaii'] 
 
 CQ_ZONES = {'CT' : 5 , \

@@ -52,6 +52,12 @@ COUNTIES['BC']=['ABF','BNS','BUS','CHP','CLC','CML','COA','CPC','CPG','CSN','DEL
                 'KOC','KTC','LAA','MMF','NAL','NOS','NPR','NVA','NWB','PMC','PMM','PPN','RIC','SBV',
                 'SGI','STR','SUC','SUN','SWK','SWR','VAC','VAE','VAG','VAK','VAQ','VAS','VIC','WVS']
 
+COUNTIES['CA']=['ALAM', 'MARN', 'SMAT', 'ALPI', 'MARP', 'SBAR', 'AMAD', 'MEND', 'SCLA', 'BUTT', 'MERC', 'SCRU', \
+                'CALA', 'MODO', 'SHAS', 'COLU', 'MONO', 'SIER', 'CCOS', 'MONT', 'SISK', 'DELN', 'NAPA', 'SOLA', \
+                'ELDO', 'NEVA', 'SONO', 'FRES', 'ORAN', 'STAN', 'GLEN', 'PLAC', 'SUTT', 'HUMB', 'PLUM', 'TEHA', \
+                'IMPE', 'RIVE', 'TRIN', 'INYO', 'SACR', 'TULA', 'KERN', 'SBEN', 'TUOL', 'KING', 'SBER', 'VENT', \
+                'LAKE', 'SDIE', 'YOLO', 'LASS', 'SFRA', 'YUBA', 'LANG', 'SJOA', 'MADE', 'SLUI']
+
 COUNTIES['CO']=['ADA','ARA','ARA','ARC','BAC','BEN','BOU','BRO','CHA','CHE','CLC','CON','COS','CRO',
                 'CUS','DEL','DEN','DOL','DOU','EAG','ELP','ELB','FRE','GAR','GIL','GRA','GUN','HIN',
                 'HUE','JAC','JEF','KIO','KIC','LAK','LAP','LAR','LAA','LIN','LOG','MES','MIN','MOF',

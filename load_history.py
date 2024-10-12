@@ -38,8 +38,9 @@ from dx.spot_processing import Station
 from dx.cluster_connections import get_logger
 from pprint import pprint
 import glob 
-from rig_io import NAQP_SECS,CA_COUNTIES
+from rig_io import NAQP_SECS,ARRL_SECS
 from zipfile import ZipFile
+from counties import COUNTIES
 
 ###################################################################
 
@@ -80,6 +81,13 @@ def load_history(history,DEBUG_CALL=None):
     fname=os.path.basename(history)
     ext=os.path.splitext(history)[1]
     print('\nHistory file=',history,'\tfname=',fname,'\text=',ext)
+
+    # Check for state QPs
+    if fname[:5]=='QSOP_':
+        STATE_QP=fname[5:7]
+    else:
+        STATE_QP=None
+    print('STATE_QP=',STATE_QP)
 
     if ext=='.xlsx':
         if history.find('CWops')>=0:
@@ -217,7 +225,7 @@ def load_history(history,DEBUG_CALL=None):
                                     key='fdsec'
                             elif fname[:7]=='ARRL160' and key=='exch1':
                                 key='sec'
-                            elif fname[:7]=='QSOP_CA' and key=='exch1':
+                            elif STATE_QP and key=='exch1':
                                 key='qth'
                             elif fname[:7]=='13COLON' and key=='exch1':
                                 key='state'
@@ -289,16 +297,25 @@ def load_history(history,DEBUG_CALL=None):
                             val=''
 
                         if key=='loc1':
-                            key='grid'    
-                        elif fname[:7]=='QSOP_CA' and key=='qth':
-                            if val in NAQP_SECS:
-                                key='state'
-                            elif len(val)==4:
+                            key='grid'
+                            
+                        elif STATE_QP and key=='qth':
+                            
+                            if val in COUNTIES[STATE_QP] or val[2:] in COUNTIES[STATE_QP] or '/' in val:
+                                # In state --> county or county line
+                                # Some tack on the abbrev for the state in front, hence the 2: above
                                 key='county'
+                            elif (STATE_QP in ['PA','NV']) and (val in ARRL_SECS):
+                                # Out of state - A few send arrl section
+                                key='sec'
+                            elif val in NAQP_SECS:
+                                # Out of state - most send state
+                                key='state'
                             else:
-                                if False:
-                                    print('LOAD HISTORY *** WARNING *** skipping blank key',key)
+                                if len(val)>0:
+                                    print('LOAD HISTORY - STATE QP *** WARNING *** Skipping unknown val=',val,'for key=',key,'\tstate=',STATE_QP)
                                     print('row=',row)
+                                    print(val in ARRL_SECS)
                                 key=''
                                 
                         if key in ALL_FIELDS:
@@ -306,8 +323,8 @@ def load_history(history,DEBUG_CALL=None):
                                 HIST[call][key].append(val)
                             else:
                                 HIST[call][key] = val
-                                if fname[:7]=='QSOP_CA' and val in CA_COUNTIES:
-                                    HIST[call]['state'] = 'CA'
+                                if STATE_QP and val in COUNTIES[STATE_QP]:
+                                    HIST[call]['state'] = STATE_QP
                                     
                         elif key not in ['',' ','call','usertext','misc','ccnr','mbrdate']:
                             print('\nLOAD_HISTORY: Unknown field ...')
