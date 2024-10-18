@@ -20,9 +20,14 @@
 ############################################################################
 
 try:
-    from PySide6.QtWidgets import QLCDNumber,QLabel,QSplashScreen,QRadioButton
-    from PySide6.QtCore import * 
-    from PySide6.QtGui import QPixmap
+    if True:
+        from PyQt6.QtWidgets import QLCDNumber,QLabel,QSplashScreen,QRadioButton
+        from PyQt6.QtCore import * 
+        from PyQt6.QtGui import QPixmap
+    else:
+        from PySide6.QtWidgets import QLCDNumber,QLabel,QSplashScreen,QRadioButton
+        from PySide6.QtCore import * 
+        from PySide6.QtGui import QPixmap
 except ImportError:
     # use Qt5
     from PyQt5.QtWidgets import QLCDNumber,QLabel,QSplashScreen,QRadioButton
@@ -36,10 +41,11 @@ class MyLCDNumber(QLCDNumber):
  
     def __init__(self,parent=None,ndigits=7,nfrac=1,signed=False,leading=False,ival=0,wheelCB=None):
         QLCDNumber.__init__(self,parent)
-        self.wheelCB = wheelCB
+        #super(MyLCDNumber, self).__init__(parent)
 
         # Init
-        self.setSegmentStyle(QLCDNumber.Filled)    
+        self.wheelCB = wheelCB
+        self.setSegmentStyle(QLCDNumber.SegmentStyle.Filled)    
         #self.setSegmentStyle(QLCDNumber.Flat)        # Bolder
         self.setStyleSheet("""QLCDNumber { 
         color: black; }""")
@@ -77,20 +83,22 @@ class MyLCDNumber(QLCDNumber):
         
         self.setDigitCount(ntot)                              # Set no. of digits
         self.set(ival)                                        # Display starting value
-        self.setFocusPolicy(Qt.StrongFocus)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
     # Override some of the event handlers - see docs for QWidget to see what's available
     
     # Callback for mouse wheel event
     def wheelEvent(self,event):
-        #print("wheelEvent:",self.val,event.pos())
+        #print(event.__dict__)
+        #print(dir(event))
+        #print("wheelEvent:",self.val,event.position())
 
         # If no callback is defined, don't allow user to adjust the digitis
         if not self.wheelCB:
             return
 
         # Determine which digit the mouse was over when the wheel was spun
-        x = event.x()                    # Width of lcd widget
+        x = event.position().x()                    # Width of lcd widget
         ndig = self.digitCount()         # Includes spaces & dec point
         w    = self.width()              # Width of the display
         edge = .028*w                    # Offset of border
@@ -158,14 +166,14 @@ class StatusBar():
             self.setText("Howdy Ho!")
         else:
             # Normal QT gui
-            print('Normal satus bar ...')
+            print('Normal satus bar ...',nrows)
             self.label = QLabel("Howdy Ho!")
             root.grid.addWidget(self.label,nrows,0)
             self.splish_splash = False
      
     def setText(self, newText):
         if self.splish_splash:
-            self.label.showMessage(newText,alignment=Qt.AlignBottom)
+            self.label.showMessage(newText,alignment=Qt.AlignmentFlag.AlignBottom)
         else:
             self.label.setText(newText)
         #self.root.update()
