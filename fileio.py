@@ -177,6 +177,7 @@ def read_adif(fname):
     print(len(lines))
     sys.exit(0)
 
+
 # Function to read list of qsos from input file
 def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False):
     logbook =[]

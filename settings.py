@@ -84,7 +84,8 @@ def read_settings(fname,attr=None):
 
     # Fill in the blanks
     if ('MY_OPERATOR' not in SETTINGS) or (SETTINGS['MY_OPERATOR'] == ''):
-        SETTINGS['MY_OPERATOR'] = SETTINGS['MY_CALL'] 
+        if 'MY_CALL' in SETTINGS:
+            SETTINGS['MY_OPERATOR'] = SETTINGS['MY_CALL'] 
     for attr in ['MY_CITY','MY_STATE']:
         if attr not in SETTINGS:
             SETTINGS[attr] = ''
