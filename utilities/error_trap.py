@@ -22,6 +22,7 @@
 import sys
 import traceback
 import linecache
+import inspect
 
 ############################################################################
 
@@ -42,3 +43,16 @@ def error_trap(msg,trace=False):
     if trace:
         traceback.print_exc()
     
+############################################################################
+
+def whoami():
+    #parent=inspect.stack()[0].function  # This just return whoami - not useful - need to look at rackback stuff
+    name=inspect.stack()[1].function
+    #name = '\n *+*+*+*+*+*+*+*+*+*+*  '+ name +' ***'
+    #return name
+    #txt = '*** '+parent+'-->'+name+' ***'
+    txt = name
+    return txt
+
+############################################################################
+

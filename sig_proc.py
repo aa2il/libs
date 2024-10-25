@@ -397,6 +397,7 @@ class ring_buffer2:
         self.prev   = np.array([])      # Overlap from pervious call
         self.last_push = 0
         self.no_overflow=PREVENT_OVERFLOW
+        self.first_ovrflow=True
         self.dtype   = None
         if USE_LOCK:
             self.lock       = threading.Lock()             # Avoid collisions between various threads
@@ -440,9 +441,11 @@ class ring_buffer2:
         nsamps2 = self.nsamps + self.last_push
         
         if nsamps2 >self.size:
-            print('\nRINGBUFFER2: PUSH overflow - tag=',self.tag,
-                  '\tnsamps=',self.nsamps,'\tlen(x)=',self.last_push,
-                  '\tBuffer size=',self.size)
+            if self.first_ovrflow:
+                print('\nRINGBUFFER2: PUSH overflow - tag=',self.tag,
+                      '\tnsamps=',self.nsamps,'\tlen(x)=',self.last_push,
+                      '\tBuffer size=',self.size)
+                self.first_ovrflow=False
             if self.no_overflow:
                 ndump=int( self.size/4 )
                 print('\tDumping a quarter of the buffer...',ndump,self.size)
