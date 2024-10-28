@@ -14,7 +14,9 @@ import sys
 import time
 import numpy as np
 from sig_proc import ring_buffer2
-import pyudev
+if sys.platform == "linux" or sys.platform == "linux2":
+    #import pyudev
+    from pyudev import Context
 
 ############################################################################################
 
@@ -258,8 +260,10 @@ class WaveRecorder(object):
 
                 if name.find(dev_name)>=0:
                     print('*** There it is ***',i)
-                    #print(dev)
-                    self.get_detailed_usb_info(dev_name.replace(' ','_'))
+                    if sys.platform == "linux" or sys.platform == "linux2":
+                        self.get_detailed_usb_info(dev_name.replace(' ','_'))
+                    else:
+                        print(dev)
                     index = i
 
         print("-------------------------------------------------------------")
@@ -268,7 +272,8 @@ class WaveRecorder(object):
 
     def get_detailed_usb_info(self,dev_name):
 
-        context = pyudev.Context()
+        #context = pyudev.Context()
+        context = Context()
         devices = context.list_devices(subsystem='usb')
 
         for device in devices:

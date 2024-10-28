@@ -20,6 +20,7 @@
 #
 ################################################################################
 
+import sys
 import os
 import psutil
 import time
@@ -37,6 +38,18 @@ class Memory_Monitor:
         self.process = psutil.Process(os.getpid())
         self.t0      = time.time()
         if fname:
+            if sys.platform == "linux" or sys.platform == "linux2":
+                # linux
+                pass
+            elif sys.platform == "win32":
+                # Windows...
+                #fname=os.path.expanduser( fname.replace('/tmp','%temp%') )
+                fname=os.path.expanduser( fname.replace('/tmp','~/Python/tmp') )
+            elif sys.platform == "darwin":
+                # OS X
+                print('MEMORY MONITOR: No support for Mac OS')
+                sys.exit(0)
+            
             self.LOG = open(fname,'w') 
             self.LOG.write('#Time (sec),Mem Usage (Mb)\t'+str(self.process)+'\n')
             self.LOG.flush()
