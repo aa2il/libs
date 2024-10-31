@@ -1131,6 +1131,7 @@ class AudioIO():
     # Finally know how to do this without an external function!!!!
     def AudioPlayCB(self,in_data, frame_count, time_info, status):
 
+        DEBUG=0
         rb=self.rb
         N=int(frame_count)
         if DEBUG>=2:
@@ -1170,8 +1171,10 @@ class AudioIO():
             Stopper=True
             if status!=0:
                 print('AudioPlayCB: *** WARNING *** Non-zero Status')
-        else:
+        elif self.P.Stopper:
             Stopper = (self.P.Stopper and self.P.Stopper.isSet())
+        else:
+            Stopper=False
             
         if status!=0 and not Stopper:
             print("AudioPlayCB: tag=",rb.tag,'\tframe count=',frame_count,
@@ -1251,7 +1254,8 @@ class AudioIO():
         
         self.last=len(data)
         if DEBUG>=2 or status!=0:
-            print('Final Push:',N,self.last,x.dtype,len(data))
+            print('Final Push: N=',N,'\tlast=',self.last,x.dtype,
+                  '\tnsamps=',rb.nsamps)
         return (data, pyaudio.paContinue)
 
 ###################################################################
