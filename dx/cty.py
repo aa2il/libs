@@ -1,6 +1,6 @@
 #! /usr/bin/python3 -u
 ################################################################################
-
+#
 # JBA - this is very slow bx .plist file is huge (~14Mb)
 # There has to be a better way!
 
@@ -9,15 +9,23 @@
 # To convert XML file to BINARY:
 #          sudo apt install libplist-util
 #          plistutil -i cty.plist -o cty.bin
+#
+################################################################################
+
+#import asyncio
+#import aiofiles
 
 # Function to load Country Information from plist file
 # http://www.country-files.com/cty/history.htm
 def load_cty(filename):
+#async def load_cty(filename):
         try:
                 import plistlib
                 print('Reading',filename,'...')
                 with open(filename, 'rb') as f:
                         country_list = plistlib.load(f)
+                #async with aiofiles.open(filename, 'rb') as f:
+                #         country_list = await plistlib.load(f)
                 return(country_list)
         except Exception as e:
                 print("LOAD_CTY Error")

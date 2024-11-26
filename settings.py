@@ -40,7 +40,9 @@ KEYER_ATTRIBUTES = ['Call','Operator',
                     'Name','State','Sec','Cat','Grid','City','County',
                     'CQ Zone','ITU Zone','Prec','Check','Club',
                     'CWops','SKCC','FISTS','FOC',
-                    'Rig','Ant','Age','Ham Age','Occupation']
+                    'Rig','Ant','Age','Ham Age','Occupation',
+                    'Email','FullName','Address1','Address2',
+                    'ZipCode','Country']
 
 # Function to read config params
 def read_settings(fname,attr=None):
@@ -168,7 +170,10 @@ class SETTINGS_GUI():
         for attr,box in zip(self.ATTRIBUTES,self.boxes):
             attr2='MY_'+attr.upper().replace(' ','_')
             if attr in KEYER_ATTRIBUTES:
-                self.SETTINGS[attr2] = box.get().upper()
+                val = box.get()
+                if attr not in ['EMAIL']:
+                    val = val.upper()
+                self.SETTINGS[attr2] = kvalbox.get().upper()
             else:
                 self.SETTINGS[attr2] = box.get()
 

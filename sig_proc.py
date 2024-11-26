@@ -429,9 +429,9 @@ class ring_buffer2:
                 print('PUSH - Unable to acquire lock - giving up')
                 print('\ttag    =',self.tag)
                 print('\tlocker =',self.locker)
-                print('\tn      =',n)
+                print('\tlen(x) =',len(x))
                 print('\tnsamps =',self.nsamps)
-                sys.exit(0)
+                #sys.exit(0)
                 return None
             else: 
                 self.locker     = 'PUSH in'
@@ -2007,7 +2007,7 @@ class Receiver:
             mute = True
             self.muted=True
             self.nmute = 0
-            print('MUTING ON - xmax=',xmax)
+            #print('MUTING ON - xmax=',xmax)
         elif self.muted:
             # Already muted but data suggests we can un-mute
             if self.nmute<P.MUTE_CHUNKS:

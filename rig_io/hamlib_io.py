@@ -613,7 +613,7 @@ class hamlib_connect(direct_connect):
         
     
     def get_ant(self):
-        VERBOSITY=1
+        VERBOSITY=0
         if VERBOSITY>0:
             print('HAMLIB_IO: Get Ant',self.rig_type,self.rig_type1,self.rig_type2)
         
@@ -1229,9 +1229,12 @@ class hamlib_connect(direct_connect):
 
         
 
-    """
     # Set sub-dial function on Yaesu rigs
     def set_sub_dial(self,func='CLAR'):
+        VERBOSITY=1
+        if VERBOSITY>0:
+            print('HAMLIB - SET SUB DIAL: func=',func,
+                  '\tcurrent=',self.sub_dial_func)
 
         if self.rig_type1!='Yaesu':
             #if self.rig_type2!='FTdx3000':
@@ -1251,7 +1254,6 @@ class hamlib_connect(direct_connect):
         self.sub_dial_func=func
         
         return
-    """            
 
 
 

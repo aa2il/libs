@@ -56,7 +56,7 @@ def open_udp_client(P,port,msg_handler,BUFFER_SIZE=1024):
     
     try:
         
-        print('OPEN_UDP_CLIENT: Opening UDP client ...')
+        print('OPEN_UDP_CLIENT: Opening UDP client on port',port,' ...')
         udp_client = TCP_Server(P,None,port,Server=False,
                                   BUFFER_SIZE=BUFFER_SIZE,Handler=msg_handler)
         worker = Thread(target=udp_client.Listener,args=(), kwargs={},
@@ -70,6 +70,7 @@ def open_udp_client(P,port,msg_handler,BUFFER_SIZE=1024):
         
         print('OPEN UDP CLIENT: Exception Raised:\n',e)
         print('--- Unable to connect to UDP socket ---')
+        print('\tport=',port)
         return None
     
     
@@ -96,7 +97,7 @@ class TCP_Server(Thread):
         else:
             self.Stopper = Event()
             
-        print('TCP Server: host=',host,'\tport=',port,'\tBuf Size=',self.BUFFER_SIZE,
+        print('TCP Server Init: host=',host,'\tport=',port,'\tBuf Size=',self.BUFFER_SIZE,
               '\tHandler=',self.msg_handler)
 
         # Start the server
@@ -105,7 +106,7 @@ class TCP_Server(Thread):
 ################################################################################
 
     def StartServer(self):
-        print('TCP_SERVER->StartServer: Starting ...')
+        print('TCP_SERVER->StartServer (',self.port,'): Starting ...')
         if self.running:
             self.tcpServer.close()
             #self.socks.remove(self.tcpServer)
@@ -121,12 +122,13 @@ class TCP_Server(Thread):
     def Connect(self,host,port):
         if not host:
             host='127.0.0.1'
-        print('TCP_SERVER->Connect: Connecting to',host,port,'\tfrom',self.host,self.port)
+        print('TCP_SERVER->Connect (',self.port,'): Connecting to',host,port,
+              '\tfrom',self.host,self.port)
         self.tcpServer.connect((host, port))                       # Connect to server
         
     # Function to listener for new connections and/or data from clients
     def Listener(self): 
-        print('TCP_SERVER->Listener: Waiting for connections from TCP clients...')
+        print('TCP_SERVER->Listener (',self.port,'): Waiting for connections from TCP clients...')
         if self.Server:
             self.tcpServer.listen(4)                                          # Server listens for clients
 
@@ -141,7 +143,7 @@ class TCP_Server(Thread):
             #readable,writeable,inerror = select.select(self.socks,self.socks,self.socks,0)
             readable,writeable,inerror = select.select(self.socks,[],[],0)
             if VERBOSITY>0:
-                print('TCP_SERVER - Listener - readable=',readable,  \
+                print('TCP_SERVER - Listener (',self.port,'): readable=',readable,  \
                       '\twriteable=',writeable,'\tinerror=',inerror)
             
             # iterate through readable sockets
@@ -160,11 +162,11 @@ class TCP_Server(Thread):
                     conn, addr = self.tcpServer.accept()
                     #conn.settimeout(2)
                     conn.setblocking(0)
-                    print('LISTENER:\r{}:'.format(addr),'connected')
+                    print('LISTENER (',self.port,'):\r{}:'.format(addr),'connected')
                     readable.append(conn)
                     self.socks.append(conn)
 
-                    print('TCP_SERVER->LISTENER: New socket:',conn,addr)
+                    print('TCP_SERVER->LISTENER (',self.port,'): New socket:',conn,addr)
                     print('\tSock Name=',conn.getsockname(),
                           '\tPeer Name=',conn.getpeername())
                     #print('\tName Info=',conn.getnameinfo())
@@ -179,7 +181,7 @@ class TCP_Server(Thread):
                     else:
                         name='NoName'
                     msg='Name:'+name+'\nName:?\n'
-                    print('TCP_SERVER->LISTENER: Sending respons:',msg)
+                    print('TCP_SERVER->LISTENER (',self.port,'): Sending response:',msg)
                     conn.send(msg.encode())
 
                 else:
@@ -199,7 +201,7 @@ class TCP_Server(Thread):
                             
                     except Exception as e:
                         
-                        print('Listener: Problem with socket - closing')
+                        print('LISTENER (',self.port,'): Problem with socket - closing')
                         print( str(e) )
                         print(sock)
                         data=None
@@ -241,7 +243,7 @@ class TCP_Server(Thread):
     def Close(self):
         
         self.tcpServer.close()
-        print('Listerner: Bye bye!')
+        print('LISTERNER (',self.port,'): Bye bye!')
 
 ################################################################################
 
@@ -263,21 +265,24 @@ class TCP_Server(Thread):
         except:
             writeable=[]
         if len(writeable)==0:
-            print('TCP_SERVER->Broadcast: No open sockets')
+            print('TCP_SERVER->Broadcast (',self.port,'): No open sockets')
             return
-                
-        msg=msg+'\n'
+
+        if isinstance(msg,str):
+            msg=msg+'\n'
+        else:
+            msg=msg+b'\n'
         for sock in writeable:
             #print(sock)
             addr = sock.getsockname()
             if False:
-                print('BROADCASTing',msg.strip(),'to',addr,'...')
+                print('BROADCASTing (',self.port,'):',msg.strip(),'to',addr,'...')
                 print('\tSock =',sock.getsockname(),
                       '\tPeer =',sock.getpeername())
             try:
                 sock.send(msg.encode())
             except:
-                print('Broadcast: Problem with socket')
+                print('BROADCAST (',self.port,'): Problem with socket')
                 print(sock)
 
 ################################################################################

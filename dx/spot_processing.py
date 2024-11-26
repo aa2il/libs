@@ -358,7 +358,15 @@ class Station(object):
         CTY_FILE='cty.bin'
         try:
             if os.path.isfile(cty_dir+CTY_FILE):
-                dxcc = load_cty(cty_dir+CTY_FILE)
+
+                if False:
+                    import asyncio
+                    loop = asyncio.get_event_loop()
+                    loop.run_until_complete(load_cty(cty_dir+CTY_FILE))
+                    print(dxcc)
+                    sys.exit(0)
+                else:
+                    dxcc = load_cty(cty_dir+CTY_FILE)
             else:
                 fname=find_resource_file(CTY_FILE)
                 #print('fname=',fname)
@@ -372,7 +380,7 @@ class Station(object):
             #self._logger.exception("CTY.PLIST could not be loaded!")
             print('cty_dir=',cty_dir)
             sys.exit(0)
-                
+
         #------------------Class Methods --------------------           
         def __iterate_prefix(self, call):
             """truncate call until it corresponds to a Prefix in the database"""
