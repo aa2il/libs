@@ -314,6 +314,12 @@ class SPLASH_SCREEN():
     def destroy(self):
         self.splash.destroy()
     
+    def hide(self):
+        self.splash.withdraw()
+    
+    def show(self):
+        self.splash.deiconify()
+    
 ################################################################################
 
 # Test program
