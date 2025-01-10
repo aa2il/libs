@@ -1,7 +1,7 @@
 #######################################################################################
 #
 # Direct Rig IO - Rev 1.0
-# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-5 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Socket I/O routines related to commanding the radio via a
 # direct USB connection.
@@ -1085,7 +1085,8 @@ class direct_connect:
                         if filt[1]<200:
                             filt[1]=200
             else:
-                filt[1]=filt[1].replace(' Hz','')
+                print('DIRECT SET_FILTER - filt=',filt,'\tfilt1=',filt[1])
+                filt[1]=str(filt[1]).replace(' Hz','')
             if VERBOSITY>0:
                 print('DIRECT SET_FILTER: filt1=',filt[1])
                 
