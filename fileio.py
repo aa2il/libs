@@ -1,7 +1,7 @@
 #######################################################################################
 #
 # File IO - Rev 1.0
-# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-5 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Functions related to file I/O
 #
@@ -231,9 +231,14 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False):
 
         if '# FLAG IT!' in record:
             print('# FLAG ON THE FIELD!')
-            logbook[-1]['flagged']='1'
-            #print(logbook[-1])
-
+            try:
+                logbook[-1]['flagged']='1'
+                #print(logbook[-1])
+            except:
+                error_trap('FILE_IO->PARSE_ADIF: *** Unexpected error - need to investigate !!! ***',1)
+                print('len(logbook)=',len(logbook))
+                #continue
+        
         for tag in tags:
             if upper_case:
                 qso[tag[0].upper()] = tag[2][:int(tag[1])]
