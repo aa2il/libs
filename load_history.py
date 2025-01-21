@@ -218,7 +218,7 @@ def load_history(history,DEBUG_CALL=None):
                                     key='sec'
                             elif key=='ck':
                                 key='check'
-                            elif fname[:5]=='FD_20':
+                            elif fname[:5]=='FD_20' or fname[:5]=='WFD_2':
                                 if key=='exch1':
                                     key='fdcat'
                                 elif key=='sec':
@@ -327,9 +327,9 @@ def load_history(history,DEBUG_CALL=None):
                                     HIST[call]['state'] = STATE_QP
                                     
                         elif key not in ['',' ','call','usertext','misc','ccnr','mbrdate']:
-                            print('\nLOAD_HISTORY: Unknown field ...')
+                            print('\nLOAD_HISTORY: Unknown field ...',key)
                             print('row=',row)
-                            print('key=',key,'\tval=',row[i],'\n')
+                            print('key=',key,'\ti=',i)     # ,'\tval=',row[i],'\n')
                             sys.exit(0)
 
                     if call==DEBUG_CALL:
