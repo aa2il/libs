@@ -173,7 +173,7 @@ class SETTINGS_GUI():
                 val = box.get()
                 if attr not in ['EMAIL']:
                     val = val.upper()
-                self.SETTINGS[attr2] = kvalbox.get().upper()
+                self.SETTINGS[attr2] = box.get().upper()
             else:
                 self.SETTINGS[attr2] = box.get()
 
