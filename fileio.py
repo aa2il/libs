@@ -1,7 +1,7 @@
 #######################################################################################
 #
 # File IO - Rev 1.0
-# Copyright (C) 2021-5 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2022-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Functions related to file I/O
 #
@@ -443,12 +443,11 @@ def qso_time(rec):
 
 def read_csv_file(fname,delim=',',FLAT_DATA=False,VERBOSITY=0):
 
-    if VERBOSITY>0:
+    if VERBOSITY>0 or True:
         print('READing CSV FILE ',fname,' ...',FLAT_DATA)
 
-    name=os.path.splitext(fname)[0]
-    ext=os.path.splitext(fname)[1]
-    print('READ_CSV_FILE: name=',name,'\text=',ext)
+    pth,name,ext = parse_file_name(fname)
+    print('READ_CSV_FILE: path=',pth,'\tname=',name,'\text=',ext)
 
     hdr=[]
     QSOs=[]

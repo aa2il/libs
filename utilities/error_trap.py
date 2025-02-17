@@ -1,7 +1,7 @@
 ############################################################################
 #
 # error_handler.py - Rev 1.0
-# Copyright (C) 2024 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2024-5 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Graceful Error handling
 #
@@ -42,6 +42,8 @@ def error_trap(msg,trace=False):
 
     if trace:
         traceback.print_exc()
+
+    return [exc_type.__name__,exc_value]
     
 ############################################################################
 
