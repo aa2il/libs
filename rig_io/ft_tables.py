@@ -1,7 +1,7 @@
 ############################################################################################
 #
 # FT Tables - Rev 1.0
-# Copyright (C) 2021-5 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Tables defining various operating parameters and capabilities
 #
@@ -118,7 +118,7 @@ XE_STATES=['AGS','BAC','BCS','CAM','CHI','CHH','CMX','COA','COL','DGO','EMX','GT
            'JAL','MIC','MOR','NAY','NLE','OAX','PUE','QRO','QUI','SLP','SIN','SON','TAB','TAM',	\
            'TLX','VER','YUC','ZAC']
 
-NA_COUNTRIES=['AK','PR','ZF','VI','HI','XE','V3','TI','8P','DX','KP4','HR','CY9','HP','KP2','HH','DR','CM','J8']
+NA_COUNTRIES=['AK','PR','ZF','VI','HI','XE','V3','TI','8P','DX','KP4','HR','CY9','HP','KP2','HH','DR','CM','J8','VP5','6Y','HI6']
 NAQP_SECS = STATES + PROVINCES2 + NA_COUNTRIES + ['DC']
 SST_SECS  = STATES + PROVINCES2  + ['CWA','DX','AUS','NT','DC','PR']
 CQ_STATES = LOWER48 + PROVINCES2 + ['DC']
