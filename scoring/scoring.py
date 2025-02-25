@@ -34,6 +34,10 @@ def Select_Scoring(P):
     if P.CONTEST_MODE:
         if P.CONTEST_NAME in ['SST']:
             sc=SST_SCORING(P,'SST')
+        elif P.CONTEST_NAME in ['MST']:
+            sc=MST_SCORING(P)
+        elif P.CONTEST_NAME in ['CWT']:
+            sc=CWT_SCORING(P)
         elif P.CONTEST_NAME in ['NAQP']:
             sc=NAQP_SCORING(P)
         else:
