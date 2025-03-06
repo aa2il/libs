@@ -301,12 +301,20 @@ class Station(object):
                 
                 self.call = call.rstrip().lstrip().upper()
                 self.homecall = self.obtain_homecall(self.call)
+
+                self.DEBUG = False     #  call=='KO4VW'
+
+                if self.DEBUG:
+                    print('SPOT PROCESSING->Station: call=',call)
+                
                 if not self.homecall:
                     self.valid = False
                     self._logger.warning("Busted Homecall: '"+ str(self.homecall) \
                                          + "' of " + self.call + " could not be decoded")
                 else:
                     self.prefix = self.obtain_prefix(self.call)
+                    if self.DEBUG:
+                        print('SPOT PROCESSING->Station: call=',call,'\tprefix=',self.prefix)
                     if not self.prefix:
                         self.valid = False
                         if not self.mm and not self.am and self.appendix=='':
@@ -367,11 +375,16 @@ class Station(object):
                     sys.exit(0)
                 else:
                     dxcc = load_cty(cty_dir+CTY_FILE)
+
+                if False:
+                    print(dxcc)
+                    print(dxcc.keys())
+                    sys.exit(0)
             else:
                 fname=find_resource_file(CTY_FILE)
                 #print('fname=',fname)
                 if os.path.isfile(fname):
-                    dxcc = load_cty(fname)              #Load Country File
+                    dxcc = load_cty(fname)              # Load Country File
                 else:
                     #self._logger.critical(CTY_FILE+" could not be loaded!")
                     raise Exception(CTY_FILE+" not found!")
@@ -386,14 +399,22 @@ class Station(object):
             """truncate call until it corresponds to a Prefix in the database"""
 
             prefix = call
-            #print(prefix,prefix in Station.dxcc)
-            while (prefix in Station.dxcc) != True:
+            #while (prefix in Station.dxcc) != True:
+            Done=False
+            while not Done:
                 if len(prefix) == 0:
                     break
                 else:
                     prefix = prefix.replace(' ','')[:-1]
+                Done=(prefix in Station.dxcc) and not Station.dxcc[prefix]['ExactCallsign']
 
-            # Nice try but the doesnt work right, e.g. if call is in cty.plist
+            if self.DEBUG:
+                print('SPOT PROCESSING->Iterate Prefix: call=',call,'\tprefix=',prefix)
+                print(Station.dxcc[prefix])
+
+            return(prefix)
+                
+            # Nice try but the doesnt work right, e.g. if call is in cty.plist - JBA - THIS HAS BEEN FIXED ABOVE!!!
             #print prefix
             if len(prefix)>0 and prefix!='E5' and prefix[0:4]!='4U1U' and False:
                 #print prefix
@@ -430,7 +451,7 @@ class Station(object):
                 try:
                         raw_call = raw_call.upper()
                         #--------identify Homecall in case the callsign has an appendix (e.g. call: DH1TW/VP5, homecall: DH1TW) ------------
-                        homecall = re.search('[\d]{0,1}[A-Z]{1,2}\d([A-Z]{1,4}|\d{3,3}|\d{1,3}[A-Z])[A-Z]{0,5}', raw_call, re.I)
+                        homecall = re.search(r'[\d]{0,1}[A-Z]{1,2}\d([A-Z]{1,4}|\d{3,3}|\d{1,3}[A-Z])[A-Z]{0,5}', raw_call, re.I)
                         if homecall:
                             homecall = homecall.group(0)
                         else:
@@ -452,17 +473,17 @@ class Station(object):
                 entire_call = call.upper()
                 self.appendix=''
                 self._logger.debug("obtain_prefix(): call " + call)
-                if re.search('[/A-Z0-9\-]{3,15}', entire_call, re.I):  #make sure the call has at least 3 characters
+                if re.search(r'[/A-Z0-9\-]{3,15}', entire_call, re.I):  #make sure the call has at least 3 characters
                                 
-                    if re.search('\-\d{1,3}$', entire_call, re.I): #cut off any -10 / -02 appendixes
-                        call = re.sub('\-\d{1,3}$', '', entire_call)
+                    if re.search(r'\-\d{1,3}$', entire_call, re.I): #cut off any -10 / -02 appendixes
+                        call = re.sub(r'\-\d{1,3}$', '', entire_call)
                                 
-                    if re.search('/[A-Z0-9]{2,4}/[A-Z0-9]{1,4}$', call):
+                    if re.search(r'/[A-Z0-9]{2,4}/[A-Z0-9]{1,4}$', call):
                         call = re.sub('/[A-Z0-9]{1,4}$', '', call) # cut off 2. appendix DH1TW/HC2/P -> DH1TW/HC2
 
                     #print('OBTAIN_PREFIX: call2=',call)
-                    if re.search('/[A-Z0-9]{2,4}$', call):  # case call/xxx, but ignoring /p and /m or /5
-                        appendix = re.search('/[A-Z0-9]{1,4}$', call)
+                    if re.search(r'/[A-Z0-9]{2,4}$', call):  # case call/xxx, but ignoring /p and /m or /5
+                        appendix = re.search(r'/[A-Z0-9]{1,4}$', call)
                         appendix = re.sub('/', '', appendix.group(0))
                         self._logger.debug("obtain_prefix(): appendix: " + appendix)
                         self.appendix=appendix
@@ -522,17 +543,17 @@ class Station(object):
                             prefix = self.__iterate_prefix(call)
                             self.beacon = True
                             self._logger.debug("obtain_prefix(): prefix: "+ str(prefix) + " (case /B)")
-                        elif re.search('\d$', appendix):
-                            area_nr = re.search('\d$', appendix).group(0)
-                            call = re.sub('/\d$', '', call)
-                            call = re.sub('[\d]+',area_nr, call)
+                        elif re.search(r'\d$', appendix):
+                            area_nr = re.search(r'\d$', appendix).group(0)
+                            call = re.sub(r'/\d$', '', call)
+                            call = re.sub(r'[\d]+',area_nr, call)
                             prefix = self.__iterate_prefix(call)
                         else:
                             #print('call=',call)
                             prefix = self.__iterate_prefix(call)
                             self._logger.debug("obtain_prefix(): appendix: " + appendix)
                         
-                    elif re.match('^[\d]{0,1}[A-Z]{1,2}\d([A-Z]{1,4}|\d{3,3}|\d{1,3}[A-Z])[A-Z]{0,5}$', call, re.I):  # normal callsigns
+                    elif re.match(r'^[\d]{0,1}[A-Z]{1,2}\d([A-Z]{1,4}|\d{3,3}|\d{1,3}[A-Z])[A-Z]{0,5}$', call, re.I):  # normal callsigns
                         prefix = self.__iterate_prefix(call)
                         #print call,prefix
                         self._logger.debug("obtain_prefix(): Prefix found: " + str(prefix) )
@@ -884,36 +905,36 @@ class Spot(object):
                     
                 """Chop Line from DX-Cluster into pieces and return a dict with the spot data"""
                 try:
-                        spotter_call_temp = re.match('[A-Za-z0-9\/]+[:$]', raw_string[6:15])
+                        spotter_call_temp = re.match(r'[A-Za-z0-9\/]+[:$]', raw_string[6:15])
                         if spotter_call_temp:
                                 self.spotter_call = re.sub(':', '', spotter_call_temp.group(0))
                         else:
                                 self._logger.debug("Missing Semicolon ?!")
-                                self.spotter_call = re.sub('[^A-Za-z0-9\/]+', '', raw_string[6:15])
+                                self.spotter_call = re.sub(r'[^A-Za-z0-9\/]+', '', raw_string[6:15])
 
-                        frequency_temp = re.search('[0-9\.]{5,12}', raw_string[10:25])
+                        frequency_temp = re.search(r'[0-9\.]{5,12}', raw_string[10:25])
                         if frequency_temp: 
                                 self.frequency = float(frequency_temp.group(0))
                         else:
                                 self._logger.debug("RegEx for Frequency didn't work")
-                                self.frequency = float(re.sub('[^0-9\.]+', '', raw_string[16:25]))
+                                self.frequency = float(re.sub(r'[^0-9\.]+', '', raw_string[16:25]))
                                 self._logger.error("__process_spot(): Frequency incorrect; "+frequency_temp)
                                 raise Exception("Could not decode frequency")
 
-                        self.dx_call = re.sub('[^A-Za-z0-9\/]+', '', raw_string[26:38])
+                        self.dx_call = re.sub(r'[^A-Za-z0-9\/]+', '', raw_string[26:38])
 
                         # For debugging problems with specific calls
                         #if self.frequency>7000 and self.frequency<7020:
                         #    self.dx_call = 'CE0YHO'
 
-                        self.comment = re.sub('[^\sA-Za-z0-9\.,;\#\+\-!\?\$\(\)@\/]+', ' ', raw_string[39:69])
+                        self.comment = re.sub(r'[^\sA-Za-z0-9\.,;\#\+\-!\?\$\(\)@\/]+', ' ', raw_string[39:69])
 #                        print "Hey",raw_string[70:74]
-                        time_temp = re.sub('[^0-9]+', '', raw_string[70:74])
+                        time_temp = re.sub(r'[^0-9]+', '', raw_string[70:74])
                         self.utc=time_temp
                         self.time = datetime.utcnow().replace(hour=int(time_temp[0:2]), \
                                                               minute=int(time_temp[2:4]), second=0, \
                                                               microsecond = 0, tzinfo=UTC)
-                        self.locator = re.sub('[^A-Za-z0-9]+', '', raw_string[75:80])
+                        self.locator = re.sub(r'[^A-Za-z0-9]+', '', raw_string[75:80])
                         self.band, self.mode = self.convert_freq_to_band(self.frequency)
                         return(True)
                 except Exception as e:
@@ -951,8 +972,8 @@ class WWV(object):
                 """Chop Line from DX-Cluster into pieces and return WWV data"""
                 try:
                         if re.match('^WWV', wwv) or re.search('^WCY', wwv):
-                                if re.search('\s[\-A-Z0-9/]{3,10}\s', wwv[6:20], re.I):
-                                        station =  re.search('\s[\-A-Z0-9/]{3,10}\s', wwv[6:20], re.I).group(0)
+                                if re.search(r'\s[\-A-Z0-9/]{3,10}\s', wwv[6:20], re.I):
+                                        station =  re.search(r'\s[\-A-Z0-9/]{3,10}\s', wwv[6:20], re.I).group(0)
                                         station = station.lstrip().rstrip()
                                         station = Station(station)
                                         if station:
@@ -960,45 +981,45 @@ class WWV(object):
                                         else:
                                                 raise Exception("Callsign wrong")
                                                 
-                                if re.search('<[\d]{2}>', wwv):
-                                        time_temp = re.search('<[\d]{2}>', wwv).group(0)
-                                        time_temp = re.search('[\d]{2}', time_temp).group(0)
+                                if re.search(r'<[\d]{2}>', wwv):
+                                        time_temp = re.search(r'<[\d]{2}>', wwv).group(0)
+                                        time_temp = re.search(r'[\d]{2}', time_temp).group(0)
                                         time_temp = int(time_temp)
                                         self.time = datetime.utcnow().replace(hour=time_temp, minute=0, second=0, microsecond=0, tzinfo=UTC)
 
-                                if re.search('A=\d{1,3}', wwv):
-                                        temp = re.search('A=\d{1,3}', wwv).group(0)
+                                if re.search(r'A=\d{1,3}', wwv):
+                                        temp = re.search(r'A=\d{1,3}', wwv).group(0)
                                         temp = re.sub('A=', '', temp)
                                         self.a = int(temp)
                                 else:
                                         raise Exception("could not decode A")
                                         
-                                if re.search('SFI=\d{1,3}', wwv):
-                                        temp = re.search('SFI=\d{1,3}', wwv).group(0)
+                                if re.search(r'SFI=\d{1,3}', wwv):
+                                        temp = re.search(r'SFI=\d{1,3}', wwv).group(0)
                                         temp = re.sub('SFI=', '', temp)
                                         self.sfi = int(temp)
                                 else:
                                         raise Exception("could not decode SFI")
                                         
-                                if re.search('\sK=\d{1,3}', wwv):
-                                        temp = re.search('\sK=\d{1,3}', wwv).group(0)
-                                        temp = re.sub('\sK=', '', temp)
+                                if re.search(r'\sK=\d{1,3}', wwv):
+                                        temp = re.search(r'\sK=\d{1,3}', wwv).group(0)
+                                        temp = re.sub(r'\sK=', '', temp)
                                         self.k = int(temp)
                                 else:
                                         raise Exception("could not decode K")
 
-                                if re.search('expK=\d{1,3}', wwv):
-                                        temp = re.search('expK=\d{1,3}', wwv).group(0)
+                                if re.search(r'expK=\d{1,3}', wwv):
+                                        temp = re.search(r'expK=\d{1,3}', wwv).group(0)
                                         temp = re.sub('expK=', '', temp)
                                         self.expk = int(temp)
                                         
-                                if re.search('R=\d{1,3}', wwv):
-                                        temp = re.search('R=\d{1,3}', wwv).group(0)
+                                if re.search(r'R=\d{1,3}', wwv):
+                                        temp = re.search(r'R=\d{1,3}', wwv).group(0)
                                         temp = re.sub('R=', '', temp)
                                         self.r = int(temp)
                                         
-                                if re.search('Au=\S{2,3}', wwv):
-                                        temp = re.search('Au=\S{2,3}', wwv).group(0)
+                                if re.search(r'Au=\S{2,3}', wwv):
+                                        temp = re.search(r'Au=\S{2,3}', wwv).group(0)
                                         temp = re.sub('Au=', '', temp)
                                         if temp == "no":
                                                 self.aurora = False
@@ -1035,9 +1056,9 @@ class Comment(object):
                 """Chop Line from DX-Cluster into pieces and return Comment data"""
                 try:
                         if re.match('^To ALL de', comment, re.I):
-                                if re.search('de [\-A-Z0-9/]{4,15}', comment[6:20], re.I):
-                                        station = re.search('de [\-A-Z0-9/]{4,15}', comment[6:20], re.I).group(0)
-                                        station = re.sub('de ','', station)
+                                if re.search(r'de [\-A-Z0-9/]{4,15}', comment[6:20], re.I):
+                                        station = re.search(r'de [\-A-Z0-9/]{4,15}', comment[6:20], re.I).group(0)
+                                        station = re.sub(r'de ','', station)
                                         station = station.upper()
                                         self.station = Station(station)
                                         if not self.station.valid:
@@ -1047,10 +1068,10 @@ class Comment(object):
 
                                 self.time = datetime.utcnow().replace(tzinfo = UTC)
                                 self.text = "hi"
-                                if re.search(':[\S\s]+', comment):
-                                        text = re.search(':[\S\s]+', comment).group(0)
+                                if re.search(r':[\S\s]+', comment):
+                                        text = re.search(r':[\S\s]+', comment).group(0)
                                         text = re.sub(': ', '', text)
-                                        text = re.sub('[^A-Za-z0-9\.,@&\?;\-\#\+!\$\(\)\/]+', ' ', text) #sanitize input
+                                        text = re.sub(r'[^A-Za-z0-9\.,@&\?;\-\#\+!\$\(\)\/]+', ' ', text) #sanitize input
                                         text = text.rstrip() #chop off tailing whitespaces
                                         self.text = text
                                 else:

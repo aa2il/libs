@@ -248,11 +248,11 @@ class SST_SCORING(CONTEST_SCORING):
 
         try:
             if 'CALL' in qso:
-                call=qso['CALL']
+                call = qso['CALL']
                 band = qso["BAND"]
                 qth  = qso["QTH"].upper()
             else:
-                call=qso['call']
+                call = qso['call']
                 band = qso["band"]
                 qth  = qso["qth"].upper()
         except:
@@ -286,7 +286,7 @@ class SST_SCORING(CONTEST_SCORING):
         band=str(band)
         if band[-1]!='m':
             band+='m'
-        print('SST->NEW MULTIPLIER: call=',call,'\tband=',band)
+        #print('SST->NEW MULTIPLIER: call=',call,'\tband=',band)
 
         new_mult=False
         try:
