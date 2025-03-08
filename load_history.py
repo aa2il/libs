@@ -32,6 +32,7 @@ import os.path
 #import openpyxl            # This doesn't seem to work very well
 import pandas               # Need to learn how to use this more
 #import math
+import chardet
 
 from unidecode import unidecode
 from dx.spot_processing import Station
@@ -41,6 +42,7 @@ import glob
 from rig_io import NAQP_SECS,ARRL_SECS
 from zipfile import ZipFile
 from counties import COUNTIES
+from utilities import error_trap
 
 ###################################################################
 
@@ -177,9 +179,25 @@ def load_history(history,DEBUG_CALL=None):
                 csvfile.close()
 
     else:
-        
-        with open(history,'r',encoding='utf-8') as csvfile:
+
+        with open(history, 'rb') as f:
+            line=f.readline()    # read()
+            result = chardet.detect(line)
+            #sys.exit(0)
+
+        if result['encoding']=='UTF-16':
+            print('\tLooks like this file uses',result)
+            enc='utf-16'
+        else:
+            enc='utf-8'
+            
+        #with open(history,'r',encoding='utf-8') as csvfile:
+        with open(history,'r',encoding=enc) as csvfile:
+            #try:
             hist = csvfile.read()
+            #except:
+            #    error_trap('LOAD HISTORY:Oooops!')
+                
             hist = hist.split("\n")
             csvfile.close()
 
@@ -197,9 +215,12 @@ def load_history(history,DEBUG_CALL=None):
 
         for n in range(nrows):
             row=hist[n].split(delim)
-            #print(row,len(row))
+            #print('n=',n,'row=',row,'len=',len(row))
 
             if len(row)>0 and len(row[0])>0 and row[0]!=' ':
+                #row0=row[0]
+                #print('row0=',row0,len(row0))
+                #print(ord(row0))
 
                 if row[0][0]=='!' or \
                    (n==0 and ('skcc' in history or 'fists' in history)):
@@ -257,7 +278,14 @@ def load_history(history,DEBUG_CALL=None):
                     #print('row=',row)
 
                     # Find the call & init struct for this call
-                    idx=KEYS.index("call")
+                    try:
+                        idx=KEYS.index("call")
+                    except:
+                        error_trap('LOAD HISTORY:Oooops!')
+                        print('\tn=',n)
+                        print('\trow=',row)
+                        print('\tKEYS=',KEYS)
+                        sys.exit(0)
                     call=row[idx].upper()
 
                     if call in ['WAKL','F61112']:

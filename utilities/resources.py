@@ -1,7 +1,7 @@
 ############################################################################
 #
 # resources.py - Rev 1.0
-# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Routine to locate various resources.
 #
@@ -160,6 +160,29 @@ def get_Host_Name_IP():
 def ping_test(host):
     response = os.system("ping -c 1 " + host)
     return response == 0
+
+def check_internet():
+
+    print('\nChecking internet connection ...')
+    host_name,host_ip=get_Host_Name_IP()
+    print("\tHostname :  ",host_name)
+    print("\tIP : ",host_ip,'\n')
+    if host_ip=='127.0.0.1':
+        INTERNET=False
+        print('No internet connection :-(')
+        #sys.exit(0)
+    else:
+        print('\tLocal Internet connection appears to be alive ...')
+        
+        # Next try pinging something outside LAN
+        INTERNET=ping_test('8.8.8.8')
+        if INTERNET:
+            print('\n... Outside Internet Connection appears to be alive also!  :-)')
+        else:
+            print('\n... No internet connection :-(')
+            #sys.exit(0)
+
+    return INTERNET,host_name,host_ip
 
 ############################################################################
 
