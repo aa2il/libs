@@ -1,7 +1,7 @@
 #######################################################################################
 #
 # Direct Rig IO - Rev 1.0
-# Copyright (C) 2021-5 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Socket I/O routines related to commanding the radio via a
 # direct USB connection.
@@ -978,12 +978,25 @@ class direct_connect:
 
 
     def set_breakin(self,onoff):
+        #VERBOSITY=1
+        if VERBOSITY>0:
+            print('DIRECT SET_BREAKIN: onoff=',onoff,type(onoff))
+        
         if self.rig_type1=='Kenwood' or self.rig_type1=='Icom':
             print('DIRECTSET_BREAKIN: Function not yet implemented for Kenwood and Icom rigs')
-            return 
-        
+            return
+
+        if isinstance(onoff, bool):
+            if onoff:
+                onoff=1
+            else:
+                onoff=0
+
         cmd='BY;BI'+str(onoff)+';'
-        self.get_response(cmd)
+        buf=self.get_response(cmd)
+        if VERBOSITY>0:
+            print('DIRECT SET_BREAKIN: cmd=',cmd)
+            print('DIRECT SET_BREAKIN: buf=',buf)
 
 
     def set_filter(self,filt,mode=None):

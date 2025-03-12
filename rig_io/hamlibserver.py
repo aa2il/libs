@@ -2,7 +2,7 @@
 ##############################################################################################################
 #
 # Hamlib Server - Rev 1.0
-# Copyright (C) 2021 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Functions that implement a minimal subset of the hamlib protocal.
 # Just enough to make WSJTX & FLDIGI happy (with a few additions).
@@ -820,7 +820,7 @@ class HamlibServer:
 ##############################################################################################################      
 
 if __name__ == "__main__":
-  print('HAMLIB_SERVER: Starting Hamkib emulator ...',PORT)
+  print('HAMLIB_SERVER: Starting Hamlib emulator ...',PORT)
 
   try:
     HamlibServer().Run()

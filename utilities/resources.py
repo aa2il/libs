@@ -112,7 +112,7 @@ def find_serial_device(device_name,device_number,VERBOSITY=0):
                 pprint(vars(port))
                 #print("port={}: desc={} hwid=[{}]".format(port.device, port.description, port.hwid))
             sys.exit(0)
-        return None
+        return None,None
         
     ports = lp.grep(VID_PID)
     nports=0
@@ -137,7 +137,7 @@ def find_serial_device(device_name,device_number,VERBOSITY=0):
             print('\tReturning device with location ending in',best)
             print(device)
 
-    return device
+    return device,VID_PID
 
 ################################################################################
 

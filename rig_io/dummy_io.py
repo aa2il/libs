@@ -1,7 +1,7 @@
 ############################################################################################
 #
 # Dummy Rig IO - Rev 1.0
-# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Dummied-up socket I/O routines so codes will work if there is not a
 # rig connection.
@@ -102,6 +102,11 @@ class no_connect:
         return band
 
     def set_band(self,b,VFO='A'):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
+        return 0
+
+    def set_breakin(self,onoff):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0
