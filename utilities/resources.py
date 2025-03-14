@@ -36,7 +36,9 @@ import platform
 
 VERBOSITY=0
 
-DEVICE_IDs={'nanoIO'   : '1A86:7523' ,
+#DEVICE_IDs={'nanoIO'   : '1A86:7523' ,
+#DEVICE_IDs={'nanoIO'   : '1A86' ,
+DEVICE_IDs={'nanoIO'   : 'USB2.0-Ser' ,
             'nanoIO32' : '10C4:EA60' ,
             'FTdx3000' : 'SER=AH046H3M120067',
             'FT991a'   : 'SER=00A50791',
@@ -84,23 +86,31 @@ def find_resource_file(f):
 ############################################################################
 
 # Function to list all of the serial devices
-def list_all_serial_devices():
+def list_all_serial_devices(USB_ONLY=False):
     ports = lp.comports()
-    print('LIST ALL SERIAL DEVICES: ports=',ports,'\n')
+    print('LIST ALL SERIAL DEVICES: USB_ONLY=',USB_ONLY)   #  ports=',ports,'\n')
     
     for port in ports:
-        print('\n',port,':')
-        pprint(vars(port))
-        print("\nport={}: desc={} hwid=[{}]".format(port.device, port.description, port.hwid))
+        if not USB_ONLY or ('USB' in str(port)):
+            print('\nport=',port,':')
+            pprint(vars(port))
+            #print("\nport={}: desc={} hwid=[{}]".format(port.device, port.description, port.hwid))
 
-# Function to find a particular serial device        
+# Function to find a particular serial device via vender id and product id
 def find_serial_device(device_name,device_number,VERBOSITY=0):
 
-    try:
-        VID_PID=DEVICE_IDs[device_name]
-        if VERBOSITY>0:
-            print('\nFIND SERIAL DEVICE: Looking for device name=',device_name,
-                  '\tvid_pid=',VID_PID)
+    if VERBOSITY>0:
+        print('\nFIND SERIAL DEVICE: Looking for device name=',device_name,
+              '\tdevice number=',device_number,'...')
+        
+    if device_name in DEVICE_IDs.keys():
+        desc=DEVICE_IDs[device_name]
+    else:
+        desc=device_name
+    print('\tdescriptor=',desc)
+    ports = lp.grep(desc)            # name, description and hwid are searched
+        
+    """
     except Exception as e: 
         if VERBOSITY>0:
             print('\nFIND SERIAL DEVICE: *** ERROR *** No such device -',device_name)
@@ -113,8 +123,8 @@ def find_serial_device(device_name,device_number,VERBOSITY=0):
                 #print("port={}: desc={} hwid=[{}]".format(port.device, port.description, port.hwid))
             sys.exit(0)
         return None,None
-        
-    ports = lp.grep(VID_PID)
+    """
+    
     nports=0
     device=None
     best=None
@@ -123,22 +133,55 @@ def find_serial_device(device_name,device_number,VERBOSITY=0):
         loc=int(port.location[-1])
         if best==None or (device_number==0 and loc<best)  or (device_number==1 and loc>best):
             device=port.device
-            best=loc            
+            best=loc
+            hwid=port.hwid
+            idx=hwid.find('VID:PID=')
+            vid_pid=hwid[(idx+8):(idx+17)]
         if VERBOSITY>0:
             print('port=')
             pprint(vars(port))
-            print('\nFIND SERIAL DEVICE: vid_pid=',VID_PID,'\tdevice=',device)
+            print('\nFIND SERIAL DEVICE: hwid=',hwid,'\tvid_pid=',vid_pid,len(vid_pid),'\tdevice=',device,'\tloc=',loc)
 
     if VERBOSITY>0:
         if nports==0:
-            print('FIND SERIAL DEVICE: Unable to locate serial device',VID_PID)
+            print('\nFIND SERIAL DEVICE: Unable to locate serial device',desc)
+            print('\nMake sure MY_KEYER_DEVICE_ID is set in ~/.keyerrc')
+            print('\nTo find a valid descriptor, on linux, use\n\tpython3 -m serial.tools.list_ports -v')
+            print('\nand on Winbloz, use\n\t py -3 -m serial.tools.list_ports --verbose\n')
         elif nports>1:
-            print('FIND SERIAL DEVICE: Multiple devices found!',VID_PID,nports)
+            print('FIND SERIAL DEVICE: Multiple devices found!',desc,nports)
             print('\tReturning device with location ending in',best)
             print(device)
 
-    return device,VID_PID
+    return device,vid_pid
 
+
+# Function to find a particular serial device via /dev/serial/by-id 
+def find_serial_device_by_serial_id(device_id,device_number,VERBOSITY=0):
+
+    if VERBOSITY>0:
+        print('\nFIND SERIAL DEVICE BY SERIAL ID: Looking for device id=',device_id,'...')
+              
+    DEV_PATH='/dev/serial/by-id'
+    try:
+        files = os.listdir(DEV_PATH)
+    except:
+        files=[]
+
+    print('\nUSB ports found:')
+    device=None
+    VID_PID=None
+    for f in files:
+        print(f)
+        port=os.path.realpath(DEV_PATH+'/'+f)
+        print(port)
+
+        if device_id in f and "-if0"+str(device_number) in f:
+            print('... There it is on port',port,' ...\n')
+            device=port
+
+    return device,VID_PID
+        
 ################################################################################
 
 # Function to display hostname and IP address

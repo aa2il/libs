@@ -1,7 +1,7 @@
 #########################################################################################
 #
 # settings.py - Rev. 1.0
-# Copyright (C) 2021-5 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Gui for basic settings.
 #
@@ -42,7 +42,7 @@ KEYER_ATTRIBUTES = ['Call','Operator',
                     'CWops','SKCC','FISTS','FOC',
                     'Rig','Ant','Age','Ham Age','Occupation',
                     'Email','FullName','Address1','Address2',
-                    'ZipCode','Country','OWM_Api_Key']
+                    'ZipCode','Country','OWM Api Key','Keyer Device','Keyer Device ID']
 
 # Function to read config params
 def read_settings(fname,attr=None):
