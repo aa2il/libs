@@ -1,7 +1,7 @@
 ############################################################################
 #
 # error_handler.py - Rev 1.0
-# Copyright (C) 2024-5 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Graceful Error handling
 #
@@ -38,10 +38,14 @@ def error_trap(msg,trace=False):
     func=exc_traceback.tb_frame.f_code.co_name
     print('\nFile:\t',fname,' at line ',lineno,' in ',func)
     line = linecache.getline(fname,lineno)
-    print('Code:',line)
+    print('Code:',line,flush=True)
 
     if trace:
         traceback.print_exc()
+
+    if exc_type.__name__=='SystemExit':
+        print('--- EXITING ---')
+        raise
 
     return [exc_type.__name__,exc_value]
     

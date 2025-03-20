@@ -1,4 +1,3 @@
-#!/usr/bin/python
 ################################################################################
 #
 # Spot Processing - J.B.Attili - ?
@@ -6,7 +5,8 @@
 # Functions for processing spot from the dx cluster
 #
 # I think the original for this came from
-# https://github.com/dh1tw/DX-Cluster-Parser
+#        https://github.com/dh1tw/DX-Cluster-Parser
+# This is the sme gentleman that provides pyhamtools - TU!
 # If you recognize this code, please email me so I can give proper attribution.
 #
 # Notes:

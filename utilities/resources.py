@@ -36,9 +36,9 @@ import platform
 
 VERBOSITY=0
 
-#DEVICE_IDs={'nanoIO'   : '1A86:7523' ,
 #DEVICE_IDs={'nanoIO'   : '1A86' ,
-DEVICE_IDs={'nanoIO'   : 'USB2.0-Ser' ,
+#DEVICE_IDs={'nanoIO'   : 'USB2.0-Ser' ,
+DEVICE_IDs={'nanoIO'   : '1A86:7523' ,
             'nanoIO32' : '10C4:EA60' ,
             'FTdx3000' : 'SER=AH046H3M120067',
             'FT991a'   : 'SER=00A50791',
@@ -107,7 +107,8 @@ def find_serial_device(device_name,device_number,VERBOSITY=0):
         desc=DEVICE_IDs[device_name]
     else:
         desc=device_name
-    print('\tdescriptor=',desc)
+    if VERBOSITY>0:
+        print('\tdescriptor=',desc)
     ports = lp.grep(desc)            # name, description and hwid are searched
         
     """
@@ -127,6 +128,7 @@ def find_serial_device(device_name,device_number,VERBOSITY=0):
     
     nports=0
     device=None
+    vid_pid=None
     best=None
     for port in ports:
         nports+=1
@@ -146,8 +148,10 @@ def find_serial_device(device_name,device_number,VERBOSITY=0):
         if nports==0:
             print('\nFIND SERIAL DEVICE: Unable to locate serial device',desc)
             print('\nMake sure MY_KEYER_DEVICE_ID is set in ~/.keyerrc')
-            print('\nTo find a valid descriptor, on linux, use\n\tpython3 -m serial.tools.list_ports -v')
-            print('\nand on Winbloz, use\n\t py -3 -m serial.tools.list_ports --verbose\n')
+            cmd='python3 -m serial.tools.list_ports -v'
+            print('\nTo find a valid descriptor, use\n\n\t',cmd,'\n')
+            os.system(cmd)
+            sys.exit(0)
         elif nports>1:
             print('FIND SERIAL DEVICE: Multiple devices found!',desc,nports)
             print('\tReturning device with location ending in',best)
