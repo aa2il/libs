@@ -96,6 +96,8 @@ def list_all_serial_devices(USB_ONLY=False):
             pprint(vars(port))
             #print("\nport={}: desc={} hwid=[{}]".format(port.device, port.description, port.hwid))
 
+    return ports
+
 # Function to find a particular serial device via vender id and product id
 def find_serial_device(device_name,device_number,VERBOSITY=0):
 
