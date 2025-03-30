@@ -221,6 +221,16 @@ class hamlib_connect(direct_connect):
             error_trap('HAMLIB IO->SEND: Timeout error')
             self.ntimeouts += 1
             print('\tNumber of timeouts =',self.ntimeouts)
+        except socket.error:
+            [ename,eval]=error_trap('HAMLIB IO->SEND: Socket Connection Error',1)
+            self.ntimeouts += 1
+            print('\tNumber of timeouts =',self.ntimeouts)
+            print("\t*** This probably means we've lost connection to the rig ***")
+            print('\tename=',ename)
+            print('\teval=',eval)
+            if USE_LOCK:
+                if self.lock.locked():
+                    print('\t--- Released the lock ---')
             
         if USE_TIMEOUT:
             self.s.settimeout(None)
@@ -238,11 +248,16 @@ class hamlib_connect(direct_connect):
             self.ntimeouts += 1
             print('\tNumber of timeouts =',self.ntimeouts)
             return None
-        #except socket.ConnectionResetError:
         except socket.error:
-            error_trap('HAMLIB IO->RECV: Socket Connection Error',1)
+            [ename,eval]=error_trap('HAMLIB IO->RECV: Socket Connection Error',1)
             self.ntimeouts += 1
             print('\tNumber of timeouts =',self.ntimeouts)
+            print("\t*** This probably means we've lost connection to the rig ***")
+            print('\tename=',ename)
+            print('\teval=',eval)
+            if USE_LOCK:
+                if self.lock.locked():
+                    print('\t--- Released the lock ---')
             return None
             
         if USE_TIMEOUT:

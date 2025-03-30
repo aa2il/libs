@@ -107,7 +107,7 @@ class CONFIG_PARAMS:
 #########################################################################################
 
 class SETTINGS_GUI():
-    def __init__(self,root,P,attrib=None,refreshCB=None):
+    def __init__(self,root,P,attrib=None,refreshCB=None,BLOCK=False):
 
         # Init
         self.root=root
@@ -163,6 +163,8 @@ class SETTINGS_GUI():
         #self.win.deiconify()
         self.show()
 
+        if BLOCK:
+            mainloop()
 
     def Dismiss(self):
         print('DISMISS: P=',self.P)

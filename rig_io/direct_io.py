@@ -231,29 +231,29 @@ def find_direct_rig(self,port_in,baud_in,force=False):
     
     # The GS232 rotor
     if port_in==232:
-        port=find_serial_device('GS232b',0,VERBOSITY=0)
+        port,vid=find_serial_device('GS232b',0,VERBOSITY=0)
         if try_rig(self,'Yaesu','GS232b',port,baud):
             return True
 
     # FTdx3000
     if port_in in [0,3000]:
-        port=find_serial_device('FTdx3000',0,VERBOSITY=0)
+        port,vid=find_serial_device('FTdx3000',0,VERBOSITY=0)
         if try_rig(self,'Yaesu','FTdx3000',port,baud):
             return True
         
     # FT991a
     if port_in in [0,991]:
-        port=find_serial_device('FT991a',0,VERBOSITY=0)
+        port,vid=find_serial_device('FT991a',0,VERBOSITY=0)
         if try_rig(self,'Yaesu','FT991a',port,baud):
             return True
 
     # IC-9700
     if port_in in [0,9700]:
-        port=find_serial_device('IC9700',0,VERBOSITY=0)
+        port,vid=find_serial_device('IC9700',0,VERBOSITY=0)
         if try_rig(self,'Icom','IC9700',port,baud):
             return True
     elif port_in in [0,7300]:
-        port=find_serial_device('IC7300',0,VERBOSITY=0)
+        port,vid=find_serial_device('IC7300',0,VERBOSITY=0)
         if try_rig(self,'Icom','IC7300',port,baud):
             return True
 

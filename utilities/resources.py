@@ -102,15 +102,21 @@ def find_serial_device(device_name,device_number,VERBOSITY=0):
     if VERBOSITY>0:
         print('\nFIND SERIAL DEVICE: Looking for device name=',device_name,
               '\tdevice number=',device_number,'...')
-        
-    if device_name in DEVICE_IDs.keys():
+
+    if device_name=='':
+        print('\nFIND SERIAL DEVICE: Fatal Error - Bad device name=',device_name)
+        return None,None
+        #sys.exit(0)
+    elif device_name in DEVICE_IDs.keys():
         desc=DEVICE_IDs[device_name]
     else:
         desc=device_name
     if VERBOSITY>0:
         print('\tdescriptor=',desc)
     ports = lp.grep(desc)            # name, description and hwid are searched
-        
+    if VERBOSITY>0:
+        print('ports=',ports)
+    
     """
     except Exception as e: 
         if VERBOSITY>0:
@@ -132,7 +138,15 @@ def find_serial_device(device_name,device_number,VERBOSITY=0):
     best=None
     for port in ports:
         nports+=1
-        loc=int(port.location[-1])
+        if VERBOSITY>0:
+            print(nports,'\tport=',port)
+
+        try:
+            loc=int(port.location[-1])         # @@@@@@@
+        except:
+            print("\tCan't locate port",port,"- skipping ...")
+            continue
+            
         if best==None or (device_number==0 and loc<best)  or (device_number==1 and loc>best):
             device=port.device
             best=loc

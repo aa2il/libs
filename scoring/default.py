@@ -82,14 +82,17 @@ class CONTEST_SCORING:
                 
         # History file
         self.history = os.path.expanduser( '~/Python/history/data/master.csv' )
-        
+
         self.MY_CALL     = P.SETTINGS['MY_CALL']
         self.MY_NAME     = P.SETTINGS['MY_NAME']
         self.MY_STATE    = P.SETTINGS['MY_STATE']
         self.MY_SECTION  = P.SETTINGS['MY_SEC']
         self.MY_SEC      = self.MY_SECTION
         self.MY_PREC     = P.SETTINGS['MY_PREC']
-        self.MY_CHECK    = int( P.SETTINGS['MY_CHECK'] )
+        try:
+            self.MY_CHECK    = int( P.SETTINGS['MY_CHECK'] )
+        except:
+            self.MY_CHECK    = ""
         self.MY_GRID     = P.SETTINGS['MY_GRID']
 
         # Multi-qsos
@@ -125,8 +128,30 @@ class CONTEST_SCORING:
         print('\nINIT SCORING:',self.nqsos,' QSOs from logbook found for this contest')
         
     # Dummies that need override for each specific contest
+    # Defaults is just to count thenumber of QSOs
     def otf_scoring(self,qso):
+        #print("\nDEFAULT->SCORING: qso=",qso)
+        self.nqsos+=1
+
+        try:
+            if 'CALL' in qso:
+                call = qso['CALL']
+            else:
+                call = qso['call']
+        except:
+            error_trap('DEFAULT->OTF SCORING - Unexpected error!')
+            print('qso=',qso)
         return
+
+        mults = 1
+        self.score=self.nqsos * mults
+        print("SCORING: score=",self.score,self.nqsos,mults)
+
+        self.txt='{:3d} QSOs  x {:3d} Mults = {:6,d} \t\t\t Last Worked: {:s}' \
+            .format(self.nqsos,mults,self.score,call)
+        if self.P.gui:
+            self.P.gui.status_bar.setText(self.txt)
+
 
     def new_multiplier(self,call,band):
         return

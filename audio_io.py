@@ -1,7 +1,7 @@
 #! /usr/bin/python3
 ############################################################################################
 #
-# audio_io.py - Rev 1.0 - Joseph B. Attili, aa2il AT arrl DOT net
+# audio_io.py - Rev 1.0 - Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Wave recorder class.
 # Originally inspired by code snippent found at https://gist.github.com/sloria/5693955.
@@ -15,8 +15,13 @@ import time
 import numpy as np
 from sig_proc import ring_buffer2
 if sys.platform == "linux" or sys.platform == "linux2":
-    #import pyudev
     from pyudev import Context
+
+############################################################################################
+
+SCALE=32767
+#SCALE=16384
+#SCALE=1
 
 ############################################################################################
 
@@ -49,6 +54,7 @@ class WaveRecorder(object):
         print('WAVE RECORDER Init: fname=',fname,
               '\n\trates=',self.rate,self.wav_rate,
               '\n\tnchan=',self.channels,
+              '\n\tgain=',self.GAIN,
               '\n\tframes_per_buf=',self.frames_per_buffer)
 
         width = self.wavefile.getsampwidth()
@@ -163,15 +169,14 @@ class WaveRecorder(object):
                 N2=len(left)                               # Don't need to decimate anymore
                 nsamps = self.rb2.nsamps
                 if nsamps>=N2:
-                    data3 = 32767*self.rb2.pull(N2)
+                    data3 = SCALE*self.rb2.pull(N2)
                 elif nsamps>0:
-                    x = 32767*self.rb2.pull(nsamps)
+                    x = SCALE*self.rb2.pull(nsamps)
                     z = np.array((N2-nsamps)*[0])
                     data3 = np.concatenate( (x,z) )
                 else:
                     data3 = np.array(N2*[0])
-                #right = self.GAIN[1]*data3[idx].astype(np.int16)          # With decimation
-                right = self.GAIN[1]*data3.astype(np.int16)                # No longer need to decimate
+                right = self.GAIN[1]*data3.astype(np.int16)
                 if DEBUG>0:
                     print('RB2: Pulled nsamps=',nsamps,N2,'\tLen=',len(left),len(right))
 
@@ -209,9 +214,9 @@ class WaveRecorder(object):
             N2=len(left)                               # Don't need to decimate sidetone data
             nsamps = self.rb2.nsamps
             if nsamps>=N2:
-                data3 = 32767*self.rb2.pull(N2)
+                data3 = SCALE*self.rb2.pull(N2)
             elif nsamps>0:
-                x = 32767*self.rb2.pull(nsamps)
+                x = SCALE*self.rb2.pull(nsamps)
                 z = np.array((N2-nsamps)*[0])
                 data3 = np.concatenate( (x,z) )
             else:

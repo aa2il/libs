@@ -260,14 +260,13 @@ class SST_SCORING(CONTEST_SCORING):
             print('qso=',qso)
             return
 
-        idx = self.BANDS.index(band)
-
         try:
+            idx = self.BANDS.index(band)
             idx1 = SST_SECS.index(qth)
         except:
             if self.P.gui:
-                self.P.gui.status_bar.setText('Unrecognized/invalid section!')
-            error_trap('SST->OTF SCORING - Unrecognized/invalid section!')
+                self.P.gui.status_bar.setText('Unrecognized/invalid band or section!')
+            error_trap('SST->OTF SCORING - Unrecognized/invalid band or section!')
             return
         self.sec_cnt[idx1,idx] = 1
         

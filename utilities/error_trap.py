@@ -26,28 +26,44 @@ import inspect
 
 ############################################################################
 
+def stack_trace(txt):
+    print('\n',txt,'\n')
+    summary = traceback.StackSummary.extract( 
+        traceback.walk_stack(None) 
+    ) 
+    print(''.join(summary.format()))
+    print('--- EXIT---')
+    sys.exit(0)
+
+    
 def error_trap(msg,trace=False):
 
     print('\n*** Trapped Exception ***',msg)
     
     exc_type, exc_value, exc_traceback = sys.exc_info()
-    print(exc_type.__name__,': ',exc_value)
+    if exc_type!=None:
+        print(exc_type.__name__,': ',exc_value)
     
-    fname=exc_traceback.tb_frame.f_code.co_filename
-    lineno=exc_traceback.tb_lineno
-    func=exc_traceback.tb_frame.f_code.co_name
-    print('\nFile:\t',fname,' at line ',lineno,' in ',func)
-    line = linecache.getline(fname,lineno)
-    print('Code:',line,flush=True)
+        fname=exc_traceback.tb_frame.f_code.co_filename
+        lineno=exc_traceback.tb_lineno
+        func=exc_traceback.tb_frame.f_code.co_name
+        print('\nFile:\t',fname,' at line ',lineno,' in ',func)
+        line = linecache.getline(fname,lineno)
+        print('Code:',line,flush=True)
+    else:
+        print('\n\tERROR_TRAP: Well thats weird - no exc_info - now what???')
 
     if trace:
         traceback.print_exc()
 
-    if exc_type.__name__=='SystemExit':
+    if exc_type!=None and exc_type.__name__=='SystemExit':
         print('--- EXITING ---')
         raise
 
-    return [exc_type.__name__,exc_value]
+    if exc_type!=None:
+        return [exc_type.__name__,exc_value]
+    else:
+        return [None,None]
     
 ############################################################################
 
