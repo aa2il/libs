@@ -382,7 +382,7 @@ class Station(object):
                     sys.exit(0)
             else:
                 fname=find_resource_file(CTY_FILE)
-                #print('fname=',fname)
+                print('City fname=',fname)
                 if os.path.isfile(fname):
                     dxcc = load_cty(fname)              # Load Country File
                 else:

@@ -1,3 +1,4 @@
+#! /home/joea/miniconda3/envs/aa2il/bin/python -u
 #########################################################################################
 #
 # settings.py - Rev. 1.0
@@ -30,6 +31,7 @@ else:
     import tkFont
 import time
 from rig_io import SATELLITE_LIST
+from widgets_tk import FrameWithScrollBar
 
 #from PyQt5 import QtCore
 #from PyQt5.QtWidgets import *
@@ -122,6 +124,7 @@ class SETTINGS_GUI():
             self.win = Tk()
             #print('Root')
         self.win.title("Settings")
+        self.win.geometry("400x770")
 
         if P:
             self.SETTINGS=self.P.SETTINGS
@@ -131,29 +134,38 @@ class SETTINGS_GUI():
         if attrib:
             self.ATTRIBUTES = attrib
         else:
-            self.ATTRIBUTES = KEYER_ATTRIBUTES            
+            self.ATTRIBUTES = KEYER_ATTRIBUTES
 
+        # Create a frame with a scrollbar
+        self.Frame = FrameWithScrollBar(self.win)
+        self.Frame.pack(expand=True, fill=BOTH)
+        
+        # Create a table of entry boxes for the various settings in the scrollable frame
         row=-1
         self.boxes=[]
         for attr in self.ATTRIBUTES:
             row+=1
+            
             txt='My '+attr
-            Label(self.win, text=txt+':').grid(row=row, column=0)
-            box = Entry(self.win)
+            Label(self.Frame.frame, text=txt+':').grid(row=row, column=0)
+            Grid.columnconfigure(self.Frame.frame,0, weight=0)        # Dont change size of Labels
+            
+            box = Entry(self.Frame.frame)
             box.grid(row=row,column=1,sticky=E+W)
-            #box.delete(0, END)  
             self.boxes.append(box)
+            Grid.columnconfigure(self.Frame.frame,1, weight=1)        # Strech enrty boxes to fill entire width
             try:
                 attr2=txt.upper().replace(' ','_')
                 box.insert(0,P.SETTINGS[attr2])
             except:
                 pass
-        
-        row+=1
-        button = Button(self.win, text="OK",command=self.Dismiss)
-        button.grid(row=row,column=0,sticky=E+W)
 
-        button = Button(self.win, text="Cancel",command=self.hide)
+
+        # Buttons to get out of dialog winow
+        row+=1
+        button = Button(self.Frame.frame, text="OK",command=self.Dismiss)
+        button.grid(row=row,column=0,sticky=E+W)
+        button = Button(self.Frame.frame, text="Cancel",command=self.hide)
         button.grid(row=row,column=1,sticky=E+W)
 
         #self.root.protocol("WM_DELETE_WINDOW", self.Quit)        
@@ -162,7 +174,13 @@ class SETTINGS_GUI():
         #self.win.update()
         #self.win.deiconify()
         self.show()
-
+        
+        self.win.update()
+        w=self.win.winfo_width()
+        h=self.win.winfo_height()
+        print(w,h)
+        self.win.minsize(400,300)
+        
         if BLOCK:
             mainloop()
 
@@ -210,6 +228,8 @@ class SETTINGS_GUI():
             self.win.destroy()
             self.win=None
 
+#########################################################################################
+            
 """
 # This doesn't work on its own
 class SETTINGS_GUI_QT(QMainWindow):
@@ -352,3 +372,26 @@ class SETTINGS_GUI_QT(QMainWindow):
         
 
 """
+
+#########################################################################################
+
+# Main test program
+if __name__ == '__main__':
+
+    from pprint import pprint
+    
+    class PARAMS:
+        def __init__(self):
+            fname='.keyerrc'
+            self.SETTINGS,self.RCFILE = read_settings(fname)
+            print(self.SETTINGS)
+            print(self.RCFILE)
+    
+    print('Howdy Ho!')
+
+    P=PARAMS()
+    print("P=")
+    pprint(vars(P))
+    
+    SettingsWin = SETTINGS_GUI(None,P,BLOCK=True)
+        

@@ -54,13 +54,16 @@ DEVICE_IDs={'nanoIO'   : '1A86:7523' ,
 ############################################################################
 
 # Function to locate a file
-def find_resource_file(f):
+def find_resource_file(f,VERBOSITY=1):
 
     PATH=os.path.realpath(sys.executable)
-    #print('FIND_FILE: PATH=',PATH)
+    if VERBOSITY>0:
+        print('FIND_RESOURCE_FILE: PATH=',PATH)
+        
     if '/usr/bin/python' in PATH or 'python.exe' in PATH:
         # Python script on linux or Windoz
-        #print('FIND_FILE: _file_=',__file__)
+        if VERBOSITY>0:
+            print('FIND_RESOURCE_FILE: _file_=',__file__)
         dname = os.path.dirname(__file__)
     elif platform.system()=='Linux':
         dname = os.path.dirname(PATH)
@@ -70,8 +73,9 @@ def find_resource_file(f):
         print("FIND RESOURCE FILE: I don't know what I'm doing here!")
         return None
 
-    #print('FIND_FILE: argv=',sys.argv)
-    #print('FIND_FILE: dname=',dname)
+    if VERBOSITY>0:
+        #print('FIND_FILE: argv=',sys.argv)
+        print('FIND_RESOURCE_FILE: dname=',dname)
     fname = dname+'/'+f
     #print('FIND_FILE: fname=',fname)
     if not os.path.isfile(fname):
@@ -99,13 +103,16 @@ def list_all_serial_devices(USB_ONLY=False):
     return ports
 
 # Function to find a particular serial device via vender id and product id
-def find_serial_device(device_name,device_number,VERBOSITY=0):
+def find_serial_device(device_name,device_number,PORT=None,VERBOSITY=0):
 
     if VERBOSITY>0:
         print('\nFIND SERIAL DEVICE: Looking for device name=',device_name,
               '\tdevice number=',device_number,'...')
 
-    if device_name=='':
+    if PORT!=None:
+        print('\nFIND SERIAL DEVICE: Looking for port',PORT)
+        desc=PORT
+    elif device_name=='':
         print('\nFIND SERIAL DEVICE: Fatal Error - Bad device name=',device_name)
         return None,None
         #sys.exit(0)
@@ -167,6 +174,8 @@ def find_serial_device(device_name,device_number,VERBOSITY=0):
             cmd='python3 -m serial.tools.list_ports -v'
             print('\nTo find a valid descriptor, use\n\n\t',cmd,'\n')
             os.system(cmd)
+            print('\nFIND SERIAL DEVICE: Unable to locate serial device',desc)
+            print('*** Giving up ***')
             sys.exit(0)
         elif nports>1:
             print('FIND SERIAL DEVICE: Multiple devices found!',desc,nports)
