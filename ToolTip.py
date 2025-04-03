@@ -1,7 +1,8 @@
 #! /usr/bin/python
 ############################################################################################
 #
-# Tool tip - J.B.Attili - 2019, aa2il AT arrl DOT net
+# Tool tip - J.B.Attili 
+# Copyright (C) 2019-25 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # I am not sure where the original for this came from.  If you recognize this code,
 # please email me so I can give proper attribution.  Not even sure why this is even here now?!

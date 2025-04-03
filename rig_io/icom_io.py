@@ -1,7 +1,7 @@
 ############################################################################################
 #
 # Icom Rig IO - Rev 1.0
-# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Functions to support communicating with Icom 706 & 9700 rigs
 #

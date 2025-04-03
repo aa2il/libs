@@ -1,7 +1,7 @@
 #######################################################################################
 #
 # Signal Processing - Rev 1.0
-# Copyright (C) 2021-4 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Various routines/objects related to sig processing, demodulation and digital receivers
 #

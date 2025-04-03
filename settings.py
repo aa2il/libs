@@ -109,7 +109,7 @@ class CONFIG_PARAMS:
 #########################################################################################
 
 class SETTINGS_GUI():
-    def __init__(self,root,P,attrib=None,refreshCB=None,BLOCK=False):
+    def __init__(self,root,P,attrib=None,refreshCB=None,BLOCK=False,SHOW=False):
 
         # Init
         self.root=root
@@ -125,6 +125,7 @@ class SETTINGS_GUI():
             #print('Root')
         self.win.title("Settings")
         self.win.geometry("400x770")
+        self.win.withdraw()
 
         if P:
             self.SETTINGS=self.P.SETTINGS
@@ -168,12 +169,9 @@ class SETTINGS_GUI():
         button = Button(self.Frame.frame, text="Cancel",command=self.hide)
         button.grid(row=row,column=1,sticky=E+W)
 
-        #self.root.protocol("WM_DELETE_WINDOW", self.Quit)        
-        self.win.protocol("WM_DELETE_WINDOW", self.hide)        
-        
-        #self.win.update()
-        #self.win.deiconify()
-        self.show()
+        self.win.protocol("WM_DELETE_WINDOW", self.hide)
+        if SHOW:
+            self.show()
         
         self.win.update()
         w=self.win.winfo_width()
@@ -182,7 +180,11 @@ class SETTINGS_GUI():
         self.win.minsize(400,300)
         
         if BLOCK:
-            mainloop()
+            self.show()
+            if root:
+                root.wait_window(self.win)
+            else:
+                mainloop()
 
     def Dismiss(self):
         print('DISMISS: P=',self.P)
@@ -211,7 +213,6 @@ class SETTINGS_GUI():
         if self.refreshCB:
             self.refreshCB()
         
-        #self.win.destroy()
         self.hide()
 
     def show(self):
@@ -395,3 +396,4 @@ if __name__ == '__main__':
     
     SettingsWin = SETTINGS_GUI(None,P,BLOCK=True)
         
+    #mainloop()
