@@ -536,7 +536,7 @@ class fldigi_xlmrpc(direct_connect):
 
     # Function to read rig mode 
     def get_mode(self,VFO='A'):
-        VERBOSITY=1
+        VERBOSITY=0
         if VERBOSITY>0:
             print('FLDIGI_IO GET_MODE: vfo=',VFO,'...')
             
@@ -1034,7 +1034,7 @@ class fldigi_xlmrpc(direct_connect):
         return 0
 
     def get_response(self,cmd):
-        VERBOSITY=1
+        VERBOSITY=0
         if VERBOSITY>0:
             print('FLDIGI GET_RESPONSE: Sending CMD ... ',cmd)
             
@@ -1501,7 +1501,7 @@ class fllog_xlmrpc:
         #print rec
         qso = {}
         #tags = re.findall('<(.*?):(\d+).*?>([^<]+)',rec.replace('<RST> <CNTR>','A AA2IL 78 CA'))
-        tags = re.findall('<(.*?):(\d+).*?>([^<]+)',rec)
+        tags = re.findall(r'<(.*?):(\d+).*?>([^<]+)',rec)
         #print tags
         for tag in tags:
             qso[tag[0].upper()] = tag[2][:int(tag[1])]
