@@ -14,6 +14,8 @@
 
 #import asyncio
 #import aiofiles
+import sys
+from utilities import error_trap
 
 # Function to load Country Information from plist file
 # http://www.country-files.com/cty/history.htm
@@ -21,15 +23,15 @@ def load_cty(filename):
 #async def load_cty(filename):
         try:
                 import plistlib
-                print('Reading',filename,'...')
+                print('LOAD CTY: Reading',filename,'...')
+                #sys.exit(0)
                 with open(filename, 'rb') as f:
                         country_list = plistlib.load(f)
                 #async with aiofiles.open(filename, 'rb') as f:
                 #         country_list = await plistlib.load(f)
                 return(country_list)
-        except Exception as e:
-                print("LOAD_CTY Error")
-                print(e)
+        except:
+                error_trap('Problem loading CTY file: fname='+filename,1)
                 #sys.exit(0)
                 return(False)
 

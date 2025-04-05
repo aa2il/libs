@@ -44,7 +44,7 @@ KEYER_ATTRIBUTES = ['Call','Operator',
                     'CWops','SKCC','FISTS','FOC',
                     'Rig','Ant','Age','Ham Age','Occupation',
                     'Email','FullName','Address1','Address2',
-                    'ZipCode','Country','OWM Api Key','Keyer Device','Keyer Device ID']
+                    'ZipCode','Country','OWM Api Key','Keyer Device','Keyer Device ID','Data Dir']
 
 # Function to read config params
 def read_settings(fname,attr=None):
@@ -124,7 +124,7 @@ class SETTINGS_GUI():
             self.win = Tk()
             #print('Root')
         self.win.title("Settings")
-        self.win.geometry("400x770")
+        self.win.geometry("400x800")
         self.win.withdraw()
 
         if P:
@@ -193,9 +193,9 @@ class SETTINGS_GUI():
             attr2='MY_'+attr.upper().replace(' ','_')
             if attr in KEYER_ATTRIBUTES:
                 val = box.get()
-                if attr not in ['EMAIL']:
+                if attr.upper() not in ['EMAIL','DATA DIR']:
                     val = val.upper()
-                self.SETTINGS[attr2] = box.get().upper()
+                self.SETTINGS[attr2] = val
             else:
                 self.SETTINGS[attr2] = box.get()
 

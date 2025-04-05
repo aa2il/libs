@@ -27,7 +27,7 @@ import logging
 from pprint import pprint
 import xlrd
 from unidecode import unidecode
-from utilities import find_resource_file, error_trap
+from utilities import find_resource_file, error_trap,stack_trace
 
 ################################################################################
 
@@ -36,7 +36,7 @@ UTC = pytz.utc
 root_logger_name = "dxcsucker"
 
 # Download this file from http://www.country-files.com/cty/
-cty_dir = os.path.expanduser('~/Python/data/')
+#cty_dir = os.path.expanduser('~/Python/data/')
 
 ################################################################################
 
@@ -271,6 +271,51 @@ def get_configured_logger(name):
 
 ####################################################################################################
 
+# This is convoluted and I need to find a better solution!
+CTY_INFO=None
+def load_cty_info(DIR=None):
+        global CTY_INFO
+        
+        #Load Country File
+        print('LOADing CTY_INFO INFO ... DIR=',DIR)
+        CTY_INFO = ""
+        if DIR==None:
+            DIR='~/Python/data'
+        cty_dir = os.path.expanduser(DIR+'/')
+        #CTY_FILE='cty.plist'
+        CTY_FILE='cty.bin'
+        try:
+            print('fname=',cty_dir+CTY_FILE)
+            if os.path.isfile(cty_dir+CTY_FILE):
+
+                if False:
+                    import asyncio
+                    loop = asyncio.get_event_loop()
+                    loop.run_until_complete(load_cty(cty_dir+CTY_FILE))
+                    print(CTY_INFO)
+                    sys.exit(0)
+                else:
+                    CTY_INFO = load_cty(cty_dir+CTY_FILE)
+
+                if False:
+                    print(CTY_INFO)
+                    print(CTY_INFO.keys())
+                    sys.exit(0)
+            else:
+                fname=find_resource_file(CTY_FILE)
+                print('Cty fname=',fname)
+                if os.path.isfile(fname):
+                    CTY_INFO = load_cty(fname)              # Load Country File
+                else:
+                    #self._logger.critical(CTY_FILE+" could not be loaded!")
+                    raise Exception(CTY_FILE+" not found!")
+        except:
+            error_trap('SPOT PROCESSING - Station: '+CTY_FILE+' could not be loaded!',1)
+            #self._logger.exception("CTY.PLIST could not be loaded!")
+            print('cty_dir=',cty_dir)
+            sys.exit(0)
+
+            
 class Station(object):
         #------------------Constructor --------------------
         def __init__(self, call):
@@ -304,9 +349,14 @@ class Station(object):
 
                 self.DEBUG = False     #  call=='KO4VW'
 
-                if self.DEBUG:
+                if self.DEBUG :
                     print('SPOT PROCESSING->Station: call=',call)
-                
+
+                if CTY_INFO==None:
+                    print('\nSPOT PROCESSING->Station: call=',call)
+                    stack_trace('*** Need to load cty info !!! ***')
+                    sys.exit(0)
+
                 if not self.homecall:
                     self.valid = False
                     self._logger.warning("Busted Homecall: '"+ str(self.homecall) \
@@ -359,58 +409,22 @@ class Station(object):
                         elif 'Turkey' in self.country:
                             self.country='Turkey'
                                         
-        #------------------STATIC Variables --------------------
-        #Load Country File
-        dxcc = ""
-        CTY_FILE='cty.plist'
-        CTY_FILE='cty.bin'
-        try:
-            if os.path.isfile(cty_dir+CTY_FILE):
-
-                if False:
-                    import asyncio
-                    loop = asyncio.get_event_loop()
-                    loop.run_until_complete(load_cty(cty_dir+CTY_FILE))
-                    print(dxcc)
-                    sys.exit(0)
-                else:
-                    dxcc = load_cty(cty_dir+CTY_FILE)
-
-                if False:
-                    print(dxcc)
-                    print(dxcc.keys())
-                    sys.exit(0)
-            else:
-                fname=find_resource_file(CTY_FILE)
-                print('City fname=',fname)
-                if os.path.isfile(fname):
-                    dxcc = load_cty(fname)              # Load Country File
-                else:
-                    #self._logger.critical(CTY_FILE+" could not be loaded!")
-                    raise Exception(CTY_FILE+" not found!")
-        except:
-            error_trap('SPOT PROCESSING - Station: '+CTY_FILE+' could not be loaded!')
-            #self._logger.exception("CTY.PLIST could not be loaded!")
-            print('cty_dir=',cty_dir)
-            sys.exit(0)
-
         #------------------Class Methods --------------------           
         def __iterate_prefix(self, call):
             """truncate call until it corresponds to a Prefix in the database"""
 
             prefix = call
-            #while (prefix in Station.dxcc) != True:
             Done=False
             while not Done:
                 if len(prefix) == 0:
                     break
                 else:
                     prefix = prefix.replace(' ','')[:-1]
-                Done=(prefix in Station.dxcc) and not Station.dxcc[prefix]['ExactCallsign']
+                Done=(prefix in CTY_INFO) and not CTY_INFO[prefix]['ExactCallsign']
 
             if self.DEBUG:
                 print('SPOT PROCESSING->Iterate Prefix: call=',call,'\tprefix=',prefix)
-                print(Station.dxcc[prefix])
+                print(CTY_INFO[prefix])
 
             return(prefix)
                 
@@ -418,8 +432,8 @@ class Station(object):
             #print prefix
             if len(prefix)>0 and prefix!='E5' and prefix[0:4]!='4U1U' and False:
                 #print prefix
-                #print Station.dxcc[prefix]
-                return Station.dxcc[prefix]['Prefix']
+                #print CTY_INFO[prefix]
+                return CTY_INFO[prefix]['Prefix']
             else:
                 #print(prefix)
                 return(prefix)
@@ -590,9 +604,10 @@ class Station(object):
                     self._logger.debug("obtain_prefix(): return False; No Prefix found for " + call )
                     return(False)
                    
-            except Exception as e:
-                print('OBTAIN_PREFIX: Exception',str(e))
-                self._logger.warning(str(e))
+            except:
+                error_trap('OBTAIN_PREFIX: Exception',1)
+                #sys.exit(0)
+                #self._logger.warning(str(e))
                 self._logger.warning("obtain_prefix(): Exception with call:" +call )
                 return(False)
             
@@ -600,15 +615,15 @@ class Station(object):
             #--------Lookup Prefix in Country Database / File and the variables ------------
             if prefix:  # if Country information found, fill the variables
                 try:
-                    #print prefix,Station.dxcc[prefix]
+                    #print prefix,CTY_INFO[prefix]
                     info = {
-                        'latitude': Station.dxcc[prefix]['Latitude'],
-                        'longitude': Station.dxcc[prefix]['Longitude'],
-                        'cqz': Station.dxcc[prefix]['CQZone'],
-                        'ituz': Station.dxcc[prefix]['ITUZone'],
-                        'country': Station.dxcc[prefix]['Country'],
-                        'continent': Station.dxcc[prefix]['Continent'],
-                        'offset': Station.dxcc[prefix]['GMTOffset']
+                        'latitude': CTY_INFO[prefix]['Latitude'],
+                        'longitude': CTY_INFO[prefix]['Longitude'],
+                        'cqz': CTY_INFO[prefix]['CQZone'],
+                        'ituz': CTY_INFO[prefix]['ITUZone'],
+                        'country': CTY_INFO[prefix]['Country'],
+                        'continent': CTY_INFO[prefix]['Continent'],
+                        'offset': CTY_INFO[prefix]['GMTOffset']
                     }
                     return(info)
 
