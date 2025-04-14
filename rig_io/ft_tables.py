@@ -32,8 +32,8 @@ VERBOSITY=0
 
 ############################################################################################
 
-DATA_DIR = '~/Python/data'
-PRESETS_FNAME = os.path.expanduser(DATA_DIR + '/presets.xls')
+#DATA_DIR = '~/Python/data'
+#PRESETS_FNAME = os.path.expanduser(DATA_DIR + '/presets.xls')
 
 # Local hardware/network etc.
 # HOST = 'localhost'

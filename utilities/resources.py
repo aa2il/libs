@@ -31,6 +31,7 @@ import socket
 import serial.tools.list_ports as lp
 from pprint import pprint
 import platform
+import json
 
 ############################################################################
 
@@ -59,8 +60,26 @@ def find_resource_file(f,VERBOSITY=1):
     PATH=os.path.realpath(sys.executable)
     if VERBOSITY>0:
         print('FIND_RESOURCE_FILE: PATH=',PATH)
-        
-    if '/usr/bin/python' in PATH or 'python.exe' in PATH:
+
+    # Try reading settings file
+    RCFILE=os.path.expanduser('~/.keyerrc')
+    if os.path.isfile(RCFILE):
+        print('FIND_RESOURCE_FILE: Found settings file ...',RCFILE)
+        with open(RCFILE) as json_data_file:
+            SETTINGS = json.load(json_data_file)
+        DATA_DIR=SETTINGS['MY_DATA_DIR']
+        if DATA_DIR=='':
+            DATA_DIR='~/Python/data'
+        print('\tDATA_DIR=',DATA_DIR)
+        fname=os.path.expanduser(DATA_DIR+'/'+f)
+        if os.path.isfile(fname):
+            print('\tFound it!',fname)
+            return fname
+        else:
+            print('\tNope, its not there')
+
+    # Look in path where execuatable it
+    if '/bin/python' in PATH or 'python.exe' in PATH:
         # Python script on linux or Windoz
         if VERBOSITY>0:
             print('FIND_RESOURCE_FILE: _file_=',__file__)

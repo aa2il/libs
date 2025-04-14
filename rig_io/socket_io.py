@@ -513,29 +513,36 @@ def SetVFO(self,cmd):
 
 # Function to reset clarifier
 def ClarReset(self,RXClarOn=False):
-    VERBOSITY=1
+    VERBOSITY=0
     if VERBOSITY>0:
         print('Clarifier reset ...',RXClarOn,self.sock.rig_type,self.sock.rig_type1)
     if self.sock.rig_type1=='Kenwood' or self.sock.rig_type1 in ['Icom','Hamlib']:
         print('CLARIFIER RESET not available in',self.sock.rig_type,'command set')
         return
-    if self.sock.rig_type=='Hamlib' and True:
-        # These arent working quite right in latest hamlib - patched
-        print('\n**** WARNING **** CLARIFIER RESET is flaky in hamlib - needs some attention! ***\n')
+    if self.sock.rig_type=='Hamlib':
+        # Need patched hamlib code for this to work right - U cmd is ok but J & Z are a mess - see newcat.c for fix
+        if VERBOSITY>0:
+            print('\n**** WARNING **** CLARIFIER RESET is flaky in hamlib - needs some attention! ***\n')
         if RXClarOn:
-            self.sock.get_response('U RIT 1')
+            self.sock.get_response('U RIT 1')             
         else:
             self.sock.get_response('U RIT 0')
         self.sock.get_response('U XIT 0')
-        self.sock.get_response("J 0")
-        self.sock.get_response("Z 0")
-        self.sock.get_response("J 0")             # This is the problem child and needs to be repeated for some reason
+
+        if True:
+            # Use direct command to clear Yaesu clarifier to avoid patches
+            self.sock.get_response("W RC; 0")
+        else:
+            # This will work with patched hamlib code
+            self.sock.get_response("J 0")             # Set RIT freq
+            self.sock.get_response("Z 0")             # Set XIT freq
+            self.sock.get_response("J 0")             # This is the problem child and needs to be repeated for some reason
     else:
         # Yaesu rigs
         if RXClarOn:
-            cmd="BY;RC;RT1;XT0;"
+            cmd="BY;RC;RT1;XT0;"                       # Clear Clar, RIT on, XIT off
         else:
-            cmd="BY;RC;RT0;XT0;"
+            cmd="BY;RC;RT0;XT0;"                       # Clear Clar, RIT off, XIT off
         self.sock.get_response(cmd)
         #self.sock.set_sub_dial('CLAR')
         time.sleep(DELAY)
@@ -558,12 +565,12 @@ def SetTXSplit(self,df_kHz,onoff=True):
     if self.sock.rig_type=='Hamlib':
         
         if onoff:
-            print('Set TX CLARIFIER SPLIT: *ON* df=',df)
+            print('SOCKET IO: Set TX CLARIFIER SPLIT: *ON* df=',df)
             self.sock.get_response('U RIT 0')
             self.sock.get_response('U XIT 1')
             self.sock.get_response("Z "+str(df))
         else:
-            print('Set TX CLARIFIER SPLIT: *OFF* df=',0)
+            print('SOCKET IO: Set TX CLARIFIER SPLIT: *OFF* df=',0)
             self.sock.get_response('U XIT 0')
             self.sock.get_response("Z 0")
             
@@ -574,7 +581,7 @@ def SetTXSplit(self,df_kHz,onoff=True):
         else:
             cmd = 'BY;RC;RT0;XT0;'
             
-        print('Set TX CLARIFIER SPLIT: df=',df,'\tcmd=',cmd)
+        print('SOCKET IO: Set TX CLARIFIER SPLIT: df=',df,'\tcmd=',cmd)
         self.sock.get_response(cmd)
 
 # Function to get split settings (clarifier)

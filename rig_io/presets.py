@@ -19,6 +19,7 @@
 #
 ############################################################################################
 
+import os
 from .ft_tables import *
 from .icom_io import *
 import xlrd
@@ -46,9 +47,12 @@ preset_prefs['PKTUSB']   = ('10 KHz','4 KHz')
 
 
 # Function to read presets from a spreadsheet
-def read_presets2(rig_type,sheet_name):
+def read_presets2(rig_type,fname,sheet_name):
 
-    book  = xlrd.open_workbook(PRESETS_FNAME,formatting_info=True)
+    if fname==None or fname=='':
+        fname='~/Python/data/presets.xls'        
+    f=os.path.expanduser(fname)
+    book  = xlrd.open_workbook(f,formatting_info=True)
     sheet = book.sheet_by_name(sheet_name)
 
     keys = []

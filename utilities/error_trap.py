@@ -51,7 +51,7 @@ def error_trap(msg,trace=False):
         line = linecache.getline(fname,lineno)
         print('Code:',line,flush=True)
     else:
-        print('\n\tERROR_TRAP: Well thats weird - no exc_info - now what???')
+        print('\n\tERROR_TRAP: Well thats weird - no exc_info - now what???',flush=True)
 
     if trace:
         traceback.print_exc()

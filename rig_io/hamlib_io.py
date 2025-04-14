@@ -39,6 +39,8 @@ from utilities import error_trap
 
 VERBOSITY=0
 USE_LOCK=True
+USE_HAMLIB_WORK_AROUNDS=True         # Turn this on to avoid fix-ups to hamlib C code
+NULL=chr(0)           # 4.6.2 seems to send a lot of nulls - we'll ignore them
 
 ############################################################################################
 
@@ -126,11 +128,11 @@ class hamlib_connect(direct_connect):
             a=line.split(':')
             caps2[a[0]]=''.join(a[1:]).strip()
         print('HAMLIB_IO: caps2=',caps2)
-        print('HAMLIB_IO: Model=',caps2['Model name'])
+        print('\nHAMLIB_IO: Model=',caps2['Model name'])
         
         # Most rigs will respond with a unique ID
         # Those that don't, we do it the hard way
-        x = self.get_response('_')
+        x = self.get_response('_',VERBOSITY=1)
         print('HAMLIB_IO: info=',x)
         if caps2['Model name']=='pySDR':
             self.rig_type1 = 'SDR'
@@ -165,7 +167,7 @@ class hamlib_connect(direct_connect):
             self.rotor     = True
         else:
             print('\n*** HAMLIB_IO - HAMLIB INIT: Unknown rig on the other end ***',x)
-            print('Giving up & aborting :-(')
+            print('Giving up :-(')
             self.rig_type  = 'UNKNOWN'
             self.rig_type1 = 'UNKNOWN'
             self.rig_type2 = 'UNKNOWN'
@@ -238,6 +240,7 @@ class hamlib_connect(direct_connect):
     
     def recv(self,n=1024):
         USE_TIMEOUT=True
+        USE_TIMEOUT=False          # 4.6.2
         if USE_TIMEOUT:
             self.s.settimeout(2.0)
             
@@ -278,7 +281,7 @@ class hamlib_connect(direct_connect):
     def get_response(self,cmd,N=1,wait=False,VERBOSITY=0):
         USE_TIMEOUT=True
         if VERBOSITY>0:
-            print('HAMLIB_IO: Get response: cmd=',cmd,'\t',cmd[-1])
+            print('HAMLIB_IO: Get Response: cmd=',cmd,'\tend=',cmd[-1])
 
         if USE_TIMEOUT:
             self.s.settimeout(2.0)
@@ -288,15 +291,22 @@ class hamlib_connect(direct_connect):
             
         if USE_LOCK:
             if VERBOSITY>0:
-                print('HAMLIB_IO GET_RESPONSE - Waiting for lock')
+                print('HAMLIB_IO GET_RESPONSE - Waiting for Lock ...')
             acq=self.lock.acquire(timeout=lock_to)
             if not acq:
-                error_trap('HAMLIB_IO GET_RESPONSE: Unable to acquire lock - giving up')
+                error_trap('HAMLIB_IO GET_RESPONSE: Unable to acquire lock - giving up :-(')
                 self.ntimeouts += 1
                 print('\tntimeots=',self.ntimeouts)
                 return None                
+            if VERBOSITY>0:
+                print('HAMLIB_IO GET_RESPONSE - ... Got Lock :-)')
 
-        if cmd[-1] == ';':
+        if cmd[0]=='W':
+            cmd2=cmd+'\n'
+            if VERBOSITY>0:
+                print('HAMLIB GET_RESPONSE: New style command cmd=',cmd2);
+            self.send(cmd2)
+        elif cmd[-1] == ';':
             # Yaseu/Kenwood command
             #print '************************* HAMLIB_IO: GET_RESPONSE - Direct commands not working yet',cmd
             #return ''
@@ -307,7 +317,7 @@ class hamlib_connect(direct_connect):
                 cmd2='w '+cmd+'\n'
             if VERBOSITY>0:
                 print('HAMLIB GET_RESPONSE: Sending Yaesu/Kenwood',cmd2)
-            print('HAMLIB GET_RESPONSE: **** WARNING *** Yaesu/Kenwood direct commands are flaky !!!!!',cmd2)
+                print('\t**** WARNING *** Yaesu/Kenwood direct commands are flaky !!!!!')
             if False:
                 if USE_LOCK:
                     self.lock.release()
@@ -319,14 +329,19 @@ class hamlib_connect(direct_connect):
             self.send(cmd+'\n')
         elif cmd[0]=='w' and cmd[-1]!=';':
             cmd2=cmd+';\n'
-            print('cmd2=',cmd2)
+            if VERBOSITY>0:
+                print('HAMLIB GET_RESPONSE: **** WARNING *** Yaesu/Kenwood direct commands are flaky !!!!!',cmd2)
             self.send(cmd2)
         else:
             if VERBOSITY>0:
                 print('HAMLIB_IO: Get Response - **** WARNING *** Not sure what to do????',cmd)
             self.send(cmd+'\n')
             
+        if VERBOSITY>0:
+            print('HAMLIB_IO: Get_Response: Waiting for response ...')
         x=self.recv(N*1024)
+        if VERBOSITY>0:
+            print('HAMLIB_IO: Get_Response: ... got it x=',x)
         
         if USE_TIMEOUT:
             self.s.settimeout(None)
@@ -364,12 +379,12 @@ class hamlib_connect(direct_connect):
             self.s.settimeout(None)
         
         if VERBOSITY>0:
-            print('resp=',x)
+            print('\tresp=',x)
         if USE_LOCK:
             self.lock.release()
             if VERBOSITY>0:
                 print('HAMLIB_IO GET_RESPONSE - Lock released 2')
-        return x
+        return x.replace(NULL,'')
 
     
     def get_freq(self,VFO='A'):
@@ -390,7 +405,8 @@ class hamlib_connect(direct_connect):
                 buf = self.get_response('F'+VFO+';')
         
             try:
-                frq = float(buf[2:-1])
+                #frq = float(buf[2:-1])
+                frq = float( buf.replace(';','') )
             except:
                 error_trap('HAMLIB GET_FREQ: Unable to read freq',1)
                 print('\tbuf=',buf)
@@ -414,6 +430,9 @@ class hamlib_connect(direct_connect):
         #print 'HAMLIB_IO: GET_FREQ: x=',x,type(x)
         
         try:
+            if x==None:
+                error_trap('HAMLIB_IO: GET_FREQ: Unable to read freq - return NONE')
+                return -1
             if isinstance(x,str):
                 a=x.split('\n')
                 x=a[0]
@@ -430,7 +449,7 @@ class hamlib_connect(direct_connect):
         return frq
     
 
-    def set_freq(self,frq_KHz,VFO='A'):
+    def set_freq(self,frq_KHz,VFO='A',VERBOSITY=0):
         #VERBOSITY=1
         if VERBOSITY>0:
             print('HAMLIB_IO->SET FREQ: frq=',frq_KHz,'\tVFO=',VFO,
@@ -454,9 +473,11 @@ class hamlib_connect(direct_connect):
         else:
             # Hamlib doesn't seem to have a nice way of changing freq of VFO B without interrupting the
             # rig so just issue the direct FB command for Yaesu and Kenwood rigs
+            # IS THIS STILL TRUE????????????
             # The second FB is just to make sure rig responds
             frq  = int(frq_KHz*1000)
-            cmd = 'F'+VFO+str(frq).zfill(8)+";FB;"
+            #cmd = 'F'+VFO+str(frq).zfill(8)+";FB;"       # Old style - b4 4.6.2
+            cmd = 'W F'+VFO+str(frq).zfill(8)+"; 0"
 
         if VERBOSITY>0:
             print('cmd=',cmd)
@@ -474,7 +495,8 @@ class hamlib_connect(direct_connect):
         if b[-1]!='m':
             b = b+'m'
         code = bands[b]["Code"]
-        cmd = 'BY;BS'+str(code).zfill(2)+';'
+        #cmd = 'BY;BS'+str(code).zfill(2)+';'          # Old style b4 4.6.2
+        cmd = 'W BS'+str(code).zfill(2)+'; 0'         
         print('HAMLIB_IO SET_BAND:',b,cmd)
         buf=self.get_response(cmd)
         print('HAMLIB_IO SET_BAND:',buf)
@@ -635,7 +657,7 @@ class hamlib_connect(direct_connect):
         # The 'y' command isn't available on all rigs but its really
         # only useful for the FTdx3000 anyway
         if self.rig_type2=='FTdx3000':
-            if False:
+            if USE_HAMLIB_WORK_AROUNDS:
                 # They seemed to have hosed this up in v4.2 so just do it directly for now
                 buf = self.get_response('AN0;')
                 ant=int(buf[3])
@@ -670,17 +692,23 @@ class hamlib_connect(direct_connect):
         return ant
 
     def set_ant(self,a,VFO='A'):
+        VERBOSITY=0
         if VERBOSITY>0:
             print('HAMLIB_IO: Set ant',a)
         # The 'Y' command isn't avaiable on all rigs but its really
         # only useful for the FTdx3000 anyway
         if self.rig_type2=='FTdx3000':
-            if False:
+            if USE_HAMLIB_WORK_AROUNDS:
+                # They seemed to have hosed this up in v4.2 so just do it directly for now
+                buf=self.get_response('W AN0'+str(a)+'; 0')
+            elif False:
                 # V3 
                 buf = self.get_response('Y'+str(int(a)-1))
             else:
                 # They changed command and response in V4 - ugh!
+                # Need my code patch to hamlib for this to work.
                 buf = self.get_response('Y '+str(int(a))+' 0' )
+                
             if a==1 or a==2:
                 # Make sure ant tuner is on for ports 1 & 2
                 self.tuner(1)
@@ -705,8 +733,9 @@ class hamlib_connect(direct_connect):
         elif opt==0 or opt==1:
             buf=self.get_response( 'U TUNER '+str(opt) )
         elif opt==2:
-            # Hamlib doesnt work
-            buf=self.get_response('BY;AC00'+str(opt)+';')
+            # Hamlib doesnt work - need to recheck if they fixed this
+            #buf=self.get_response('BY;AC00'+str(opt)+';')                   # Old style b4 4.6.2
+            buf=self.get_response('W AC00'+str(opt)+'; 0')
         else:
             print('HAMLIB TUNER - Invalid option:',opt)
 
@@ -752,13 +781,16 @@ class hamlib_connect(direct_connect):
         if self.rig_type2=='FT991a':
             # Hamlib 'C' command doesn't work for this rig so do it using rig CAT commands
             # Note that there are some mods needed to rigctl_parse.c for this to work properly
+            # Need to recheck all of this
             if tone==0:
-                buf = self.get_response('BY;CT00;')
+                #buf = self.get_response('BY;CT00;')                 # Old style b4 4.6.2
+                buf = self.get_response('W CT00; 0')
                 if VERBOSITY>0:
                     print('HAMLIB_IO SET_PL_TONE: CT buf=',buf)
             else:
                 p3 = str( np.where(PL_TONES==tone)[0][0] ).zfill(3)
-                cmd='BY;CN00'+p3+';CT02;'
+                #cmd='BY;CN00'+p3+';CT02;'                 # Old style b4 4.6.2
+                cmd='W CN00'+p3+';CT02; 0'                 # Need to check this 
                 buf = self.get_response(cmd)
                 if VERBOSITY>0:
                     print('HAMLIB_IO SET_PL_TONE: CT buf=',buf)
@@ -1072,8 +1104,9 @@ class hamlib_connect(direct_connect):
     # Disabled broken code in newcat.c so now this works
     # Keep an eye on it
     def rit(self,opt,df,VFO='A'):
-        if VERBOSITY>0 or False:
-            print('HAMLIB RIT:',opt,df,VFO)
+        VERBOSITY=0
+        if VERBOSITY>0:
+            print('HAMLIB RIT: opt=',opt,'\tdf=',df,'\tvfo=',VFO)
 
         if opt==-1:
             # Read current rit setting
@@ -1082,12 +1115,35 @@ class hamlib_connect(direct_connect):
             return [buf1,buf2]
     
         elif opt<2:
-            # Turn it on/off
-            buf2=self.get_response('j')               # Get current shift
-            #print('buf2=',buf2)
-            offset = int(buf2) +df                    # Compute new shift
-            buf=self.get_response('U RIT '+str(opt))
-            buf2=self.get_response('J '+str(offset))
+            
+            # Get current shift and compute new shift
+            cmd='j'
+            buf2=self.get_response(cmd)
+            offset = int(buf2) + df  
+            if VERBOSITY>0:
+                print('\tcmd    =',cmd)
+                print('\tbuf2   =',buf2)
+                print('\toffset =',offset)
+            
+            # Turn rit on/off ...
+            cmd='U RIT '+str(opt)
+            buf=self.get_response(cmd)
+            if VERBOSITY>0:
+                print('\tcmd  =',cmd)
+                print('\tbuf  =',buf2)
+
+            # ... and adjust shift            
+            if USE_HAMLIB_WORK_AROUNDS and self.rig_type1=='Yaesu':
+                if df>=0:
+                    cmd='W RU'+str(df).zfill(4)+'; 0'
+                else:
+                    cmd='W RD'+str(-df).zfill(4)+'; 0'
+            else:
+                cmd='J '+str(offset)
+            buf2=self.get_response(cmd)
+            if VERBOSITY>0:
+                print('\tcmd  =',cmd)
+                print('\tbuf2 =',buf2,flush=True)
 
         else:
 
@@ -1152,17 +1208,20 @@ class hamlib_connect(direct_connect):
         if self.rig_type2=='FT991a':
 
             print('\nSetting Rig Date ...',date)
-            cmd='w DT0'+date+';BY;'
+            #cmd='w DT0'+date+';BY;'                               # Old style b4 4.6.2
+            cmd='W DT0'+date+'; 0'
             buf=self.get_response(cmd)
             print('cmd=',cmd,'\tbuf=',buf)
             
             print('\nSetting Rig Time ...',time)
-            cmd='w DT1'+time+';BY;'
+            #cmd='w DT1'+time+';BY;'                               # Old style b4 4.6.2
+            cmd='W DT1'+time+'; 0' 
             buf=self.get_response(cmd)
             print('cmd=',cmd,'\tbuf=',buf)
 
             print('Setting Rig UTC offset ...')
-            cmd='w DT2+0000;BY;'
+            #cmd='w DT2+0000;BY;'                                  # Old style b4 4.6.2
+            cmd='W DT2+0000; 0' 
             buf=self.get_response(cmd)
             print('cmd=',cmd,'\tbuf=',buf)
             
@@ -1246,9 +1305,9 @@ class hamlib_connect(direct_connect):
 
     # Set sub-dial function on Yaesu rigs
     def set_sub_dial(self,func='CLAR'):
-        VERBOSITY=1
+        VERBOSITY=0
         if VERBOSITY>0:
-            print('HAMLIB - SET SUB DIAL: func=',func,
+            print('\nHAMLIB - SET SUB DIAL: func=',func,
                   '\tcurrent=',self.sub_dial_func)
 
         if self.rig_type1!='Yaesu':
@@ -1257,16 +1316,24 @@ class hamlib_connect(direct_connect):
             return
             
         if func=='CLAR':
-            cmd='BY;SF5;'
+            #cmd='BY;SF5;'       # Old style - b4 4.6.2
+            cmd='W SF5; 0'
         elif func=='VFO-B':
-            cmd='BY;SF4;'
+            #cmd='BY;SF5;'       # Old style - b4 4.6.2
+            cmd='W SF4; 0'
         else:
             self.sub_dial_func=None
             print('HAMLIB_IO - SET_SUB_DIAL - Unknown Function',func)
             return
         
-        buf = self.get_response(cmd)
+        if VERBOSITY>0:
+            print('HAMLIB - SET SUB DIAL: cmd=',cmd)
+        
+        buf = self.get_response(cmd,VERBOSITY=VERBOSITY)
         self.sub_dial_func=func
+
+        if VERBOSITY>0:
+            print('HAMLIB - SET SUB DIAL: buf=',buf,'\n')
         
         return
 
@@ -1288,10 +1355,10 @@ class hamlib_connect(direct_connect):
         tx    = int(buf3)*int(buf2)
         
         if VERBOSITY>0:
-            print('buf1=',buf1)
-            print('buf2=',buf2)
-            print('buf3=',buf3)
-            #print('buf4=',buf4)
+            print('\tbuf1 (rit) =',buf1)
+            print('\tbuf2 (j)   =',buf2)
+            print('\tbuf3 (xit) =',buf3)
+            #print('\tbuf4=',buf4)
             print('rx=',rx,'\ttx=',tx)   # ,'\tshift=',shift)
         
         return rx,tx
