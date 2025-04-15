@@ -406,7 +406,7 @@ class hamlib_connect(direct_connect):
         
             try:
                 #frq = float(buf[2:-1])
-                frq = float( buf.replace(';','') )
+                frq = float( buf.replace(';','')[2:] )
             except:
                 error_trap('HAMLIB GET_FREQ: Unable to read freq',1)
                 print('\tbuf=',buf)
