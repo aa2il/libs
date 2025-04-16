@@ -67,7 +67,10 @@ def find_resource_file(f,VERBOSITY=1):
         print('FIND_RESOURCE_FILE: Found settings file ...',RCFILE)
         with open(RCFILE) as json_data_file:
             SETTINGS = json.load(json_data_file)
-        DATA_DIR=SETTINGS['MY_DATA_DIR']
+        if 'MY_DATA_DIR' in SETTINGS:
+            DATA_DIR=SETTINGS['MY_DATA_DIR']
+        else:
+            DATA_DIR='~/Python/data'
         if DATA_DIR=='':
             DATA_DIR='~/Python/data'
         print('\tDATA_DIR=',DATA_DIR)
@@ -314,7 +317,8 @@ def get_PIDs(name):
 
 """
  In windoz, use wmic:
- C:\>wmic process where "name='chrome.exe'" get ProcessID, ExecutablePath
+
+ wmic process where "name='chrome.exe'" get ProcessID, ExecutablePath
 
  In Linux, can also use    pgrep flrig
 

@@ -249,17 +249,17 @@ def get_configured_logger(name):
                 file_handler.setLevel(logging.ERROR) #adjust logging level to your needs
                 file_handler.setLevel(logging.DEBUG) #adjust logging level to your needs
 
-                #Instanciate Root logger
+                # Instanciate Root logger
                 #logger = logging.getLogger()
                 logger = logging.getLogger(name)
 
-                #Assign Formatter to Handler
+                # Assign Formatter to Handler
                 console_handler.setFormatter(logging.Formatter(formatter_simple))
                 #print('GET_CONFIGURED_LOGGER: fmt verbose=',formatter_verbose)
                 #file_handler.setFormatter(logging.Formatter(formatter_verbose))
                 file_handler.setFormatter(logging.Formatter(None))
                 
-                #Assign Handler to Logger
+                # Assign Handler to Logger
                 logger.addHandler(console_handler)
                 logger.addHandler(file_handler)
                 
@@ -276,8 +276,8 @@ CTY_INFO=None
 def load_cty_info(DIR=None):
         global CTY_INFO
         
-        #Load Country File
-        print('LOADing CTY_INFO INFO ... DIR=',DIR)
+        # Load Country File
+        print('LOADing CTY INFO ... DIR=',DIR)
         CTY_INFO = ""
         if DIR==None:
             DIR='~/Python/data'
