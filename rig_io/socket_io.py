@@ -45,6 +45,7 @@ from pprint import pprint
 from .dummy_io import *
 from .hamlib_io import *
 from .direct_io import *
+from .kcat import *
 
 ############################################################################################
 
@@ -106,6 +107,11 @@ def open_rig_connection(connection,host=0,port=0,baud=0,tag='',
     if rig=='TYT9000d':
         print('HEY TYT!!!')
         sock = tyt9000d_connect()
+        return sock
+
+    if connection=='KCAT' or rig=='KC505':
+        print('HEY KCAT!!!')
+        sock = kcat_connect(host,port)
         return sock
 
     if connection=='TS850' and force:
