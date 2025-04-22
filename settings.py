@@ -68,8 +68,8 @@ def read_settings(fname,attr=None):
         
     else:
         
-        print(RCFILE,' not found!\n')
-        s=SETTINGS_GUI(None,None,attr)
+        print('READ SETTINGS: ',RCFILE,' not found!\n')
+        s=SETTINGS_GUI(None,None,attr,SHOW=True)
         while not SETTINGS:
             try:
                 if s.win==None:
