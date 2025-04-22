@@ -148,7 +148,7 @@ class fldigi_xlmrpc(direct_connect):
 
         # Open xlmrpc server 
         addr= "http://"+host+":"+str(port)
-        print("\n",tag,": Opening XMLRPC connection to FLDIGI/FLRIG on ",addr)
+        print("\nFLDIGI_IO->OPEN tag=",tag,": Opening XMLRPC connection to FLDIGI/FLRIG on ",addr)
         self.s = ServerProxy(addr)
 
         # Init assuming failure
@@ -233,17 +233,24 @@ class fldigi_xlmrpc(direct_connect):
             """
             
         if self.fldigi_active:
+            
             # Looking for something that distinguishes the rigs ...
             name = self.s.rig.get_name()
-            print('Rig name=',name)
+            print('\tRig name=',name)
             modes = self.s.rig.get_modes()
-            print('Avail modes=',modes)
+            print('\tAvail modes=',modes)
             bws = self.s.rig.get_bandwidths()
-            print('Avail bandwidths=',bws)
+            print('\tAvail bandwidths=',bws)
             bw = self.s.rig.get_bandwidth()
-            print('Current bandwidth=',bw)
+            print('\tCurrent bandwidth=',bw)
 
-            if 'NONE' in modes:
+            if name in ['KCAT','KC505','505DSP']:
+
+                print('Rig appears to be KCAT - assuming KC505 for now ???')
+                self.rig_type1 = 'KCAT'
+                self.rig_type2 = 'KC505'
+                
+            elif 'NONE' in modes:
 
                 # FLDIGI attached to FTdx3000 via HAMLIB
                 #Avail modes= ['NONE', 'AM', 'CW', 'USB', 'LSB', 'RTTY', 'FM', 'WFM', 'CWR', 'RTTYR', 'AMS', 'PKTLSB', 'PKTUSB', 'PKTFM', 'SAM', 'SAL', 'SAH']
@@ -1432,7 +1439,7 @@ class fllog_xlmrpc:
 
         # Open xlmrpc server 
         addr= "http://"+host+":"+str(port)
-        print("\n",tag,": Opening XMLRPC connection to FLLOG on ",addr)
+        print("\nFLDIGI_IO->OPEN tag=",tag,": Opening XMLRPC connection to FLLOG on ",addr)
         self.s = ServerProxy(addr)
 
         # Init assuming failure

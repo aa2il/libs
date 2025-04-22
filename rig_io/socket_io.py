@@ -109,7 +109,7 @@ def open_rig_connection(connection,host=0,port=0,baud=0,tag='',
         sock = tyt9000d_connect()
         return sock
 
-    if connection=='KCAT' or rig=='KC505':
+    if connection=='KCAT': # or rig=='KC505':
         print('HEY KCAT!!!')
         sock = kcat_connect(host,port)
         return sock
@@ -162,6 +162,13 @@ def open_rig_connection(connection,host=0,port=0,baud=0,tag='',
             if connection=='FLDIGI' and not sock.fldigi_active and True:
                 print('SOCKET_IO: Unable to activate FLDIGI connection - aborting')
                 sys.exit(0)
+            else:
+                print('SOCKET_IO: ... Opened socket to',sock.rig_type,sock.rig_type1,sock.rig_type2)
+                if rig=='KC505':
+                    print('SOCKET_IO: Overriding rig discovery - DEBUG ONLY!')
+                    sock.rig_type1='KCAT'
+                    sock.rig_type2='KC505'
+                
             return sock
             
     if connection=='FLLOG':
@@ -337,6 +344,7 @@ def get_status(self):
         print('Get Status:',frq,mode,ant)
         
     elif s.rig_type1=='Kenwood':
+        
         # The Kenwood command set is similar to Yaesu's but not as flush
         buf=self.sock.get_response("IF;",True)
         buf = strip_garbage(buf,'IF')
@@ -346,6 +354,7 @@ def get_status(self):
         ant = 1
 
     elif s.rig_type1=='Icom':
+        
         # Icom's commands are quite different
         #print 'ICOM;;;;;;;;;'
         frq  = s.get_freq() * 1e-3
@@ -353,6 +362,7 @@ def get_status(self):
         ant  = 1
         
     else:
+        
         # Assume Yaesu command set - Get freq
         if True:
             # This works - need to get get_freq working on all connections (fldigi?)
@@ -1150,7 +1160,7 @@ def read_tx_pwr(self):
 def read_mic_gain(self):
     s = self.sock
     self.gain=0
-    if s.rig_type1=='Kenwood' or s.rig_type1 in ['Icom','Hamlib'] or \
+    if s.rig_type1 in ['Kenwood','KCAT'] or s.rig_type1 in ['Icom','Hamlib'] or \
        (s.rig_type=='Hamlib' and s.rig_type2!='FTdx3000' and s.rig_type2!='FT991a'):
         print('READ_MIC_GAIN not available in',s.rig_type,s.rig_type2,'command set')
         return self.gain
