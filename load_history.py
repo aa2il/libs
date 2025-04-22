@@ -86,11 +86,19 @@ def load_history(history,DEBUG_CALL=None):
     print('\nHistory file=',history,'\tfname=',fname,'\text=',ext)
 
     # Check for state QPs
-    if fname[:5]=='QSOP_':
+    if fname[:9]=='QSOP_NEWE':
+        STATE_QP='W1'
+    elif fname[:15]=='QSOP_IN7QPNE_DE':
+        STATE_QP='IN7QPNEDE'
+    elif fname[:5]=='QSOP_':
         STATE_QP=fname[5:7]
     else:
         STATE_QP=None
-    print('STATE_QP=',STATE_QP)
+
+    if False:
+        print('STATE_QP=',STATE_QP)
+        print(COUNTIES[STATE_QP])
+        sys.exit(0)
 
     if ext=='.xlsx':
         if history.find('CWops')>=0:
@@ -342,7 +350,8 @@ def load_history(history,DEBUG_CALL=None):
                                 key='state'
                             else:
                                 if len(val)>0:
-                                    print('LOAD HISTORY - STATE QP *** WARNING *** Skipping unknown val=',val,'for key=',key,'\tstate=',STATE_QP)
+                                    print('LOAD HISTORY - STATE QP *** WARNING *** Skipping unknown val=',
+                                          val,'for key=',key,'\tstate=',STATE_QP)
                                     print('row=',row)
                                     print(val in ARRL_SECS)
                                 key=''

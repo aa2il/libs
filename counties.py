@@ -163,6 +163,15 @@ COUNTIES['MB']=['BRS','CHA','CHR','DAU','ELM','KIL','POR','PRO','SEL','STB','WPC
 COUNTIES['ME']=['AND','ARO','CUM','FRA','HAN','KEN','KNO','LIN','OXF','PEN',
                 'PIS','SAG','SOM','WAL','WAS','YOR']
 
+COUNTIES['MI']=['ALCO',	'ALGE',	'ALLE',	'ALPE',	'ANTR',	'AREN',	'BARA',	'BARR',	'BAY',	'BENZ',	'BERR',
+                'BRAN',	'CALH',	'CASS',	'CHAR',	'CHEB',	'CHIP',	'CLAR',	'CLIN',	'CRAW',	'DELT',	'DICK',
+                'EATO',	'EMME',	'GENE',	'GLAD',	'GOGE',	'GRAT',	'GRTR',	'HILL',	'HOUG',	'HURO',	'INGH',
+                'IONI',	'IOSC',	'IRON',	'ISAB',	'JACK',	'KALK',	'KENT',	'KEWE',	'KZOO',	'LAKE',	'LAPE',
+                'LEEL',	'LENA',	'LIVI',	'LUCE',	'MACK',	'MACO',	'MANI',	'MARQ',	'MASO',	'MCLM',	'MECO',
+                'MENO',	'MIDL',	'MISS',	'MONR',	'MTMO',	'MUSK',	'NEWA',	'OAKL',	'OCEA',	'OGEM',	'ONTO',
+	        'OSCE',	'OSCO',	'OTSE',	'OTTA',	'PRES',	'ROSC',	'SAGI',	'SANI',	'SCHO',	'SHIA',	'STCL',
+	        'STJO',	'TUSC',	'VANB',	'WASH',	'WAYN',	'WEXF']
+
 COUNTIES['MN']=['AIT','ANO','BEC','BEL','BEN','BIG','BLU','BRO','CRL','CRV','CAS','CHP','CHS','CLA',
                 'CLE','COO','COT','CRO','DAK','DOD','DOU','FAI','FIL','FRE','GOO','GRA','HEN','HOU',
                 'HUB','ISA','ITA','JAC','KNB','KND','KIT','KOO','LAC','LAK','LKW','LES','LIN','LYO',
@@ -361,4 +370,19 @@ COUNTIES['WV'] = ['BAR','BER','BOO','BRA','BRO','CAB','CAL','CLA','DOD','FAY','G
 
 COUNTIES['WY'] = ['ALB','BIG','CAM','CAR','CON','CRO','FRE','GOS','HOT','JOH','LAR','LIN','NAT',
                   'NIO','PAR','PLA','SHE','SUB','SWE','TET','UIN','WAS','WES']
+
+# New England also has a "State QP"
+COUNTIES['W1'] = []
+for s in W1_STATES:
+    for c in COUNTIES[s]:
+        COUNTIES['W1'].append(s+c)
+
+# As does the 7th call area (7QP)
+COUNTIES['7QP'] = []
+for s in W7_STATES:
+    for c in COUNTIES[s]:
+        COUNTIES['7QP'].append(s[:2]+c)
+
+# They also combined the call history files for the IN, 7QP, DE and New England QPs
+COUNTIES['IN7QPNEDE'] = COUNTIES['IN'] + COUNTIES['7QP'] + COUNTIES['W1'] + COUNTIES['DE'] 
 
