@@ -535,7 +535,7 @@ def ClarReset(self,RXClarOn=False):
         print('Clarifier reset ...',RXClarOn,self.sock.rig_type,self.sock.rig_type1,self.sock.rig_type2)
         
     # Not sure how true this is anymore
-    if self.sock.rig_type1=='Kenwood' or self.sock.rig_type1 in ['Icom','Hamlib']:
+    if self.sock.rig_type1 in ['Kenwood','KCAT','Icom','Hamlib']:
         print('CLARIFIER RESET not available in',self.sock.rig_type,'command set')
         return
 
@@ -594,7 +594,7 @@ def SetTXSplit(self,df_kHz,onoff=True):
               self.sock.rig_type,self.sock.rig_type1,self.sock.rig_type2)
 
     # Not sure how true this is anymore
-    if self.sock.rig_type1=='Kenwood' or self.sock.rig_type1 in ['Icom','Hamlib']:
+    if self.sock.rig_type1 in ['Kenwood','KCAT','Icom','Hamlib']:
         print('CLARIFIER RESET not available in',self.sock.rig_type,'command set')
         return
 
@@ -1010,7 +1010,7 @@ def set_tx_pwr(self,tx_pwr=None):
         tx_pwr = self.tx_pwr
     print(("SET_TX_PWR: Setting TX Power %s " % tx_pwr))
 
-    if s.rig_type1=='Kenwood' or s.rig_type1 in ['Icom','Hamlib']:
+    if s.rig_type1 in ['Kenwood','KCAT','Icom','Hamlib']:
         print('SET_TX_POWER not available in',s.rig_type,s.rig_type2,'command set')
         return
     
@@ -1032,7 +1032,7 @@ def set_tx_pwr(self,tx_pwr=None):
     
 def set_mic_gain(self,gain=None):
     s = self.sock
-    if s.rig_type1=='Kenwood' or s.rig_type1 in ['Icom','Hamlib'] or \
+    if s.rig_type1 in ['Kenwood','Icom','Hamlib','KCAT'] or \
        (s.rig_type=='Hamlib' and s.rig_type2!='FTdx3000' and s.rig_type2!='FT991a'):
         print('SET_MIC_GAIN not available in',s.rig_type,s.rig_type2,'command set')
         return
@@ -1066,7 +1066,7 @@ def set_mic_gain(self,gain=None):
     
 def set_mon_level(self,gain=None):
     s = self.sock
-    if s.rig_type1=='Kenwood' or s.rig_type1 in ['Icom','Hamlib']:
+    if s.rig_type1 in ['Kenwood','Icom','Hamlib','KCAT']:
         print('SET_MON_LEVEL not available in',s.rig_type,s.rig_type2,'command set')
         return
     if not gain:
@@ -1088,7 +1088,7 @@ def set_mon_level(self,gain=None):
 def read_monitor_level(self):
     s = self.sock
     self.mon_level=0
-    if s.rig_type1=='Kenwood' or s.rig_type1 in ['Icom','Hamlib']:
+    if s.rig_type1 in ['Kenwood','KCAT','Icom','Hamlib']:
         print('READ_MONITOR_LEVEL not available in',s.rig_type,s.rig_type2,'command set')
         return self.mon_level
 
@@ -1161,7 +1161,7 @@ def read_tx_pwr(self):
 def read_mic_gain(self):
     s = self.sock
     self.gain=0
-    if s.rig_type1 in ['Kenwood','KCAT'] or s.rig_type1 in ['Icom','Hamlib'] or \
+    if s.rig_type1 in ['Kenwood','KCAT','Icom','Hamlib'] or \
        (s.rig_type=='Hamlib' and s.rig_type2!='FTdx3000' and s.rig_type2!='FT991a'):
         print('READ_MIC_GAIN not available in',s.rig_type,s.rig_type2,'command set')
         return self.gain
