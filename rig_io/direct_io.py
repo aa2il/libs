@@ -620,8 +620,9 @@ class direct_connect:
     def set_PLtone(self,tone):
         if VERBOSITY>0:
             print('DIRECT Set PL Tone ...')
-        if self.rig_type=='Kenwood':
-            print('SET_PLtone: Function not yet implemented for Kenwood rigs')
+            
+        if self.rig_type=='Kenwood' or self.rig_type2=='KC505':
+            print('SET_PLtone: Function not yet implemented for Kenwood & KC505 rigs')
             return 0
 
         elif self.rig_type1=='Icom':

@@ -66,7 +66,8 @@ print full_stac()
 """
 
 
-class fldigi_xlmrpc(direct_connect):
+#class fldigi_xlmrpc(direct_connect):
+class fldigi_xlmrpc(no_connect):
     def __init__(self,host,port,tag='',MAX_TRYS=10):
 
         if host==0:
