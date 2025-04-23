@@ -764,7 +764,8 @@ def SelectBand(self,b=None,m=None,df=0):
 
     print("%%%%%%%%%% Select band: Setting band ... b=",b,"  m=",m,"  df=",df,"%%%%%%%%",s.rig_type)
     
-    if s.rig_type1=='Kenwood' or s.rig_type1=='Icom' or s.rig_type=='Hamlib':
+    if s.rig_type1 in ['Kenwood','Icom','KCAT'] or s.rig_type=='Hamlib':
+        
         # The TS850 command set does not have a band select so we fake it by setting a freq
         # Likewise, our implementation of hamlib is limited.
         if True:
@@ -1125,7 +1126,7 @@ def read_monitor_level(self):
 def read_tx_pwr(self):
     self.tx_pwr = 0
     s = self.sock
-    if s.rig_type2 in ['TS850'] or s.rig_type1 in ['Icom','Hamlib']:
+    if s.rig_type2 in ['TS850','KC505'] or s.rig_type1 in ['Icom','Hamlib','KCAT']:
         print('SOCKET_IO: READ_TX_PWR not available in',s.rig_type1,s.rig_type2,
               'command set')
         return self.tx_pwr
