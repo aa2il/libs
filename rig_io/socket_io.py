@@ -464,69 +464,89 @@ def SetVFO(self,cmd):
     s=self.sock
     print('SOCKET IO->SetVFO: cmd=',cmd,'\t',s.rig_type,'\t',s.rig_type1)
 
-    if cmd=='A':
-        if s.rig_type1 in ['Icom','Hamlib']:
-            print('SetVFO - Select A - Not implemented on ICOM or Hamlib rigs yet')
-        else:
-            self.sock.get_response("BY;FR0;FT2;")
+    if s.active:
     
-    elif cmd=='B':
-        if s.rig_type1 in ['Icom','Hamlib']:
-            print('SetVFO - Select A - Not implemented on ICOM or Hamlib rigs yet')
-        else:
-            self.sock.get_response("BY;FR4;FT3;")
-    
-    elif cmd in ['A','B']:
-        for itry in range(5):
-            s.set_vfo(cmd)
-            time.sleep(DELAY)
-            s.split_mode(0)
-            time.sleep(DELAY)
-            vfo = s.get_vfo()
-            time.sleep(DELAY)
-            print('SOCKET IO->SetVFO: cmd=',cmd,'\titry=',itry,'\tvfo=',vfo)
-            if vfo==cmd:
-                break
-        ClarReset(self,True)
-        time.sleep(DELAY)
-            
-    #elif cmd in ['SPLIT']:
-    #    s.set_vfo(rx='A',tx='B')
-    #elif cmd in ['A->B','A<->B']:
-    #    s.set_vfo(op=cmd)
-    
-    elif cmd=='A->B':
-        if s.rig_type1 in ['Icom','Hamlib']:
-            print('SetVFO - Select A->B - Not implemented on ICOM rigs yet')
-        else:
-            self.sock.get_response("BY;AB;")
-    elif cmd=='B->A':
-        if s.rig_type1 in ['Icom','Hamlib']:
-            print('SetVFO - Select B->A - Not implemented on ICOM rigs yet')
-        else:
-            self.sock.get_response("BY;BA;")
-    elif cmd=='A<->B':
-        if s.rig_type1 in ['Icom','Hamlib']:
-            print('SetVFO - Select A<->B - Not implemented on ICOM rigs yet')
-        else:
-            self.sock.get_response("BY;SV;")
-    elif cmd=='SPLIT':
-        if s.rig_type1 in ['Icom','Hamlib']:
-            print('SetVFO - Select SPLIT - Not implemented on ICOM rigs yet')
-        else:
-            self.sock.get_response("BY;FT3;")
-    elif cmd=='TXW':
-        if s.rig_type1 in ['Icom','Hamlib']:
-            print('SetVFO - TXW - Not implemented on ICOM rigs yet')
-        else:
-            txw=self.sock.get_response("TS;")
-            print('TXW=',txw)
-            if txw=='TS0;':
-                self.sock.get_response("BY;TS1;")
+        if cmd=='A':
+            if s.rig_type=='Hamlib':
+                cmd='V Main'
+                reply = s.get_response(cmd)
+                cmd='S 0 Main'
+                reply = s.get_response(cmd)
+            elif s.rig_type=='Yaesu' or s.rig_type1=='Yaesu':
+                s.get_response("BY;FR0;FT2;")
             else:
-                self.sock.get_response("BY;TS0;")
-    else:
-        print('SetVFO: Invalid command - ',cmd)
+                print('SetVFO - Select A - Not implemented on Kenwood or ICOM or FLDIGI or FLRIG or KCAT rigs yet')
+    
+        elif cmd=='B':
+            if s.rig_type=='Hamlib':
+                cmd='S 1 Sub'
+                reply = s.get_response(cmd)
+                cmd='V Sub'
+                reply = s.get_response(cmd)
+            elif s.rig_type=='Yaesu' or s.rig_type1=='Yaesu':
+                s.get_response("BY;FR0;FT2;")
+            else:
+                print('SetVFO - Select B - Not implemented on Kenwood or ICOM or FLDIGI or FLRIG or KCAT rigs yet')
+    
+        elif cmd=='A->B':
+            if s.rig_type=='Hamlib':
+                cmd='G CPY'
+                reply = s.get_response(cmd)
+            elif s.rig_type=='Yaesu' or s.rig_type1=='Yaesu':
+                s.get_response("BY;AB;")
+            else:
+                if s.rig_type1 in ['Icom','Hamlib']:
+                    print('SetVFO - Select A->B - Not implemented on ICOM rigs yet')
+                    
+        elif cmd=='B->A':
+            if s.rig_type=='Hamlib':
+                cmd='G TOGGLE'
+                reply = s.get_response(cmd)
+                cmd='G CPY'
+                reply = s.get_response(cmd)
+                cmd='G TOGGLE'
+                reply = s.get_response(cmd)
+            elif s.rig_type=='Yaesu' or s.rig_type1=='Yaesu':
+                s.get_response("BY;BA;")
+            else:
+                print('SetVFO - Select B->A - Not implemented on ICOM rigs yet')
+                
+        elif cmd=='A<->B':
+            if s.rig_type=='Hamlib':
+                cmd='G TOGGLE'
+                reply = s.get_response(cmd)
+            elif s.rig_type=='Yaesu' or s.rig_type1=='Yaesu':
+                s.get_response("BY;SV;")
+            else:
+                if s.rig_type1 in ['Icom','Hamlib']:
+                    print('SetVFO - Select A<->B - Not implemented on ICOM rigs yet')
+                    
+        elif cmd=='SPLIT':
+            if s.rig_type=='Hamlib':
+                cmd='S 1 Sub'
+                reply = s.get_response(cmd)
+            elif s.rig_type=='Yaesu' or s.rig_type1=='Yaesu':
+                s.get_response("BY;FT3;")
+            else:
+                print('SetVFO - Select SPLIT - Not implemented on ICOM rigs yet')
+                
+        elif cmd=='TXW':
+            if s.rig_type=='Hamlib':
+                cmd='G TOGGLE'
+                reply = s.get_response(cmd)
+            elif s.rig_type=='Yaesu' or s.rig_type1=='Yaesu':
+                txw=s.get_response("TS;")
+                print('TXW=',txw)
+                if txw=='TS0;':
+                    s.get_response("BY;TS1;")
+                else:
+                    s.get_response("BY;TS0;")
+            else:
+                print('SetVFO - TXW - Not implemented on ICOM rigs yet')
+
+        else:
+            print('SetVFO: Invalid command - ',cmd)
+            
 
 # Function to reset clarifier
 def ClarReset(self,RXClarOn=False):
@@ -535,7 +555,7 @@ def ClarReset(self,RXClarOn=False):
         print('Clarifier reset ...',RXClarOn,self.sock.rig_type,self.sock.rig_type1,self.sock.rig_type2)
         
     # Not sure how true this is anymore
-    if self.sock.rig_type1 in ['Kenwood','KCAT','Icom','Hamlib']:
+    if self.sock.rig_type1 in ['Kenwood','KCAT','Icom']:
         print('CLARIFIER RESET not available in',self.sock.rig_type,'command set')
         return
 
@@ -583,7 +603,10 @@ def SetSubDial(self,opt='CLAR'):
     VERBOSITY=1
     if VERBOSITY>0:
         print('Setting Sub-dial ...',opt)
-    self.sock.set_sub_dial(opt)
+    if self.sock.rig_type2=='FTdx3000':
+        self.sock.set_sub_dial(opt)
+    else:
+        print('SetSub Dial - Only available on FTdx3000')
 
         
 # Function to set TX split
@@ -594,8 +617,8 @@ def SetTXSplit(self,df_kHz,onoff=True):
               self.sock.rig_type,self.sock.rig_type1,self.sock.rig_type2)
 
     # Not sure how true this is anymore
-    if self.sock.rig_type1 in ['Kenwood','KCAT','Icom','Hamlib']:
-        print('CLARIFIER RESET not available in',self.sock.rig_type,'command set')
+    if self.sock.rig_type1 in ['Kenwood','KCAT','Icom']:
+        print('Set TX Split not available in',self.sock.rig_type,'command set')
         return
 
     # Hard-limit the requested offset
@@ -721,7 +744,13 @@ def GetInfo(self):
 
 # Function to reset rx attenuator
 def AttenReset(self):
-    self.sock.get_response("BY;RA00;")
+    if sock.rig_type=='Hamlib':
+        cmd='L ATT 0'
+        reply = s.get_response(cmd)
+    elif sock.rig_type=='Yaesu' or sock.rig_type1=='Yaesu':
+        self.sock.get_response("BY;RA00;")
+    else:
+        print('ATTEN RESET - Not implemented on Kenwood or ICOM or FLDIGI or FLRIG or KCAT rigs yet')
 
 ############################################################################################
 
@@ -769,9 +798,19 @@ def SelectBand(self,b=None,m=None,df=0):
         # The TS850 command set does not have a band select so we fake it by setting a freq
         # Likewise, our implementation of hamlib is limited.
         if True:
-            if m=='LSB' or m=='USB' or m=='FM':
-                m='SSB'
-            frq = bands[b][m+'1']+df
+            if m in ['CW','CW-N','CW-R']:
+                m='CW1'
+            elif m in ['SSB','LSB','USB','AM','AM-N','FM','FM-W','FM-N']:
+                m='SSB1'
+            elif m in ['RTTY','FSK','FSK-R']:
+                m='RTTY1'
+            elif m in ['WSJT']:
+                m='FT8'
+            elif m in ['PKTUSB','PKT-L','PKT-FM','PKT-U']:
+                m='PSK'
+            else:
+                m=m+'1'
+            frq = bands[b][m]+df
             print('Setting freq to',frq)
             s.set_freq(frq,'A')
 

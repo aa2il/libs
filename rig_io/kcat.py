@@ -46,12 +46,13 @@ class kcat_connect(no_connect):
         if port:
             self.port = port
         else:
-            self.port = 12345             # Bill, put the proper port here
+            self.port = 7365             # Bill, put the proper port here
 
         # Open socket to server
         print('KCAT CONNECT: Opening socket to',self.host,' on port',self.port,' ...')
         self.s = socket.socket()
         self.s.connect((self.host, self.port))   
+        self.s.settimeout(0.1) # 100 ms timeout
 
         # Read rig freq & mode
         frq = self.get_freq()
@@ -59,21 +60,28 @@ class kcat_connect(no_connect):
         mode = self.get_mode()
         print('KCAT CONNECT: Rig mode=',mode)
         
+    def send_cmd(self, xml_cmd):
+        try:
+            self.s.sendall(xml_cmd.encode("utf-8"))
+            data = self.s.recv(1024)
+            response = data.decode("utf-8").strip()
+            print(f"[send_cmd] Sent: {xml_cmd}, Received: {response}")
+            if response.startswith("<RESPONSE>") and response.endswith("</RESPONSE>"):
+                return response[len("<RESPONSE>"):-len("</RESPONSE>")]
+            return response  # return raw if not wrapped
+        except Exception as e:
+            print(f"[send_cmd] Error sending {xml_cmd}: {e}")
+            return None
     
     def get_mode(self,VFO='A'):
-        print('Hey KCAT GET_MODE: VFO=',VFO)
-        return 'CW'
+        return self.send_cmd("<CMD>get_mode</CMD>")
         
-    def set_mode(self,mode,VFO='A',Filter=None):
-        print('Hey KCAT SET_MODE: VFO=',VFO)
-        return 'CW'
+    def set_mode(self, mode, VFO='A', Filter=None):
+        return self.send_cmd(f"<SET>set_mode={mode}</SET>")
         
     def get_freq(self,VFO='A'):
-        print('Hey KCAT GET_FREQ: VFO=',VFO)
-        return 14030e3
-    
-    def set_freq(self,f,VFO='A'):
-        print('Hey KCAT SET_FREQ: VFO=',VFO)
-        return 0
+        return float(self.send_cmd("<CMD>get_frequency</CMD>"))
 
+    def set_freq(self, freq, VFO='A'):
+        return self.send_cmd(f"<SET>set_freq={freq}</SET>")
     

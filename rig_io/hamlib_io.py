@@ -25,6 +25,7 @@
 
 from .ft_tables import *
 from .direct_io import direct_connect
+from .dummy_io import no_connect
 import socket
 import time
 import select
@@ -47,7 +48,8 @@ NULL=chr(0)           # 4.6.2 seems to send a lot of nulls - we'll ignore them
 # Object for connection via hamlib
 # We use direct_connect as the base class so we can inherit all the
 # direct commands that we may need as hamlib doesn't provide everything
-class hamlib_connect(direct_connect):
+#class hamlib_connect(direct_connect):
+class hamlib_connect(no_connect):
     def __init__(self,host,port,baud,tag=''):
         if baud==0:
             baud = BAUD  
@@ -513,7 +515,13 @@ class hamlib_connect(direct_connect):
             
         if mode==None:
             return
-        elif mode in ['RTTY','DIGITAL','FT8'] or mode.find('PSK')>=0 or mode.find('JT')>=0:
+        elif mode=='SSB':
+            frq = self.get_freq()
+            if freq<10e6:
+                mode='LSB'
+            else:
+                mode='USB'
+        elif mode in ['RTTY','DIGITAL','FT8','FSK','FSK-R'] or mode.find('PSK')>=0 or mode.find('JT')>=0:
             mode='PKTUSB'
             if not bw:
                 if self.rig_type2=='FT991a':
@@ -534,6 +542,13 @@ class hamlib_connect(direct_connect):
                     bw=500
                 else:
                     bw=200
+        elif mode in ['AM','AM-N']:
+            mode='AM'
+            if not bw:
+                if Filter=='Wide':
+                    bw=9000
+                else:
+                    bw=6000
         else:
             if not bw:
                 bw=2400

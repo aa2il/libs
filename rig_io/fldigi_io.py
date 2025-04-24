@@ -748,7 +748,15 @@ class fldigi_xlmrpc(no_connect):
         # Translate rig mode into something rig understands
         if mode==None or mode=='IQ':
             return
-        if mode in ['PKTUSB','RTTY','DIGITA','DIGITAL','FT8','FT4'] or mode.find('PSK')>=0 or mode.find('JT')>=0:
+        
+        elif mode=='SSB':
+            frq = self.get_freq()
+            if freq<10e6:
+                mode='LSB'
+            else:
+                mode='USB'
+                
+        elif mode in ['PKTUSB','RTTY','DIGITA','DIGITAL','FT8','FT4'] or mode.find('PSK')>=0 or mode.find('JT')>=0:
 
             # There are some issues with the various versions of flrig
             # Need to add some code to get all available modes & select the right one?!

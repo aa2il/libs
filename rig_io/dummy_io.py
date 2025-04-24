@@ -25,7 +25,7 @@ import threading
 
 ############################################################################################
 
-VERBOSITY=0
+VERBOSITY=1
 
 ############################################################################################
 
@@ -115,7 +115,12 @@ class no_connect:
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0
-        
+
+    def set_if_shift(self,shift):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
+        return 0
+    
     def set_ant(self,a,VFO='A'):
         if VERBOSITY>0:
             logging.info('Ignoring call')
@@ -155,6 +160,11 @@ class no_connect:
         return 0
 
     def set_vfo(self,rx=None,tx=None,op=None):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
+        return
+
+    def set_vfo_direct(self,rx=None,tx=None,op=None):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return
@@ -280,11 +290,21 @@ class no_connect:
         return 0
     
     def set_monitor_gain(self,gain):
-        print('DUMMY_IO: Set Monitor Level - Ignored')
+        #print('DUMMY_IO: Set Monitor Level - Ignored')
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 
 
+    def sat_mode(self,opt):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
+        return 
+
+    def set_PLtone(self,tone):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
+        return 
+    
 
 # Dummy for the TYT9000d 220 FM rig so it will return something useful
 class tyt9000d_connect(no_connect):

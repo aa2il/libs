@@ -2114,7 +2114,7 @@ class direct_connect:
             try:
                 pos = [float(x[3:6]),float(x[9:])]                
                 if VERBOSITY>0:
-                    print('\DIRECT - GET_POSITION:',pos)
+                    print('DIRECT - GET_POSITION:',pos)
                 return pos
             except:
                 ntries+=1
