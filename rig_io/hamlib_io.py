@@ -24,7 +24,7 @@
 ############################################################################################
 
 from .ft_tables import *
-from .direct_io import direct_connect
+#from .direct_io import direct_connect
 from .dummy_io import no_connect
 import socket
 import time
@@ -504,7 +504,7 @@ class hamlib_connect(no_connect):
         print('HAMLIB_IO SET_BAND:',buf)
 
     def set_mode(self,mode,VFO='A',Filter=None):
-        VERBOSITY=1
+        VERBOSITY=0
         if VERBOSITY>0:
             print('HAMLIB_IO - SET MODE: mode=',mode,'\tVFO=',VFO,'\tFilter=',Filter)
 

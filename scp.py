@@ -1,4 +1,7 @@
-#! /usr/bin/python3
+#! /home/joea/miniconda3/envs/aa2il/bin/python -u
+#
+# NEW: /home/joea/miniconda3/envs/aa2il/bin/python -u
+# OLD: /usr/bin/python3 -u 
 ############################################################################################
 #
 # scp.py - Rev 1.0
@@ -29,7 +32,7 @@ import Levenshtein
 from fileio import parse_file_name
 import glob 
 from load_history import *
-from dx.spot_processing import Station
+from dx import Station,load_cty_info
 
 ############################################################################################
 
@@ -86,7 +89,16 @@ class SUPER_CHECK_PARTIAL:
         else:
             scp,fname9 = load_history(fname)
             #print(scp)
-            self.calls=list(scp.keys())
+            if False:
+                self.calls=list(scp.keys())
+            else:
+                self.calls=[]
+                for call in scp.keys():
+                    if '/' in call:
+                        dx = Station(call)
+                        self.calls.append(dx.homecall)
+                    else:
+                        self.calls.append(call)
             self.MAX_DX=1
 
         self.calls = list( set(self.calls) )
@@ -102,7 +114,6 @@ class SUPER_CHECK_PARTIAL:
         if not MAX_DX:
             MAX_DX=self.MAX_DX
 
-        #call=call.upper()
         call = ''.join(call.upper().split())
         if len(call)==0:
             return [],[]
@@ -162,7 +173,12 @@ class SUPER_CHECK_PARTIAL:
 
 # Test program
 if __name__ == '__main__':
-    SCP=SUPER_CHECK_PARTIAL()
+
+    load_cty_info()
+    SCP_FNAME=None
+    #SCP_FNAME='~/Python/history/data/K1USNSST-*.txt'
+
+    SCP=SUPER_CHECK_PARTIAL(SCP_FNAME)
     call = input("\nEnter a call:\n")
     if len(call)==0:
         call='aa2il'

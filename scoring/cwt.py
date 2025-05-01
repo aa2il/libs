@@ -65,11 +65,12 @@ class CWT_SCORING(CONTEST_SCORING):
                 # Must be looking at Wednesday's session
                 day-=1
         elif today=='Thursday':
-            if hour<3:
+            if hour<2:
                 # Must be looking at previous session
+                # which was on Wednesday
                 start_time=19
                 day-=1
-            elif hour>=7:
+            elif hour>=6:
                 # 0700 Session
                 start_time=7
             else:
@@ -84,9 +85,9 @@ class CWT_SCORING(CONTEST_SCORING):
         else:
             print('CWT_SCORING_INIT: Unable to determine contest time')
             sys.exit(0)
-        print(now)
-        print(day)
-        print(start_time)
+        print('now=',now)
+        print('day=',day)
+        print('start_time=',start_time)
         self.date0=datetime.datetime(now.year,now.month,day,start_time)
             
         self.date1 = self.date0 + datetime.timedelta(hours=1+3*30/3600.)

@@ -38,6 +38,7 @@ from .icom_io import *
 from datetime import timedelta,datetime
 from pytz import timezone
 from utilities import find_serial_device,error_trap,show_ascii
+from .dummy_io import no_connect
 
 #######################################################################################
 
@@ -279,7 +280,8 @@ def find_direct_rig(self,port_in,baud_in,force=False):
 ############################################################################################
 
 # Object for basic direct connection via serial port
-class direct_connect:
+#class direct_connect:
+class direct_connect(no_connect):
     def __init__(self,port,baud,force=False):
 
         self.wpm           = 0
@@ -1555,10 +1557,6 @@ class direct_connect:
                 print('DUAL_WATCH: Invalid rig',self.rig_type2)
             return 0
     
-
-    # Dummy
-    def modem_carrier(self,frq=None):
-        return 0
 
     # Routine to put rig into split mode
     def split_mode(self,opt):

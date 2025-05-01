@@ -41,7 +41,7 @@ from widgets_tk import FrameWithScrollBar
 KEYER_ATTRIBUTES = ['Call','Operator',
                     'Name','State','Sec','Cat','Grid','City','County',
                     'CQ Zone','ITU Zone','Prec','Check','Club',
-                    'CWops','SKCC','FISTS','FOC',
+                    'CWops','LICW','SKCC','FISTS','FOC',
                     'Rig','Ant','Age','Ham Age','Occupation',
                     'Email','FullName','Address1','Address2',
                     'ZipCode','Country','OWM Api Key','Keyer Device','Keyer Device ID','Data Dir']
