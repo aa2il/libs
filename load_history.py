@@ -28,10 +28,7 @@ from collections import OrderedDict
 import csv
 import os.path
 
-#import xlrd                # Doesn't work anymore for xlsx files
-#import openpyxl            # This doesn't seem to work very well
 import pandas               # Need to learn how to use this more
-#import math
 import chardet
 
 from unidecode import unidecode
@@ -362,7 +359,10 @@ def load_history(history,DEBUG_CALL=None):
                             else:
                                 HIST[call][key] = val
                                 if STATE_QP and val in COUNTIES[STATE_QP]:
-                                    HIST[call]['state'] = STATE_QP
+                                    if STATE_QP in ['W1','IN7QPNEDE']:
+                                        HIST[call]['state'] = val[:2]
+                                    else:
+                                        HIST[call]['state'] = STATE_QP
                                     
                         elif key not in ['',' ','call','usertext','misc','ccnr','mbrdate']:
                             print('\nLOAD_HISTORY: Unknown field ...',key)
