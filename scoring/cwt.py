@@ -26,6 +26,7 @@ from scoring import CONTEST_SCORING
 from dx.spot_processing import Station
 from pprint import pprint
 from utilities import reverse_cut_numbers
+from tkinter import END
 
 ############################################################################################
     
@@ -240,8 +241,26 @@ class CWT_SCORING(CONTEST_SCORING):
         score=self.nqsos * mults
         print("SCORING: score=",score)
 
-        txt='{:3d} QSOs  x {:3d} Uniques = {:6,d} \t\t\t Last Worked: {:s}' \
+        band=qso['BAND']
+        idx2 = self.BANDS.index(band)
+        self.sec_cnt[idx2] += 1
+        
+        self.txt='{:3d} QSOs  x {:3d} Uniques = {:6,d} \t\t\t Last Worked: {:s}' \
             .format(self.nqsos,mults,score,call)
-        self.P.gui.status_bar.setText(txt)
+        if self.P.gui:
+            self.P.gui.status_bar.setText(self.txt)
         
         
+    # Put summary info in big text box
+    def otf_summary(self):
+
+        for i in range(len(self.BANDS)):
+            txt = '{:s} \t {:3d} \t {:3d}\n'.format(self.BANDS[i],self.sec_cnt[i])
+            self.P.gui.txt.insert(END, txt, ('highlight'))
+        txt = '{:s} \t {:3d} \t {:3d}\n'.format('Totals:',np.sum(self.sec_cnt))
+        self.P.gui.txt.insert(END, txt, ('highlight'))
+        txt='No. Unique Calls = {:d}\n'.format(len(self.calls))
+        self.P.gui.txt.insert(END, txt, ('highlight'))
+        self.P.gui.txt.insert(END, self.txt+'\n', ('highlight'))
+        
+            

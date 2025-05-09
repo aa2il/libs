@@ -26,6 +26,7 @@ from rig_io.ft_tables import *
 from scoring import CONTEST_SCORING
 from dx.spot_processing import Station
 from utilities import error_trap
+from tkinter import END
 
 ############################################################################################
     
@@ -268,6 +269,7 @@ class SST_SCORING(CONTEST_SCORING):
                 self.P.gui.status_bar.setText('Unrecognized/invalid band or section!')
             error_trap('SST->OTF SCORING - Unrecognized/invalid band or section!')
             return
+        self.band_cnt[idx] += 1
         self.sec_cnt[idx1,idx] = 1
         
         mults = np.sum( np.sum(self.sec_cnt,axis=0) )
@@ -279,6 +281,20 @@ class SST_SCORING(CONTEST_SCORING):
         if self.P.gui:
             self.P.gui.status_bar.setText(self.txt)
 
+    # Put summary info in big text box
+    def otf_summary(self):
+
+        mults1 = np.sum(self.sec_cnt,axis=0)
+        mults = [int(i) for i in mults1]
+        
+        for i in range(1,len(self.BANDS)):
+            #print(self.BANDS[i],'\t',self.band_cnt[i],'\t',mults[i])
+            txt = '{:s} \t {:3d} \t {:3d}\n'.format(self.BANDS[i],self.band_cnt[i],mults[i])
+            self.P.gui.txt.insert(END, txt, ('highlight'))
+        txt = '{:s} \t {:3d} \t {:3d}\n'.format('Totals:',np.sum(self.band_cnt),np.sum(mults))        
+        self.P.gui.txt.insert(END, txt, ('highlight'))
+        self.P.gui.txt.insert(END, self.txt+'\n', ('highlight'))
+            
         
     # Function to check for new multipliers
     def new_multiplier(self,call,band):

@@ -260,8 +260,24 @@ class MST_SCORING(CONTEST_SCORING):
         self.score=self.nqsos * mults
         #print("SCORING: score=",self.score)
 
+        band=qso['BAND']
+        idx2 = self.BANDS.index(band)
+        self.sec_cnt[idx2] += 1
+        
         self.txt='{:3d} QSOs  x {:3d} Uniques = {:6,d} \t\t\t Last Worked: {:s}' \
             .format(self.nqsos,mults,self.score,call)
         if self.P.gui:
             self.P.gui.status_bar.setText(self.txt)
         
+
+    # Put summary info in big text box
+    def otf_summary(self):
+
+        for i in range(len(self.BANDS)):
+            txt = '{:s} \t {:3d} \t {:3d}\n'.format(self.BANDS[i],self.sec_cnt[i])
+            self.P.gui.txt.insert(END, txt, ('highlight'))
+        txt = '{:s} \t {:3d} \t {:3d}\n'.format('Totals:',np.sum(self.sec_cnt))
+        self.P.gui.txt.insert(END, txt, ('highlight'))
+        txt='No. Unique Calls = {:d}\n'.format(len(self.calls))
+        self.P.gui.txt.insert(END, txt, ('highlight'))
+        self.P.gui.txt.insert(END, self.txt+'\n', ('highlight'))

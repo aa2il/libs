@@ -153,6 +153,10 @@ class CONTEST_SCORING:
             self.P.gui.status_bar.setText(self.txt)
 
 
+    def otf_summary(self):
+        print('No summary available')
+        return
+        
     def new_multiplier(self,call,band):
         return
     
