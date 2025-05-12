@@ -291,9 +291,10 @@ class SST_SCORING(CONTEST_SCORING):
             #print(self.BANDS[i],'\t',self.band_cnt[i],'\t',mults[i])
             txt = '{:s} \t {:3d} \t {:3d}\n'.format(self.BANDS[i],self.band_cnt[i],mults[i])
             self.P.gui.txt.insert(END, txt, ('highlight'))
-        txt = '{:s} \t {:3d} \t {:3d}\n'.format('Totals:',np.sum(self.band_cnt),np.sum(mults))        
+        txt = '{:s} \t {:3d} x\t {:3d} = {:5d}\n'.format('Totals:',np.sum(self.band_cnt),np.sum(mults),self.score)        
         self.P.gui.txt.insert(END, txt, ('highlight'))
-        self.P.gui.txt.insert(END, self.txt+'\n', ('highlight'))
+        #self.P.gui.txt.insert(END, self.txt+'\n', ('highlight'))
+        self.P.gui.txt.see(END)
             
         
     # Function to check for new multipliers

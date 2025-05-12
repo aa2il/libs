@@ -1,6 +1,6 @@
 ############################################################################################
 #
-# naqp.py - Rev 1.0
+# naqp.py - Rev 1.1
 # Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Routines for scoring NAQP CW & RTTY contests
@@ -79,10 +79,10 @@ class NAQP_SCORING(CONTEST_SCORING):
         print('day1=',day1,'\tsat1=',sat1,'\tdate0=',self.date0)
         #sys.exit(0)
 
-
         # Name of output file - stupid web uploader doesn't recognize .LOG extenion!
         # !!!!!!!!!!!!!! MUST BE .TXT !!!!!!!!!!!!!!!
         self.output_file = self.MY_CALL+'_NAQP_'+MONTH+'_'+MODE+'_'+str(self.date0.year)+'.TXT'
+        
 
     # Contest-dependent header stuff
     def output_header(self,fp):
@@ -289,9 +289,7 @@ class NAQP_SCORING(CONTEST_SCORING):
         if self.P.gui:
             self.P.gui.status_bar.setText(self.txt)
 
-
-
-
+            
     # Function to check for new multipliers - need to combine with SST
     def new_multiplier(self,call,band):
         band=str(band)

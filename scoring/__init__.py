@@ -25,3 +25,4 @@ from .sst import *
 from .mst import *
 from .cwt import *
 from .naqp import *
+from .wpx import *

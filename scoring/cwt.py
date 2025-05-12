@@ -257,10 +257,11 @@ class CWT_SCORING(CONTEST_SCORING):
         for i in range(len(self.BANDS)):
             txt = '{:s} \t {:3d} \t {:3d}\n'.format(self.BANDS[i],self.sec_cnt[i])
             self.P.gui.txt.insert(END, txt, ('highlight'))
-        txt = '{:s} \t {:3d} \t {:3d}\n'.format('Totals:',np.sum(self.sec_cnt))
+        txt = '{:s} \t {:3d} x\t {:3d} = {:5d}\n'.format('Totals:',np.sum(self.sec_cnt),self.score)
         self.P.gui.txt.insert(END, txt, ('highlight'))
         txt='No. Unique Calls = {:d}\n'.format(len(self.calls))
         self.P.gui.txt.insert(END, txt, ('highlight'))
-        self.P.gui.txt.insert(END, self.txt+'\n', ('highlight'))
+        #self.P.gui.txt.insert(END, self.txt+'\n', ('highlight'))
+        self.P.gui.txt.see(END)
         
             
