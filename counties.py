@@ -371,7 +371,7 @@ COUNTIES['WV'] = ['BAR','BER','BOO','BRA','BRO','CAB','CAL','CLA','DOD','FAY','G
 COUNTIES['WY'] = ['ALB','BIG','CAM','CAR','CON','CRO','FRE','GOS','HOT','JOH','LAR','LIN','NAT',
                   'NIO','PAR','PLA','SHE','SUB','SWE','TET','UIN','WAS','WES']
 
-# New England also has a "State QP"
+# New England also has a combine QP
 COUNTIES['W1'] = []
 for s in W1_STATES:
     for c in COUNTIES[s]:
@@ -383,6 +383,13 @@ for s in W7_STATES:
     for c in COUNTIES[s]:
         COUNTIES['7QP'].append(s[:2]+c)
 
-# They also combined the call history files for the IN, 7QP, DE and New England QPs
+# They also combined the call history files for the IN, 7QP, DE and
+# New England QPs since they happen on the same weekend
 COUNTIES['IN7QPNEDE'] = COUNTIES['IN'] + COUNTIES['7QP'] + COUNTIES['W1'] + COUNTIES['DE'] 
+
+# The Canadian prarie provinces have a combined QSO party 
+COUNTIES['CP'] = []
+for s in CP_PROVINCES:
+    for c in COUNTIES[s]:
+        COUNTIES['CP'].append(s+c)
 
