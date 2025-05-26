@@ -347,7 +347,8 @@ class Station(object):
                 self.call = call.rstrip().lstrip().upper()
                 self.homecall = self.obtain_homecall(self.call)
 
-                self.DEBUG = False     #  call=='KO4VW'
+                #self.DEBUG = True
+                self.DEBUG = False
 
                 if self.DEBUG :
                     print('SPOT PROCESSING->Station: call=',call)
@@ -415,7 +416,9 @@ class Station(object):
 
             prefix = call
             Done=False
+            #Done=(prefix in CTY_INFO) and not CTY_INFO[prefix]['ExactCallsign']
             while not Done:
+                #print('SPOT PROCESSING->Iterate Prefix: prefix=',prefix,len(prefix))
                 if len(prefix) == 0:
                     break
                 else:
@@ -423,7 +426,8 @@ class Station(object):
                 Done=(prefix in CTY_INFO) and not CTY_INFO[prefix]['ExactCallsign']
 
             if self.DEBUG:
-                print('SPOT PROCESSING->Iterate Prefix: call=',call,'\tprefix=',prefix)
+                print('SPOT PROCESSING->Iterate Prefix: call=',call,'\tprefix=',prefix,len(prefix))
+                #if len(prefix)>0:
                 print(CTY_INFO[prefix])
 
             return(prefix)
@@ -478,10 +482,8 @@ class Station(object):
         
         
         def obtain_prefix(self, call):
-            #print('OBTAIN_PREFIX: call=',call)
-            #if call=='2Q0CVN/70':
-            #    call='2Q0CVN/P'
-            #print('OBTAIN_PREFIX: call=',call)
+            if self.DEBUG :
+                print('OBTAIN_PREFIX: call=',call)
             
             try:
                 entire_call = call.upper()
@@ -590,7 +592,10 @@ class Station(object):
                             pass
                         else:
                             pfx = re.search('^[A-Z0-9]{1,4}/', entire_call)
-                            pfx = re.sub('/', '', pfx.group(0))
+                            #pfx = re.sub('/', '', pfx.group(0))
+                            pfx = pfx.group(0)
+                            if self.DEBUG :
+                                print('OBTAIN_PREFIX: entire call=',entire_call,'\tpfx=',pfx)
                             prefix = self.__iterate_prefix(pfx)
                             self._logger.debug("obtain_prefix(): country prefix " + pfx)
                             

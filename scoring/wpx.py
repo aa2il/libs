@@ -26,6 +26,7 @@ from scoring import CONTEST_SCORING
 from dx.spot_processing import Station
 from pprint import pprint
 from utilities import reverse_cut_numbers,error_trap
+from tkinter import END
 
 ############################################################################################
 
@@ -76,6 +77,7 @@ class CQ_WPX_SCORING(CONTEST_SCORING):
         for b in self.BANDS:
             sa_prefixes.append((b,set([])))
         self.sa_prefixes = OrderedDict(sa_prefixes)
+        self.init_otf_scoring()
 
         # Determine start & end dates/times
         now = datetime.datetime.utcnow()
@@ -364,7 +366,7 @@ class CQ_WPX_SCORING(CONTEST_SCORING):
         
     # On-the-fly scoring
     def otf_scoring(self,qso):
-        print("\nWPX OTF SCORING: qso=",qso)
+        #print("\nWPX OTF SCORING: qso=",qso)
 
         try:
             if 'CALL' in qso:
@@ -379,7 +381,7 @@ class CQ_WPX_SCORING(CONTEST_SCORING):
                 mode = qso["mode"]
             rx = rx.strip().upper()
         except:
-            error_trap('NAQP->OTF SCORING - Unexpected error!')
+            error_trap('WPX->OTF SCORING - Unexpected error!')
             print('qso=',qso)
             sys.exit(0)
             return
@@ -401,13 +403,18 @@ class CQ_WPX_SCORING(CONTEST_SCORING):
 
         # Determine multipliers
         dx_station = Station(call)
+        #if '/' in call:
+        #    print('\nFile: wpx.py - problem with call parser - call=',call)
+        #    pprint(vars(dx_station))
         prefix = dx_station.prefix
         if dx_station.prefix==dx_station.call_prefix:
             prefix = dx_station.call_prefix + dx_station.call_number
-        self.calls.add(prefix)
+        if isinstance(prefix, str):
+            self.calls.add(prefix)
         continent = dx_station.continent
         country   = dx_station.country
-        self.dxccs.add(country)
+        if isinstance(country, str):
+            self.dxccs.add(country)
 
         # Scoring
         if not self.WPX and cat in ['M','Y','Q']:
@@ -442,12 +449,22 @@ class CQ_WPX_SCORING(CONTEST_SCORING):
                 
         else:
             qso_points = 0
+            
+        idx2 = self.BANDS.index(band)
+        self.sec_cnt[idx2] += 1
+        self.total_points += qso_points
 
         if not self.WPX and continent=='SA':
             self.sa_prefixes[band].add(prefix)
             
         if self.WPX:
-            print('\nPrefixes         =',sorted( self.calls ),len(self.calls))
+            """
+            try:
+                print('\nPrefixes         =',sorted( self.calls ),len(self.calls))
+            except:
+                error_trap('WPX->OTF SCORING - Error with prefix list?!')
+                print('\nPrefixes         =',self.calls,len(self.calls))
+            """
             mults = len(self.calls)
         else:
             mults = len(self.dxccs)
@@ -463,3 +480,18 @@ class CQ_WPX_SCORING(CONTEST_SCORING):
             self.P.gui.status_bar.setText(self.txt)
 
             
+    # Put summary info in big text box
+    def otf_summary(self):
+
+        txt = 'Prefixes = '+' '.join(sorted( self.calls ))+'\n'
+        self.P.gui.txt.insert(END, txt, ('highlight'))
+        for i in range(len(self.BANDS)):
+            txt = '{:s} \t {:d}\n'.format(self.BANDS[i],self.sec_cnt[i])
+            self.P.gui.txt.insert(END, txt, ('highlight'))
+        txt = '{:s} \t {:d} QSOs x {:d} Prefixes = {:,d}\n'.format('Totals:',np.sum(self.sec_cnt),len(self.calls),self.score)
+        self.P.gui.txt.insert(END, txt, ('highlight'))
+        #txt='No. Unique Calls = {:d}\n'.format(len(self.calls))
+        #self.P.gui.txt.insert(END, txt, ('highlight'))
+        #self.P.gui.txt.insert(END, self.txt+'\n', ('highlight'))
+        self.P.gui.txt.see(END)
+        
