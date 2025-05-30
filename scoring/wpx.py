@@ -34,7 +34,7 @@ from tkinter import END
 class CQ_WPX_SCORING(CONTEST_SCORING):
     def __init__(self,P,MODE,CONTEST,TRAP_ERRORS=False):
 
-        print('CQ WPX Scoring Init: contest=',CONTEST,'...')
+        print('CQ WPX Scoring Init: contest=',CONTEST,'...',TRAP_ERRORS)
         self.prev_num_out=0
         self.TRAP_ERRORS = TRAP_ERRORS
         
@@ -64,7 +64,7 @@ class CQ_WPX_SCORING(CONTEST_SCORING):
             sys.exit(0)
         
         # Inits
-        super().__init__(P,CONTEST_NAME,MODE)
+        super().__init__(P,CONTEST_NAME,MODE,TRAP_ERRORS)
 
         if MODE=='CW':
             self.BANDS = ['160m','80m','40m','20m','15m','10m']
@@ -308,7 +308,8 @@ class CQ_WPX_SCORING(CONTEST_SCORING):
             self.total_points += qso_points
             
         # Info for multi-qsos
-        exch_in=rst_in+' '+num_in
+        #exch_in=rst_in+' '+num_in
+        exch_in={'RST':rst_in, 'NR':num_in}
         if call in self.EXCHANGES.keys():
             self.EXCHANGES[call].append(exch_in)
         else:

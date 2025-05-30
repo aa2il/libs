@@ -46,8 +46,9 @@ def similar(a, b):
 
 # Base contest scorer class
 class CONTEST_SCORING:
-    def __init__(self,P,contest,mode=None):
-        print('CONTEST SCORING: Base Class Init - contest=',contest,'\tmode=',mode)
+    def __init__(self,P,contest,mode=None,TRAP_ERRORS=False):
+        print('CONTEST SCORING: Base Class Init - contest=',contest,'\tmode=',mode,TRAP_ERRORS)
+        #sys.exit(0)
 
         self.P             = P
         self.contest       = contest
@@ -71,7 +72,7 @@ class CONTEST_SCORING:
         self.trap_errors = True
         self.num_prev    = 0
         self.rec_prev    = []
-        self.TRAP_ERRORS = False
+        self.TRAP_ERRORS = TRAP_ERRORS
         self.num_cwops   = 0
         self.num_running = 0
         self.num_sandp   = 0
@@ -384,6 +385,9 @@ class CONTEST_SCORING:
             if type(exchs[0]) is str:
                 # Simple fixed item - make sure all the same
                 mismatch = exchs.count(exchs[0]) != len(exchs)
+                if mismatch and self.TRAP_ERRORS:
+                    print(exchs)
+                    sys.exit(0)
             elif type(exchs[0]) is dict:
                 # Multiple items in exchange
                 mismatch=False
@@ -412,7 +416,10 @@ class CONTEST_SCORING:
                         #print('FIXED ITEMS:',items.count(items[0]),len(items))
                     #print(same)
                     mismatch |= not same
-                #sys.exit(0)
+                if mismatch and self.TRAP_ERRORS and False:
+                    print('DEFAUT SCORING - Whoops!')
+                    #print(exchs[0].keys())
+                    sys.exit(0)
                 
             if mismatch:
                 if not problem or True:
