@@ -1,14 +1,29 @@
 #! /usr/bin/python3
-############################################################################################
+###################################################################
 #
-# audio_io.py - Rev 1.0 - Joseph B. Attili, joe DOT aa2il AT gmail DOT com
+# audio_io.py - Rev 1.1 
 #
-# Wave recorder class.
-# Originally inspired by code snippent found at https://gist.github.com/sloria/5693955.
+# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
-############################################################################################
+# Various routines/objects related to audio recording and play
+#
+###################################################################
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+###################################################################
 
 import pyaudio
+import pygame
+import pygame._sdl2.audio as sdl2_audio
 import wave
 import sys
 import time
@@ -17,16 +32,396 @@ from sig_proc import ring_buffer2
 if sys.platform == "linux" or sys.platform == "linux2":
     from pyudev import Context
 
-############################################################################################
+###################################################################
 
+# User params
 #SCALE=32767
-SCALE=16384
-#SCALE=1
+#SCALE=16384
+#SCALE=8192
+#SCALE=4096
+SCALE=1
 
-############################################################################################
+###################################################################
 
+# An audio player which uses pygame instead of pyaudio.
+# This is interesting since pygame seems to
+#    1) find bluetooth devices but pyaudio does not,
+#    2) be supported on android and pyaudio is not - TBD
+
+class pgPLAYER:
+    def __init__(self,fs):
+
+        self.fs  = int(fs)
+        self.vol = 1.
+
+        # Get list of available playback devices
+        self.devs1=self.get_devices()
+        print('Playback Devices:  ',self.devs1)
+        
+        # Open the mixer and create a channel to play sounds
+        pygame.mixer.pre_init(self.fs, size=-16, channels=1)
+        pygame.mixer.init()
+        #pygame.mixer.init(devicename = devs1[2])
+
+        #devs2=get_devices(True)
+        #print('Recording Devices: ',devs2)
+
+        self.chan=pygame.mixer.Channel(0)
+
+    def set_volume(self,a):
+        self.vol = a
+
+    def push(self,x):
+        #print('push: x=',x,len(x))
+        print('push: ',len(x))
+        xx  = (x*16383).astype(np.int16)
+        sound = pygame.sndarray.make_sound(xx)
+        sound.set_volume(self.vol)
+        self.chan.queue(sound)
+
+        # It looks like we can only queue-up one sound bite in advance
+        # That's too bad - I was hoping pygame did the ring-buffering for us
+        #print('s=',sound)
+        #q = self.chan.get_queue()
+        #print('q=',q)
+
+    def wait(self):
+        while self.chan.get_busy():
+            time.sleep(.1)
+
+    def start_playback(self,nwait,block):
+        return
+
+    def pause(self):
+        return
+    
+    def resume(self):
+        return
+
+    def get_devices(self,capture_devices: bool = False):
+        init_by_me = not pygame.mixer.get_init()
+        if init_by_me:
+            pygame.mixer.init()
+        devices = tuple(sdl2_audio.get_audio_device_names(capture_devices))
+        if init_by_me:
+            pygame.mixer.quit()
+        return devices
+
+###################################################################
+
+# Here is the audio player.  PortAudio is apperently very finiky about
+# the callback deadline which can lead to underruns.  These in turn pegs
+# the CPU, causing the SDR app to fall way behind.  To avoid this,
+#       sudo emacs /etc/pulse/daemon.conf
+# and un-comment the line
+#       default-fragments = 4
+# Then restart Pulse Audio:
+#       pulseaudio --kill
+#
+# These websites are helpful in this regard:
+# https://bbs.archlinux.org/viewtopic.php?id=185736
+# https://wiki.archlinux.org/index.php/PulseAudio#Setting_the_default_fragment_number_and_buffer_size_in_PulseAudio
+
+class AudioIO():
+    def __init__(self,P,fs,rb,device=None,Chan='B',ZeroFill=False,Tag=None):
+        print('AUDIO_IO: Init audio player @',fs,' Hz',
+              '\trequested device=',device,'\tTag=',Tag,' ...')
+        self.device = device
+        self.fs = fs
+        self.rb = rb
+        self.p  = pyaudio.PyAudio()
+        self.rb.Chan = Chan           # B,L or R for Both, Left or Right
+        self.P = P
+        self.stream=None
+        self.last=None
+        self.ZeroFill=ZeroFill
+        self.push = self.rb.push           # Link to ringbuf push function
+
+        if self.device==None:
+            loopbacks = self.find_loopback_devices(True)
+            default_device = self.p.get_default_output_device_info()
+            print('Default device=',default_device)
+        else:
+            loopbacks = self.find_loopback_devices()
+            print('AUDIO_IO: loopback device ids=',loopbacks)
+            self.device = loopbacks[device-1]
+            print('device=',device,'\t Using Device id=',self.device,'\n')
+            #sys,exit(0)
+
+        self.idle =True
+        self.Start_Time = 0
+        self.active=False
+        self.nchan = 2
+
+        # This can eventually be smplified since I now know how to do this with an object method
+        self.FirstTime = True
+        self.callback = self.AudioPlayCB
+        print('Player Init')
+
+    # Function to push a chunk of data into the ring buffer
+    #def push(x):
+    #    self.rb.push(x)
+
+    # Function to create a list of loopback devices
+    def find_loopback_devices(self,INFO_ONLY=False):
+
+        p=self.p
+        info = p.get_host_api_info_by_index(0)
+        numdev = info.get('deviceCount')
+        print('\nFIND_LOOPBACK_DEVICES: info=',info,numdev)
+
+        # Look at all audio devices 
+        loopback_devs=[]
+        for i in range(0,numdev):
+            dev_info = p.get_device_info_by_host_api_device_index(0,i)
+            #print dev_info
+
+            name = dev_info.get('name')
+            srate = dev_info.get('defaultSampleRate')
+            if dev_info.get('maxInputChannels')>0:
+                print("Input  Device id ", i, " - ",name,srate)
+
+            if dev_info.get('maxOutputChannels')>0:
+                print("Output Device id ", i, " - ",name,srate)
+
+            if "Loopback:" in name and srate==48000:
+            #if "Loopback:" in name:
+                #print dev_info
+                loopback_devs.append(i)
+                print('***')
+
+        if len(loopback_devs)==0 and not INFO_ONLY:
+            print('\nFIND_LOOP_BACKS: *** WARNING *** None found ***\n')
+            print('This might be becuase the default sample rate is not 48k')
+            print('To fix this, run start_loopback\n')
+            print('If that doesnt work, try eliminating the "and srate" above')
+            print('ed ~/Python/pySDR/pySDR/sig_proc.py')
+            print('Note, however, that 48K is needed for WSJT to function correctly')
+            print('so this is NOT a good solution!!!!\n')
+            print('Quitting')
+            sys.exit(1)
+        
+        return loopback_devs
+
+
+    def start_playback(self,nwait,block):
+
+        # Need to delay start of playback until there are enough samples
+        if not self.idle:
+            #print "Playback already running"
+            return True
+        elif block:
+            # Blocking
+            #print "Playback blocking..."
+            while self.rb.nsamps<nwait:
+                print('waiting for ring buffer to fill ....',self.rb.nsamps)
+                #                time.sleep(self.rb.size/(2.*self.fs))
+                time.sleep(.1)
+        else:
+            # Non-blocking
+            if self.rb.nsamps<nwait:
+                print("Too few samples to start Playback...")
+                return False
+
+        print('\n##############################################################################')
+        print("\nStarting audio play back @",self.fs,"Hz\ttag=",self.rb.tag,
+              '\n\tnsamps=',self.rb.nsamps,'\trb_size=',self.rb.size,
+              '\tdevice=',self.device)
+        msec = 20                            # Set buffer size to about 20ms
+        ifr = int( .001*msec*self.fs )
+        self.stream = self.p.open(output_device_index=self.device,
+                                  format=pyaudio.paFloat32,
+                                  channels=self.nchan,
+                                  rate=self.fs,
+                                  frames_per_buffer=ifr,
+                                  output=True,
+                                  stream_callback=self.callback)
+
+        self.stream.start_stream()
+        self.Start_Time = time.time()
+        self.active=True
+        self.idle = False
+        print("Audio playback started ... tag=",self.rb.tag)
+        return True
+
+    def restart(self,dfs=0):
+        fsold=self.fs
+        self.fs += max( min(dfs,1000) ,-1000)
+        print('Changing audio playback rate from',fsold,' to',self.fs,'         ',dfs)
+        self.stop()
+        self.start_playback(self.rb.size/2,True)
+        print("Audio playback restarted ...")
+
+    def stop(self):
+        self.active=False
+        if self.stream:
+            print('\tStopping audio:',self.rb.tag)
+            self.stream.stop_stream()
+            print('\tStream stopped:',self.rb.tag)
+            self.stream.close()
+        self.stream=None
+        self.idle =True
+        print("\tAudio playback stopped ...",self.rb.tag)
+
+    def quit(self):
+        print('Quitting audio',self.rb.tag,self.active,self.idle)
+        self.stream.stop_stream()
+        self.stream.close()
+        self.p.terminate()
+        self.idle =True
+
+    def pause(self):
+        self.idle =True
+        self.stream.stop_stream()
+        print('### Audio Stream Paused ###')
+
+    def resume(self):
+        if self.active:
+            self.idle =False
+            self.stream.start_stream()
+            print('### Audio Stream Resumed ###')
+        else:
+            self.start_playback(0,False)
+
+    # Callback to retrieve data for a hungry sound card.
+    # Finally know how to do this without an external function!!!!
+    def AudioPlayCB(self,in_data, frame_count, time_info, status):
+
+        DEBUG=0
+        rb=self.rb
+        N=int(frame_count)
+        if DEBUG>=2:
+            print('\nAUDIO PLAY CallBack: status=',status,'\tN=',N,
+                  '\ttag=',rb.tag,'ZeroFill=',self.ZeroFill)
+
+        ##################################################################
+        #                                                                #
+        # Handle problems - See comments just above AudioIO class def    #
+        # on how to fix some underruns.                                  #
+        #                                                                #
+        # Here are the error codes from the pyAudio manual:              #
+        #   PortAudio Callback Flags                                     #
+        #        paInputUnderflow  = 1                                   #
+        #        paInputOverflow   = 2                                   #
+        #        paOutputUnderflow = 4                                   #
+        #        paOutputOverflow  = 8                                   #
+        #        paPrimingOutput   = 16                                  #
+        #                                                                #
+        ##################################################################
+
+        if status!=0 and True:
+            if status == pyaudio.paInputUnderflow:
+                err='Input Under Flow'
+            elif status == pyaudio.paInputOverflow:
+                err='Input Over Flow'
+            if status == pyaudio.paOutputUnderflow:
+                err='Output Under Flow'
+            elif status == pyaudio.paOutputOverflow:
+                err='Output Over Flow'
+            elif status == pyaudio.paPrimingOutput:
+                err='Priming Output'
+            print("AudioPlayCB: err=",err,'\ttag=',rb.tag,
+                  '\tframe cnt=',frame_count,'\n\ttime=',time_info,'\tstatus=',status)
+        
+        if self.ZeroFill:
+            Stopper=True
+            if status!=0:
+                print('AudioPlayCB: *** WARNING *** Non-zero Status')
+        elif self.P.Stopper:
+            Stopper = (self.P.Stopper and self.P.Stopper.isSet())
+        else:
+            Stopper=False
+            
+        if status!=0 and not Stopper:
+            print("AudioPlayCB: tag=",rb.tag,'\tframe count=',frame_count,
+                  '\ttime=',time_info,'\tstauts=',status)
+            if status == pyaudio.paOutputUnderflow:
+                delay=self.P.RB_SIZE/self.P.FS_OUT/4
+                print("Houston, we have an underflow problem ...")
+                print("Stalling until recharge - tag=",rb.tag,
+                      '\tnsamps=',rb.nsamps,'\tlast=',self.last,
+                      '\n\tnchan=',self.nchan,'\tChan=',rb.Chan,'\tZeroFill=',self.ZeroFill,
+                      '\n\tP.DELAY=',self.P.DELAY,'\tdelay=',delay)
+                #print("See comments in sig_proc.py on how to fix if this persists")
+                
+                # Wait for ring buffer to fill again
+                while not rb.ready( self.P.DELAY ) and not self.P.REPLAY_MODE and not Stopper:
+                    time.sleep(delay)
+                    Stopper = (self.P.Stopper and self.P.Stopper.isSet())
+                print("Recharged tag=",rb.tag,'\tnsamps=',rb.nsamps,'\tN=',N)
+            
+        # First time through, wait for ring buffer to start to fill
+        if self.FirstTime:
+            if False:
+                while rb.nsamps <= 4*N:
+                    time.sleep(.01)
+                    #pass
+            if False:
+                N=4*N
+        self.FirstTime = False
+
+        # Pull next chunk from the ring buffer
+        if self.ZeroFill:
+            nready = rb.nsamps
+            if DEBUG>=2:
+                print('Available:',nready,N)
+
+            if nready<1024:
+                N2=1024
+                x2=np.array(N2*[0],dtype=np.float32)
+                rb.push(x2)
+                nready = rb.nsamps
+                if DEBUG>=1:
+                    print('Zero Pushed:',rb.tag,N2,x2.dtype,len(x2))
+                    print('Available:',nready,N)
+                    
+            if nready>0:
+                N1=min(N,nready)
+                x=rb.pull(N1)
+                if DEBUG>=2:
+                    print('Pulled:',rb.tag,N1,x.dtype)
+                    
+            if nready<N:
+                N2=N-nready
+                x2=np.array(N2*[0.],dtype=x.dtype)
+                x = np.concatenate( (x, x2) )
+                if DEBUG>=1:
+                    print('Zeroed:',rb.tag,N2,x.dtype,len(x))
+                    
+        else:
+            x=rb.pull(N)
+            if DEBUG>=2:
+                print('Pulled',rb.tag,x.dtype,self.nchan,rb.Chan)
+    
+        if self.nchan==2:
+            #print(x.dtype==np.float32,x.dtype==np.float64)
+            if x.dtype==np.float32 or x.dtype==np.float64:
+                if rb.Chan=='B':
+                    x = x + 1j*x                      # Copy mono data to both L&R channels
+                elif rb.Chan=='L':
+                    x = x + 1j*0                       # Copy mono data to L channel
+                    #print rb.tag,x.dtype,nchan,rb.Chan
+                else:
+                    x = 0 + 1j*x                       # Copy mono data to R channel
+                    #print rb.tag,x.dtype,nchan,rb.Chan
+            data = x.astype(np.complex64).tostring()
+        else:
+            data = x.astype(np.float32).tostring()
+        
+        self.last=len(data)
+        if DEBUG>=2 or status!=0:
+            print('Final Push: N=',N,'\tlast=',self.last,x.dtype,
+                  '\tnsamps=',rb.nsamps)
+        return (data, pyaudio.paContinue)
+
+###################################################################
+#
 # A recorder class for recording audio to a WAV file.
 # Records in mono @ 48KHz by default.
+# Originally inspired by code snippent found at https://gist.github.com/sloria/5693955.
+#
+###################################################################
+
 class WaveRecorder(object):
     def __init__(self, fname, mode='wb', channels=1, rate=48000, frames_per_buffer=None,
                  wav_rate=48000,rb2=None,GAIN=[1,1]):
@@ -129,7 +524,7 @@ class WaveRecorder(object):
             # Left channel is audio from RX
             # Direct decimation of the data
             data1 = np.fromstring(in_data,dtype=np.int16);
-            left  = self.GAIN[0]*data1[idx]
+            left  = np.int16( self.GAIN[0]*data1[idx] )
             
             self.rb.push(left)
             
@@ -137,7 +532,7 @@ class WaveRecorder(object):
         return callback
 
     
-
+    """
     # Wrapper to pass callback to gui
     # This works but is not good since it writes data to disk & can cause lost chunks
     def get_callback_old(self):
@@ -194,7 +589,7 @@ class WaveRecorder(object):
             return in_data, pyaudio.paContinue
         
         return callback
-
+    """
 
 
     # Function to assemble & write-out data to disk
@@ -205,7 +600,8 @@ class WaveRecorder(object):
         # Left channel is audio from RX
         # Direct decimation of the data
         #data1 = np.fromstring(in_data,dtype=np.int16);
-        left  = self.GAIN[0]*in_data.astype(np.int16)
+        #left  = np.int16( self.GAIN[0]*in_data ) # .astype(np.int16)
+        left  = in_data.astype(np.int16)
         if DEBUG>0 and False:
             print('WAVE RECORDER - WRITE_DATA: Left has nsamps=',len(left))
 
@@ -221,7 +617,8 @@ class WaveRecorder(object):
                 data3 = np.concatenate( (x,z) )
             else:
                 data3 = np.array(N2*[0])
-            right = self.GAIN[1]*data3.astype(np.int16)   
+            #right = np.int16( self.GAIN[1]*data3 ) #.astype(np.int16)   
+            right = data3.astype(np.int16)   
             if DEBUG>0:
                 print('WAVE RECORDER - WRITE_DATA: Pulled nsamps=',nsamps,'\tN2=',N2,'\tLen=',len(left),len(right))
 

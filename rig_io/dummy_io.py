@@ -25,13 +25,13 @@ import threading
 
 ############################################################################################
 
-VERBOSITY=1
+VERBOSITY=0
 
 ############################################################################################
 
 # Setup basic logging
 logging.basicConfig(
-    format="%(asctime)-15s [%(levelname)s] %(funcName)s:\t%(message)s",
+    format="%(asctime)-15s [%(levelname)s] %(pathname)s %(funcName)s:\t%(message)s",
     level=logging.INFO)
 
 # Object with dummy connection
