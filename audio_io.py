@@ -51,25 +51,54 @@ SCALE=1
 class pgPLAYER:
     def __init__(self,fs):
 
-        self.fs  = int(fs)
-        self.vol = 1.
+        print('pgPLAYER init ... fs=',fs)
+        self.fs     = int(fs)
+        self.vol    = 1.
+        self.active = False
 
-        # Get list of available playback devices
-        self.devs1=self.get_devices()
-        print('Playback Devices:  ',self.devs1)
+        # Get list of available playback (and recording devices)
+        self.playback_devices=self.get_devices()
+        print('\tPlayback Devices:  ',self.playback_devices)
+        self.device_name = self.playback_devices[0]         # Default is first device
         
+        #self.recording_devices=self.get_devices(True)
+        #print('Recording Devices: ',self.recording_devices)
+        
+    def get_devices(self,capture_devices: bool = False):
+        init_by_me = not pygame.mixer.get_init()
+        if init_by_me:
+            pygame.mixer.init()
+        devices = tuple(sdl2_audio.get_audio_device_names(capture_devices))
+        if init_by_me:
+            pygame.mixer.quit()
+        return devices
+
+    def set_device(self,name):
+        self.device_name = name
+        init_by_me = not pygame.mixer.get_init()
+        print('\tSet Device: name=',name,'\tinit=',init_by_me,'\tactive=',self.active)
+        if self.active or True:
+            self.quit()
+            self.start_playback()
+
+    def start_playback(self,nwait=0,block=False):
+        print('pgPLAYER Start Playback: dev=',self.device_name)
+
         # Open the mixer and create a channel to play sounds
-        pygame.mixer.pre_init(self.fs, size=-16, channels=1)
+        pygame.mixer.pre_init(self.fs, size=-16, channels=1,devicename = self.device_name)
         pygame.mixer.init()
-        #pygame.mixer.init(devicename = devs1[2])
-
-        #devs2=get_devices(True)
-        #print('Recording Devices: ',devs2)
-
         self.chan=pygame.mixer.Channel(0)
+        self.active = True
+
+        return
 
     def set_volume(self,a):
+        #if self.active:
+            #self.pause()
         self.vol = a
+        if self.active:
+            self.chan.set_volume(self.vol)
+            #self.resume()
 
     def push(self,x):
         #print('push: x=',x,len(x))
@@ -89,24 +118,23 @@ class pgPLAYER:
         while self.chan.get_busy():
             time.sleep(.1)
 
-    def start_playback(self,nwait,block):
-        return
-
     def pause(self):
+        pygame.mixer.pause()
         return
     
     def resume(self):
+        pygame.mixer.unpause()
         return
 
-    def get_devices(self,capture_devices: bool = False):
-        init_by_me = not pygame.mixer.get_init()
-        if init_by_me:
-            pygame.mixer.init()
-        devices = tuple(sdl2_audio.get_audio_device_names(capture_devices))
-        if init_by_me:
-            pygame.mixer.quit()
-        return devices
-
+    def stop(self):
+        self.chan.stop()
+        #pygame.mixer.quit()
+        self.active=False
+    
+    def quit(self):
+        pygame.mixer.quit()
+        self.active=False
+    
 ###################################################################
 
 # Here is the audio player.  PortAudio is apperently very finiky about
@@ -126,27 +154,31 @@ class AudioIO():
     def __init__(self,P,fs,rb,device=None,Chan='B',ZeroFill=False,Tag=None):
         print('AUDIO_IO: Init audio player @',fs,' Hz',
               '\trequested device=',device,'\tTag=',Tag,' ...')
-        self.device = device
+        self.device = device               # Device index
+        self.playback_devices=[]           # Available playback devices
         self.fs = fs
         self.rb = rb
         self.p  = pyaudio.PyAudio()
-        self.rb.Chan = Chan           # B,L or R for Both, Left or Right
+        self.rb.Chan = Chan                # B,L or R for Both, Left or Right
         self.P = P
         self.stream=None
         self.last=None
         self.ZeroFill=ZeroFill
         self.push = self.rb.push           # Link to ringbuf push function
+        self.vol = 1.0
 
         if self.device==None:
             loopbacks = self.find_loopback_devices(True)
             default_device = self.p.get_default_output_device_info()
             print('Default device=',default_device)
+            self.device=default_device.get('index')
+            self.device_name = default_device.get('name')
         else:
             loopbacks = self.find_loopback_devices()
             print('AUDIO_IO: loopback device ids=',loopbacks)
             self.device = loopbacks[device-1]
             print('device=',device,'\t Using Device id=',self.device,'\n')
-            #sys,exit(0)
+            # TODO: Will need to add device_name when we use this again
 
         self.idle =True
         self.Start_Time = 0
@@ -159,6 +191,7 @@ class AudioIO():
         print('Player Init')
 
     # Function to push a chunk of data into the ring buffer
+    # See link above instead
     #def push(x):
     #    self.rb.push(x)
 
@@ -168,7 +201,7 @@ class AudioIO():
         p=self.p
         info = p.get_host_api_info_by_index(0)
         numdev = info.get('deviceCount')
-        print('\nFIND_LOOPBACK_DEVICES: info=',info,numdev)
+        print('\nAUDIO - FIND_LOOPBACK_DEVICES: info=',info,numdev)
 
         # Look at all audio devices 
         loopback_devs=[]
@@ -183,6 +216,7 @@ class AudioIO():
 
             if dev_info.get('maxOutputChannels')>0:
                 print("Output Device id ", i, " - ",name,srate)
+                self.playback_devices.append(name)
 
             if "Loopback:" in name and srate==48000:
             #if "Loopback:" in name:
@@ -262,6 +296,7 @@ class AudioIO():
         self.stream=None
         self.idle =True
         print("\tAudio playback stopped ...",self.rb.tag)
+        self.rb.clear()
 
     def quit(self):
         print('Quitting audio',self.rb.tag,self.active,self.idle)
@@ -283,6 +318,14 @@ class AudioIO():
         else:
             self.start_playback(0,False)
 
+    def set_volume(self,a):
+        #if self.active:
+            #self.pause()
+        self.vol = a
+        #if self.active:
+            #self.chan.set_volume(self.vol)
+            #self.resume()
+            
     # Callback to retrieve data for a hungry sound card.
     # Finally know how to do this without an external function!!!!
     def AudioPlayCB(self,in_data, frame_count, time_info, status):

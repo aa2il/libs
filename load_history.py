@@ -261,7 +261,7 @@ def load_history(history,DEBUG_CALL=None):
                                 key='cqz'
                             elif fname[:6]=='CWOPS_' and key=='exch1':
                                 key='cwops'
-                            elif fname=='foc.txt' and key=='exch1':
+                            elif (fname=='foc.txt' or fname[:7]=='FOCBWQP') and key=='exch1':
                                 key='foc'
                             elif fname[:8]=='K1USNSST' and key=='exch1':
                                 key='state'

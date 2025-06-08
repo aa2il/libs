@@ -21,10 +21,6 @@
 #
 ############################################################################################
 
-W1_STATES=['CT','ME','MA','NH','RI','VT']
-W7_STATES=['AZ','ID','MT','NV','OR','UT','WA7QP','WY']
-CP_PROVINCES=['AB','MB','SK']
-
 COUNTIES={}
 
 COUNTIES['AL']=['AUTA','BALD','BARB','BIBB','BLOU','BULL','BUTL','CHOU','CHMB','CKEE','CHIL','CHOC',
@@ -202,6 +198,8 @@ COUNTIES['MT']=['BEA','BIG','BLA','BRO','CRB','CRT','CAS','CHO','CUS','DAN','DAW
                 'MCC','MEA','MIN','MIS','MUS','PAR','PET','PHI','PON','PWD','PWL','PRA','RAV','RIC',
                 'ROO','ROS','SAN','SHE','SIL','STI','SWE','TET','TOO','TRE','VAL','WHE','WIB','YEL']
 
+COUNTIES['NB']=['ALB','CAR','CHA','GLO','KEN','KGS','MAD','NOR','QNS','RES','SJC','SUN','VIC','WES','YOR']
+
 COUNTIES['NC']=['ALA','ALE','ALL','ANS','ASH','AVE','BEA','BER','BLA','BRU','BUN','BUR','CAB','CAL',
                 'CAM','CAR','CAS','CAT','CHA','CHE','CHO','CLA','CLE','COL','CRA','CUM','CUR','DAR',
                 'DVD','DAV','DUP','DUR','EDG','FOR','FRA','GAS','GAT','GRM','GRA','GRE','GUI','HAL',
@@ -230,12 +228,15 @@ COUNTIES['NH']=['BEL','CAR','CHE','COO','GRA','HIL','MER','ROC','STR','SUL']
 COUNTIES['NJ']=['ATLA','BERG','BURL','CAPE','CMDN','CUMB','ESSE','GLOU','HUDS','HUNT','MERC','MID',
                 'MONM','MORR','OCEA','PASS','SALE','SOME','SUSS','UNIO','WRRN']
 
+COUNTIES['NL']=['ASJ','BMT','SCB','SGS','HCB','GFW','BTC','NDL','NSA','LGB','LNN']
+
 COUNTIES['NM']=['BER','CAT','CHA','CIB','COL','CUR','DEB','DON','EDD','GRA',
                 'GUA','HAR','HID','LEA','LIN','LOS','LUN','MCK','MOR','OTE',
                 'QUA','RIO','ROO','SJU','SMI','SAN','SFE','SIE','SOC','TAO',
                 'TOR','UNI','VAL']
 
-COUNTIES['NS']=['THERE ARE 18 OF THEM - WHO KNOWS WHAT THE ABREVS ARE?!']
+COUNTIES['NS']=['ANP','ATG','CBR','COL','CMB','DIG','GUY','HRM','HNT','INV','KGS',
+	        'LUN','PIC','QNS','RIC','SHL','VIC']
 
 COUNTIES['NV'] = ['CAR','CHU','CLA','DOU','ELK','ESM','EUR','HUM','LAN','LIN','LYO','MIN','NYE','PER',
                   'STO','WAS','WHI']
@@ -277,7 +278,10 @@ COUNTIES['PA'] = ['ADA','ALL','ARM','BEA','BED','BER','BLA','BRA','BUX','BUT','C
                   'MER','MIF','MOE','MGY','MTR','NHA','NUM','PER','PHI','PIK','POT','SCH','SNY','SOM',
                   'SUL','SUS','TIO','UNI','VEN','WAR','WAS','WAY','WES','WYO','YOR']
 
-COUNTIES['QC'] = ['Unable to reach website - try again later!']
+COUNTIES['PEI'] = ['KGS','QNS','PRN']
+
+COUNTIES['QC'] = ['BSA','SLS','QUE','MAU','ETE','MTL','OTS','ATE','CND','NDQ',
+	          'GIM','CAS','LVL','LDE','LNS','MEE','CDQ']
 
 COUNTIES['RI'] = ['BRI','KEN','NEW','PRO','WAS']
 
@@ -372,12 +376,14 @@ COUNTIES['WY'] = ['ALB','BIG','CAM','CAR','CON','CRO','FRE','GOS','HOT','JOH','L
                   'NIO','PAR','PLA','SHE','SUB','SWE','TET','UIN','WAS','WES']
 
 # New England also has a combine QP
+W1_STATES=['CT','ME','MA','NH','RI','VT']
 COUNTIES['W1'] = []
 for s in W1_STATES:
     for c in COUNTIES[s]:
         COUNTIES['W1'].append(s+c)
 
 # As does the 7th call area (7QP)
+W7_STATES=['AZ','ID','MT','NV','OR','UT','WA7QP','WY']
 COUNTIES['7QP'] = []
 for s in W7_STATES:
     for c in COUNTIES[s]:
@@ -388,8 +394,15 @@ for s in W7_STATES:
 COUNTIES['IN7QPNEDE'] = COUNTIES['IN'] + COUNTIES['7QP'] + COUNTIES['W1'] + COUNTIES['DE'] 
 
 # The Canadian prarie provinces have a combined QSO party 
+CP_PROVINCES=['AB','MB','SK']
 COUNTIES['CP'] = []
 for s in CP_PROVINCES:
     for c in COUNTIES[s]:
         COUNTIES['CP'].append(s+c)
 
+# As do the Atlantic provinces
+AC_PROVINCES=['NL','PEI','NB','NS']
+COUNTIES['AC'] = []
+for s in AC_PROVINCES:
+    for c in COUNTIES[s]:
+        COUNTIES['AC'].append(s+c)

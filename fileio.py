@@ -554,7 +554,7 @@ def write_csv_file(fname,keys,qsos):
 
 
 # Function to read a simple text file
-def read_text_file(fname,KEEP_BLANKS=True,UPPER=False):
+def read_text_file(fname,KEEP_BLANKS=True,UPPER=False,KEEP_COMMENTS=True):
 
     # Line by line so we can do some better filtering
     lines=[]
@@ -572,10 +572,13 @@ def read_text_file(fname,KEEP_BLANKS=True,UPPER=False):
                     Done=True
                 else:
                     line=line.strip()
+                    if not KEEP_BLANKS and len(line)==0:
+                        continue
+                    if not KEEP_COMMENTS and line[0]=='#':
+                        continue
                     if UPPER:
                         line=line.upper()
-                    if KEEP_BLANKS or len(line)>0:
-                        lines.append(line)
+                    lines.append(line)
 
     return lines
 
