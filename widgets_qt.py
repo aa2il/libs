@@ -19,6 +19,10 @@
 #
 ############################################################################
 
+import subprocess
+from time import sleep
+import sys
+
 try:
     if True:
         from PyQt6.QtWidgets import QLCDNumber,QLabel,QSplashScreen,QRadioButton
@@ -140,18 +144,57 @@ class MyLCDNumber(QLCDNumber):
 
 ################################################################################
 
+# Routine to get current screen size
+def get_screen_size(app):
+
+    # This seems to be broken for QT6 on the RPi?!
+    # Maybe because we're running headless?
+    screen_resolution = app.primaryScreen().size()
+    width  = screen_resolution.width()
+    height = screen_resolution.height()
+    print('GET_SCREEN_SIZE: via QT, size=',width,height)
+
+    # If we got a bogus result, try using system command
+    if width==0 and height==0:
+        cmd='xdpyinfo | grep dimensions'
+        print('GET_SCREEN_SIZE: Well thats not right - using cmd=',cmd)
+        result = subprocess.run(cmd, capture_output=True, text=True,
+                                shell=True, check=True).stdout.strip()
+        print('result=',result)
+        sz=result.split()[1].split('x')
+        print('sz=',sz)
+        width =int(sz[0])
+        height=int(sz[1])
+        print(width,height)
+        
+    print("Screen Size:",screen_resolution,width, height)
+    return width,height
+
+################################################################################
+
 # Splash screen
 class SPLASH_SCREEN():
     def __init__(self,app,fname):
 
+        self.app=app
         self.splash = QSplashScreen(QPixmap(fname))
         self.splash.show()
+        self.center()
         self.status_bar = StatusBar(self.splash,-1)
         #time.sleep(.1)
         app.processEvents()
 
     def destroy(self):
         self.splash.destroy()
+
+    def center(self):
+        width,height=get_screen_size(self.app)
+        qr = self.splash.frameGeometry()
+        print('SPLASH_SCREEN:',width,height,qr,qr.width())
+        x=int( (width  - qr.width() ) /2 )
+        y=int( (height - qr.height()) /2 )
+        print(x,y)
+        self.splash.move(x,y)
         
 ################################################################################
 
