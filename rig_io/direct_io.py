@@ -596,7 +596,8 @@ class direct_connect(no_connect):
                 print('DIRECT GET_PL_TONE: Problem reading PL tone - giving up')
                 print('e=',e,'\n')
                 traceback.print_exc()
-                print('buf=',buf)
+                print('\tcmd1=',cmd1)
+                print('\tbuf =',buf)
                 return 0
                 
             if VERBOSITY>0:

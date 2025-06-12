@@ -22,20 +22,47 @@
 import subprocess
 from time import sleep
 import sys
+import importlib.metadata
 
-try:
-    if True:
-        from PyQt6.QtWidgets import QLCDNumber,QLabel,QSplashScreen,QRadioButton
-        from PyQt6.QtCore import * 
-        from PyQt6.QtGui import QPixmap
-    else:
-        from PySide6.QtWidgets import QLCDNumber,QLabel,QSplashScreen,QRadioButton
-        from PySide6.QtCore import * 
-        from PySide6.QtGui import QPixmap
-except ImportError:
-    # use Qt5
+# Function to sort out which of the Qt front ends are available
+def FindQtFrontEnds():
+    frontends = {'PyQt6' : False,
+                 'PySide6' : False,
+                 'PyQt5' : False,
+                 'PySide2' : False }
+    
+    for frontend in frontends.keys():
+        try:
+            print(frontend+' version=',importlib.metadata.version(frontend))
+            frontends[frontend] = True
+            return frontend
+        except:
+            print(frontend+' not found')
+    print('frontends=',frontends)
+
+    return None
+
+if True:
+    # Dynamic importing - this works!
+    QTLIB=FindQtFrontEnds()
+    exec('from '+QTLIB+'.QtWidgets import QLCDNumber,QLabel,QSplashScreen,QRadioButton')
+    exec('from '+QTLIB+'.QtCore import Qt')
+    exec('from '+QTLIB+'.QtGui import QPixmap')    
+elif False:
+    # This works
+    from PyQt6.QtWidgets import QLCDNumber,QLabel,QSplashScreen,QRadioButton
+    from PyQt6.QtCore import Qt         # was *
+    from PyQt6.QtGui import QPixmap
+elif False:
+    # ... there was a bug in PySide6 and this hangs on exit but it seems fixed now
+    # But there is problem try to use alongside pyqtgraph under uv
+    from PySide6.QtWidgets import QLCDNumber,QLabel,QSplashScreen,QRadioButton
+    from PySide6.QtCore import Qt       # was *
+    from PySide6.QtGui import QPixmap
+else:
+    # Discard at some point
     from PyQt5.QtWidgets import QLCDNumber,QLabel,QSplashScreen,QRadioButton
-    from PyQt5.QtCore import * 
+    from PyQt5.QtCore import Qt         # was *
     from PyQt5.QtGui import QPixmap
 
 ################################################################################
@@ -147,14 +174,14 @@ class MyLCDNumber(QLCDNumber):
 # Routine to get current screen size
 def get_screen_size(app):
 
-    # This seems to be broken for QT6 on the RPi?!
-    # Maybe because we're running headless?
+    # This seems to be broken for QT6 on the RPi when we're running headless?
+    # Works fine with a monitor connected
     screen_resolution = app.primaryScreen().size()
     width  = screen_resolution.width()
     height = screen_resolution.height()
     print('GET_SCREEN_SIZE: via QT, size=',width,height)
 
-    # If we got a bogus result, try using system command
+    # If we got a bogus result (e,g, headless), try using system command
     if width==0 and height==0:
         cmd='xdpyinfo | grep dimensions'
         print('GET_SCREEN_SIZE: Well thats not right - using cmd=',cmd)

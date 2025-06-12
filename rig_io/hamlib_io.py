@@ -1267,6 +1267,8 @@ class hamlib_connect(no_connect):
         cmd='L IF '+str(shift)
         buf=self.get_response(cmd)
 
+    def mic_setting(self,m,iopt,src=None,lvl=None,prt=None):
+        return 0
 
     def set_vfo(self,rx=None,tx=None,op=None):
         VERBOSITY=1
