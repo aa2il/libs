@@ -89,8 +89,11 @@ SAT_RIGS    = ['FT991a','IC9700','pySDR']
 
 ############################################################################################
 
+HF_BANDS = ['160m','80m','60m','40m','30m','20m','17m','15m','12m','10m']
 CONTEST_BANDS = ['160m','80m','40m','20m','15m','10m']
-NON_CONTEST_BANDS = ['60m','30m','17m','12m','6m']
+NON_CONTEST_BANDS = ['60m','30m','17m','12m']
+VHF_BANDS = ['6m','2m','1.25m','70cm','33cm','23cm']
+ALL_BANDS = CONTEST_BANDS + NON_CONTEST_BANDS + VHF_BANDS
 
 LOWER48 = ['AL','AR','AZ','CA','CO','CT','DE','FL','GA', \
            'ID','IL','IN','IA','KS','KY','LA','ME','MA','MD','MI','MS', \
@@ -226,14 +229,13 @@ CQ_ZONES = {'CT' : 5 , \
 #          XW-2A?, 2F?, CAS-6?, Orbicraft-Zorkiy?,
 # IO-86 never gets bove the horizon in our part of the world
 SATELLITE_LIST = ['None','ISS','PO-101','SO-50', \
-                  'AO-73','AO-91','RS-44', \
+                  'AO-73','AO-91','AO-123','RS-44', \
                   'CAS-2T','CAS-4A','CAS-4B', \
                   'AO-7','JO-97','UVSQ-SAT', \
-                  'LILACSAT-2','FO-29','HO-68','IO-117','IO-86',
-                  'NO-44','SO-114','SO-121',
-                  'TEVEL-1','TEVEL-2','TEVEL-3','TEVEL-4','TEVEL-5',
-                  'TEVEL-6','TEVEL-7','TEVEL-8',
-                  'XW-2B','XW-2C','XW-2D', \
+                  'LILACSAT-2','MO-122',\
+                  'FO-29','HO-68','IO-117','IO-86',\
+                  'NO-44','SO-124','SO-125',\
+                  'TO-108',
                   'Moon']
 
 # Valid precidences for ARRL SS

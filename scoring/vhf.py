@@ -38,7 +38,6 @@ class VHF_SCORING(CONTEST_SCORING):
     def __init__(self,P,SPONSER=None,TRAP_ERRORS=False):
 
         self.SPONSER=SPONSER
-        self.TRAP_ERRORS = TRAP_ERRORS
 
         self.BANDS = ['6m','2m','1.25m','70cm','33cm','23cm']
         self.sec_cnt = np.zeros(len(self.BANDS),dtype=int)
@@ -78,7 +77,7 @@ class VHF_SCORING(CONTEST_SCORING):
             print('\nVHF SCORING: *** ERROR - Invalid sponser ***\n')
             print('SPONSER=',SPONSER)
             sys.exit(0)
-        CONTEST_SCORING.__init__(self,P,contest_name,mode='MIXED')
+        CONTEST_SCORING.__init__(self,P,contest_name,mode='MIXED',TRAP_ERRORS=TRAP_ERRORS)
 
         self.NQSOS = OrderedDict()
         grids = []
@@ -168,12 +167,9 @@ class VHF_SCORING(CONTEST_SCORING):
 
         if False:
             print('\nrec=',rec)
-            sys,exit(0)
-            
-        if False:
-            #print('\nrec=',rec)
             #print('\nqsos=',qsos)
-            print('\nHIST=',HIST)
+            #print('\nHIST=',HIST)
+            print('TRAP_ERRORS =',self.TRAP_ERRORS)
             sys,exit(0)
 
         # Pull out relavent entries
@@ -247,6 +243,8 @@ class VHF_SCORING(CONTEST_SCORING):
             valid3 = mode=='FM'
         elif band=='70cm':
             valid3 = (freq<435 and mode=='USB') or (freq>445. and mode=='FM') # or (freq>144.3 and mode=='FT8')
+        elif band=='23cm':
+            valid3 = mode in ['FM','USB']
         else:
             valid3=False
 
@@ -299,7 +297,7 @@ class VHF_SCORING(CONTEST_SCORING):
                 print('------------ pts=',qso_points)
             elif self.SPONSER=='CQ' and band=='2m':
                 qso_points=2
-            elif band=='33cm':
+            elif band=='33cm' or band=='23cm':
                 qso_points=3
             elif band=='70cm' or band=='1.25m':
                 qso_points=2
@@ -478,132 +476,60 @@ class VHF_SCORING(CONTEST_SCORING):
 
         
     # On-the-fly scoring
-    def otf_scoring_WPX(self,qso):
-        #print("\nWPX OTF SCORING: qso=",qso)
+    def otf_scoring(self,qso):
+        #print("\nVHF OTF SCORING: qso=",qso)
 
         try:
             if 'CALL' in qso:
                 call=qso['CALL']
                 band = qso["BAND"]
-                rx = qso["SRX_STRING"]
                 mode = qso["MODE"]
             else:
                 call=qso['call']
                 band = qso["band"]
-                rx = qso["srx_string"]
                 mode = qso["mode"]
-            rx = rx.strip().upper()
         except:
-            error_trap('WPX->OTF SCORING - Unexpected error!')
+            error_trap('VHF->OTF SCORING - Unexpected error!')
             print('qso=',qso)
             sys.exit(0)
-            return
 
+
+        if self.SPONSER=='CQ' and band=='2m':
+            qso_points=2
+        elif band=='33cm' or band=='23cm':
+            qso_points=3
+        elif band=='70cm' or band=='1.25m':
+            qso_points=2
+        else:
+            qso_points=1
+
+        mults=1
         self.nqsos+=1
-        a    = rx.split(',')
-        if len(a)>1:
-            rst_in = reverse_cut_numbers( a[0] )
-            if self.WPX:
-                num_in = reverse_cut_numbers( a[1] )
-            else:
-                num_in = a[1]
-        else:
-            rst_in = qso["rst_rcvd"].strip().upper()
-            if self.WPX:
-                num_in = reverse_cut_numbers( a[0] )
-            else:
-                num_in = a[1]
-
-        # Determine multipliers
-        dx_station = Station(call)
-        #if '/' in call:
-        #    print('\nFile: wpx.py - problem with call parser - call=',call)
-        #    pprint(vars(dx_station))
-        prefix = dx_station.prefix
-        if dx_station.prefix==dx_station.call_prefix:
-            prefix = dx_station.call_prefix + dx_station.call_number
-        if isinstance(prefix, str):
-            self.calls.add(prefix)
-        continent = dx_station.continent
-        country   = dx_station.country
-        if isinstance(country, str):
-            self.dxccs.add(country)
-
-        # Scoring
-        if not self.WPX and cat in ['M','Y','Q']:
-                qso_points = 10
-                
-        elif country=='United States':
-            if not self.WPX or mode=='CW':
-                qso_points = 1
-            else:
-                if band in ['160m','80m','40m']:
-                    qso_points = 2
-                elif band in ['20m','15m','10m']:
-                    qso_points = 1
-                else:
-                    qso_points = 0
-                    
-        elif continent=='NA':
-            if band in ['160m','80m','40m']:
-                qso_points = 4
-            elif band in ['20m','15m','10m']:
-                qso_points = 2
-            else:
-                qso_points = 0
-                
-        elif continent in ['SA','EU','OC','AF','AS']:
-            if band in ['160m','80m','40m']:
-                qso_points = 6
-            elif band in ['20m','15m','10m']:
-                qso_points = 3
-            else:
-                qso_points = 0
-                
-        else:
-            qso_points = 0
-            
-        idx2 = self.BANDS.index(band)
-        self.sec_cnt[idx2] += 1
         self.total_points += qso_points
+        self.score=self.total_points*mults
+        print("VHF->SCORING: score=",self.score,self.nqsos)
 
-        if not self.WPX and continent=='SA':
-            self.sa_prefixes[band].add(prefix)
-            
-        if self.WPX:
-            """
-            try:
-                print('\nPrefixes         =',sorted( self.calls ),len(self.calls))
-            except:
-                error_trap('WPX->OTF SCORING - Error with prefix list?!')
-                print('\nPrefixes         =',self.calls,len(self.calls))
-            """
-            mults = len(self.calls)
-        else:
-            mults = len(self.dxccs)
-            for i in range( len(self.BANDS) ):
-                b=self.BANDS[i]
-                pre=self.sa_prefixes[b]
-                mults+=len(pre)
-
-        self.score = self.total_points*mults
-        self.txt='{:4d} QSOs  x {:3d} Mults = {:8,d} \t\t\t Last Worked: {:s}' \
+        self.txt='{:3d} QSOs  x {:3d} Mults = {:6,d} \t\t\t Last Worked: {:s}' \
             .format(self.nqsos,mults,self.score,call)
         if self.P.gui:
             self.P.gui.status_bar.setText(self.txt)
 
             
     # Put summary info in big text box
-    def otf_summary_WPX(self):
+    def otf_summary(self):
 
-        txt = 'Prefixes = '+' '.join(sorted( self.calls ))+'\n'
+        #print('GRIDS:',self.grids)
+        txt = 'GRIDS: '+' \t '.join(sorted( self.grids ))+'\n'
         self.P.gui.txt.insert(END, txt, ('highlight'))
-        for i in range(len(self.BANDS)):
-            txt = '{:s} \t {:d}\n'.format(self.BANDS[i],self.sec_cnt[i])
+        
+        mults=0
+        for b in self.BANDS:
+            grids = list( self.grids[b] )
+            mults+=len(grids)
+            txt = '{:s} \t {:d}\n'.format(b,len(grids))
             self.P.gui.txt.insert(END, txt, ('highlight'))
-        txt = '{:s} \t {:d} QSOs x {:d} Prefixes = {:,d}\n'.format('Totals:',np.sum(self.sec_cnt),len(self.calls),self.score)
+
+        txt = '{:s} \t {:d} QSOs x {:d} Grids = {:,d}\n'.\
+            format('Totals:',self.nqsos,mults,self.score)
         self.P.gui.txt.insert(END, txt, ('highlight'))
-        #txt='No. Unique Calls = {:d}\n'.format(len(self.calls))
-        #self.P.gui.txt.insert(END, txt, ('highlight'))
-        #self.P.gui.txt.insert(END, self.txt+'\n', ('highlight'))
         self.P.gui.txt.see(END)

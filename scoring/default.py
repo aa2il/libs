@@ -72,7 +72,8 @@ class CONTEST_SCORING:
         self.trap_errors = True
         self.num_prev    = 0
         self.rec_prev    = []
-        self.TRAP_ERRORS = TRAP_ERRORS
+        if not hasattr(self,'TRAP_ERRORS'):
+            self.TRAP_ERRORS = TRAP_ERRORS
         self.num_cwops   = 0
         self.num_running = 0
         self.num_sandp   = 0
@@ -142,11 +143,11 @@ class CONTEST_SCORING:
         except:
             error_trap('DEFAULT->OTF SCORING - Unexpected error!')
             print('qso=',qso)
-        return
+            return
 
         mults = 1
         self.score=self.nqsos * mults
-        print("SCORING: score=",self.score,self.nqsos,mults)
+        print("DEFAULT->SCORING: score=",self.score,self.nqsos,mults)
 
         self.txt='{:3d} QSOs  x {:3d} Mults = {:6,d} \t\t\t Last Worked: {:s}' \
             .format(self.nqsos,mults,self.score,call)
@@ -182,7 +183,7 @@ class CONTEST_SCORING:
     def group_modes(self,mode):
         if mode in ['FM','SSB','USB','LSB']:
             mode2='PH'
-        elif mode=='FT8' or mode=='MFSK':
+        elif mode in ['FT8','FT4','MFSK']:
             mode2='DG'
         else:
             mode2=mode

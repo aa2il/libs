@@ -245,7 +245,7 @@ def load_history(history,DEBUG_CALL=None):
                                     key='sec'
                             elif key=='ck':
                                 key='check'
-                            elif fname[:5]=='FD_20' or fname[:5]=='WFD_2':
+                            elif fname[:5]=='FD_20' or fname[:6]=='FDGOTA' or fname[:5]=='WFD_2':
                                 if key=='exch1':
                                     key='fdcat'
                                 elif key=='sec':

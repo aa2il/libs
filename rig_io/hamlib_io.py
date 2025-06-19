@@ -993,12 +993,23 @@ class hamlib_connect(no_connect):
         
         if VERBOSITY>0:
             print('HAMLIB - SET_POSITION: Adjusted pos=',pos)
-            print('cmd=',cmd)
-            print('x=',x)
+            print('\tcmd=',cmd)
+            print('\tx=',x)
             
         return 
 
-            
+    # Stop rotor 
+    def stop_rotor(self):
+        VERBOSITY=1
+        if VERBOSITY>0:
+            print('\nHAMLIB - STOP ROTOR')
+        cmd='S'
+        x = self.get_response(cmd)
+        if VERBOSITY>0:
+            print('HAMLIB - ROTOR STOPPED')
+            print('\tcmd=',cmd)
+            print('\tx=',x)
+                        
     # Routine to put rig into split mode
     def split_mode(self,opt):
         #VERBOSITY=1
