@@ -1640,12 +1640,7 @@ class direct_connect(no_connect):
     def init_keyer(self):
         #VERBOSITY=1
         
-        if self.rig_type=='Hamlib':
-
-            print('Keyer not yet supported for hamlib')
-            return -1
-            
-        elif self.rig_type2 in ['IC9700','IC7300']:
+        if self.rig_type2 in ['IC9700','IC7300']:
 
             # Turn on full QSK
             cmd =  self.civ.icom_form_command([0x16,0x47,0x02])  

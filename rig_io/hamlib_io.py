@@ -812,8 +812,13 @@ class hamlib_connect(no_connect):
 
         else:
             print('Function not yet implemented')
+
             
-            
+    def init_keyer(self):
+        print('Keyer not yet supported for HAMLIB')
+        return -1
+
+        
     def get_fldigi_mode(self):
         # I think we really want this to use xlmrpc to get the fldigi mode but it was probably
         # put in like this just as a place holder ???????
@@ -1305,18 +1310,24 @@ class hamlib_connect(no_connect):
                 return
                 
             if rx=='A' or rx=='M':
-                rx='Main'
+                #rx='Main'
+                rx='VFOA'
             elif rx=='B' or rx=='S':
-                rx='Sub'
+                #rx='Sub'
+                rx='VFOB'
             else:
-                rx='Main'                
+                #rx='Main'                
+                rx='VFOA'
                 
             if tx=='A' or tx=='M':
-                tx='Main'
+                #tx='Main'
+                tx='VFOA'
             elif tx=='B' or tx=='S':
-                tx='Sub'
+                #tx='Sub'
+                tx='VFOB'
             else:
-                tx='Main'                
+                #tx='Main'                
+                tx='VFOA'
 
             if tx==rx:
                 cmd='S 0 '+tx

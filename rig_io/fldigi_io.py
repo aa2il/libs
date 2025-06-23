@@ -1321,6 +1321,11 @@ class fldigi_xlmrpc(no_connect):
                 
         return [src,lvl,prt]
 
+            
+    def init_keyer(self):
+        print('Keyer not yet supported for FLRIG')
+        return -1
+
 
     def read_meter(self,meter):
         if VERBOSITY>0:

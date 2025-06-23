@@ -36,7 +36,7 @@ logging.basicConfig(
 
 # Object with dummy connection
 class no_connect:
-    def __init__(self,host=0,port=0):
+    def __init__(self,host=0,port=0,RIG_TYPE=None):
         print('DUMMY_IO->NO CONNECT: Init ...')
 
         self.s          = None
@@ -55,9 +55,21 @@ class no_connect:
         self.rig_type1  = None
         self.rig_type2  = 'None'
         self.tlast      = None
-        self.ntimeouts = 0
+        self.ntimeouts  = 0
         self.tx_evt     = threading.Event()            # Allow rig quires only when receiving
 
+        self.default_mode = 'CW'
+        self.default_freq = 0
+
+        if RIG_TYPE=='TYT9000d':
+            self.active       = True
+            self.rig_type     = 'TYT'
+            self.rig_type1    = 'TYT'
+            self.rig_type2    = RIG_TYPE
+            self.default_mode = 'FM'
+            self.default_freq = 223.5e6
+            
+        
     def get_band(self,frq=None,VFO='A'):
         if frq==None or frq<0:
             if VERBOSITY>0:
@@ -135,24 +147,26 @@ class no_connect:
         if VERBOSITY>0:
             print('Hey DUMMY GET_MODE: VFO=',VFO)
             logging.info('Ignoring call')
-        return 'CW'
+        return self.default_mode
         
     def set_mode(self,mode,VFO='A',Filter=None):
         if VERBOSITY>0:
             logging.info('Ignoring call')
-        return '0'
+        self.default_mode=mode
+        return mode
         
     def get_freq(self,VFO='A'):
         if VERBOSITY>0:
             print('Hey DUMMY GET_FREQ: VFO=',VFO)
             logging.info('Ignoring call')
-        return 0
+        return self.default_freq
 
     def set_freq(self,f,VFO='A'):
         if VERBOSITY>0:
             logging.info('Ignoring call')
             #print('Ignoring call to SET_FREQ')
-        return 0
+        self.default_freq=f
+        return f
 
     def set_filter(self,filt,mode=None):
         if VERBOSITY>0:
@@ -307,6 +321,7 @@ class no_connect:
     
 
 # Dummy for the TYT9000d 220 FM rig so it will return something useful
+# Should be able to eliminate this soon ...
 class tyt9000d_connect(no_connect):
 
     def __init__(self):
