@@ -24,7 +24,7 @@
 ############################################################################################
 
 from .ft_tables import *
-#from .direct_io import direct_connect
+from .direct_io import direct_connect
 from .dummy_io import no_connect
 import socket
 import time
@@ -48,8 +48,8 @@ NULL=chr(0)           # 4.6.2 seems to send a lot of nulls - we'll ignore them
 # Object for connection via hamlib
 # We use direct_connect as the base class so we can inherit all the
 # direct commands that we may need as hamlib doesn't provide everything
-#class hamlib_connect(direct_connect):
-class hamlib_connect(no_connect):
+class hamlib_connect(direct_connect):
+#class hamlib_connect(no_connect):
     def __init__(self,host,port,baud,tag=''):
         if baud==0:
             baud = BAUD  
@@ -97,12 +97,15 @@ class hamlib_connect(no_connect):
             self.s.settimeout(2.0)
             if tag=='ROTOR':
                 frq = self.get_position()[0]
+                print('HAMLIB_IO: pos=',frq,' on port',port)
             else:
+                s = self.split_mode(-1)
+                m = self.get_mode()
                 frq = self.get_freq()
                 if frq==-1:
                     # Try again
                     frq = self.get_freq()
-            print('HAMLIB_IO: frq=',frq,' on port',port)
+                print('HAMLIB_IO: frq=',frq,'\tmode=',m,'\tsplit=',s,' on port',port)
             self.s.settimeout(None)
 
             if frq>=0:
@@ -284,6 +287,7 @@ class hamlib_connect(no_connect):
         USE_TIMEOUT=True
         if VERBOSITY>0:
             print('HAMLIB_IO: Get Response: cmd=',cmd,'\tend=',cmd[-1])
+        binary_cmd=False
 
         if USE_TIMEOUT:
             self.s.settimeout(2.0)
@@ -303,7 +307,17 @@ class hamlib_connect(no_connect):
             if VERBOSITY>0:
                 print('HAMLIB_IO GET_RESPONSE - ... Got Lock :-)')
 
-        if cmd[0]=='W':
+        if isinstance(cmd[0],int) and cmd[0]==254:
+            if VERBOSITY>0:
+                print('HAMLIB GET_RESPONSE: Looks like an Icom command',cmd)
+            x=show_hex(cmd)
+            #print('\tx=',x)
+            cmd2='w \\'+'\\'.join(x)+'\n'
+            if VERBOSITY>0:
+                print('\tcmd2=',cmd2)
+            self.send(cmd2)
+            binary_cmd=True
+        elif cmd[0]=='W':
             cmd2=cmd+'\n'
             if VERBOSITY>0:
                 print('HAMLIB GET_RESPONSE: New style command cmd=',cmd2);
@@ -344,6 +358,21 @@ class hamlib_connect(no_connect):
         x=self.recv(N*1024)
         if VERBOSITY>0:
             print('HAMLIB_IO: Get_Response: ... got it x=',x)
+
+        if binary_cmd:
+            # Convert ICOM response into a byte array
+            xx=x.split(' ')[0].split('\\')
+            if VERBOSITY>0:
+                print('\txx=',xx)
+            xxx=[]
+            for h in xx:
+                if len(h)>0:
+                    xxx.append(int(h,16))
+            if VERBOSITY>0:
+                print('\txxx=',xxx,'\t',bytes(xxx))
+            if USE_LOCK:
+                self.lock.release()
+            return bytes(xxx)
         
         if USE_TIMEOUT:
             self.s.settimeout(None)
@@ -588,7 +617,7 @@ class hamlib_connect(no_connect):
                 print('HAMLIB_IO - SET MODE: Response buf=',buf)
         
                 
-    def get_mode(self,VFO='A'):
+    def get_mode(self,VFO='A',VERBOSITY=0):
         #VERBOSITY=1
         if VERBOSITY>0:
             print('HAMLIB_IO: Get mode - vfo=',VFO)
@@ -968,7 +997,7 @@ class hamlib_connect(no_connect):
         if pos[0]>self.max_az:
             pos[0]-=360
 
-        # It woul be really nice to have ome code here to keep
+        # It would be really nice to have one code here to keep
         # from banging against stops at +/-180-deg but I haven't
         # figure it out yet!
         #pos[0]=max(-175,min(175,pos[0]))
@@ -979,7 +1008,7 @@ class hamlib_connect(no_connect):
             #if pos[0]>az_prev and pos[0]>177 and pos[0]<180:
             if pos[0]>175 and pos[0]<180:
                 pos[0]=175
-                print('Limiting CW movement to 175-deg')
+                print('Limiting CCW movement to 175-deg')
             #elif pos[0]<az_prev and pos[0]<183 and pos[0]>180:
             elif pos[0]<185 and pos[0]>180:
                 pos[0]=183
@@ -1097,9 +1126,8 @@ class hamlib_connect(no_connect):
                 print('HAMLIB SELECT_VFO: Only VFO-A supported for FT991a (for now)')
             return
             
-        elif self.rig_type1 != 'Icom':
-            #print('HAMLIB SELECT_VFO - Not available for Non-ICOM rigs???')
-            #return
+        elif self.rig_type2=='IC9700':
+            # Selectbetween main and sub receivers for this rig
             if VFO=='A':
                 VFO='M'
             elif VFO=='B':

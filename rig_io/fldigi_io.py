@@ -66,8 +66,8 @@ print full_stac()
 """
 
 
-#class fldigi_xlmrpc(direct_connect):
-class fldigi_xlmrpc(no_connect):
+class fldigi_xlmrpc(direct_connect):
+#class fldigi_xlmrpc(no_connect):
     def __init__(self,host,port,tag='',MAX_TRYS=10):
 
         if host==0:
@@ -1049,8 +1049,8 @@ class fldigi_xlmrpc(no_connect):
     def close(self):
         return 0
 
-    def get_response(self,cmd):
-        VERBOSITY=0
+    def get_response(self,cmd,VERBOSITY=0):
+        #VERBOSITY=0
         if VERBOSITY>0:
             print('FLDIGI GET_RESPONSE: Sending CMD ... ',cmd)
             

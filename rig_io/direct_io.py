@@ -1118,7 +1118,7 @@ class direct_connect(no_connect):
         return False
 
         
-    def get_mode(self,VFO='A'):
+    def get_mode(self,VFO='A',VERBOSITY=0):
         if VERBOSITY>0:
             print('DIRECT GET_MODE:',VFO)
             
@@ -1337,7 +1337,7 @@ class direct_connect(no_connect):
     def get_date_time(self,VERBOSITY=0):
         #VERBOSITY=1
         if self.rig_type2=='FT991a':
-            buf=self.get_response('DT0;')
+            buf=self.get_response('DT0;',VERBOSITY)
             d=buf[3:-1]
             if VERBOSITY>0:
                 print('DIRECT GET_DATE_TIME: Date=',buf,d)
@@ -1347,7 +1347,7 @@ class direct_connect(no_connect):
             if VERBOSITY>0:
                 print('DIRECT GET_DATE_TIME: Time=',buf,t)
 
-            buf=self.get_response('DT2;')
+            buf=self.get_response('DT2;',VERBOSITY)
             z=buf[3:-1]
             if VERBOSITY>0:
                 print('DIRECT GET_DATE_TIME: Zone=',buf,z)
@@ -1356,8 +1356,10 @@ class direct_connect(no_connect):
 
             if VERBOSITY>0:
                 print('DIRECT GET_DATE_TIME - Icom - Getting UTC offset ...')
-            cmd =  self.civ.icom_form_command([0x1a,0x05,0x01,0x84])  
-            x=self.get_response(cmd)
+            cmd =  self.civ.icom_form_command([0x1a,0x05,0x01,0x84])
+            if VERBOSITY>0:
+                print('\tcmd=',show_hex(cmd))
+            x=self.get_response(cmd,VERBOSITY=VERBOSITY)
             y=self.civ.icom_response(cmd,x)
             # This is probably not quite right since I set the rig to UTC time so z=0.
             # Pg 16 of the IC9700 CIV manual shows how to decode this message.
@@ -1368,7 +1370,7 @@ class direct_connect(no_connect):
             if VERBOSITY>0:
                 print('\nDIRECT GET_DATE_TIME - Icom - Getting Date ...')
             cmd =  self.civ.icom_form_command([0x1a,0x05,0x01,0x79])  
-            x=self.get_response(cmd)
+            x=self.get_response(cmd,VERBOSITY=VERBOSITY)
             y=self.civ.icom_response(cmd,x)
             d=str( bcd2int( y[3:],1 ) )
             if VERBOSITY>0:
@@ -1377,7 +1379,7 @@ class direct_connect(no_connect):
             if VERBOSITY>0:
                 print('\nDIRECT GET_DATE_TIME - Icom - Getting Time ...')
             cmd =  self.civ.icom_form_command([0x1a,0x05,0x01,0x80])  
-            x=self.get_response(cmd)
+            x=self.get_response(cmd,VERBOSITY=VERBOSITY)
             y=self.civ.icom_response(cmd,x)
             t=str( bcd2int( y[3:],1 ) ).zfill(4) + '00'
             if VERBOSITY>0:

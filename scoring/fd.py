@@ -51,7 +51,7 @@ class FIELD_DAY_SCORING(CONTEST_SCORING):
         CONTEST_SCORING.__init__(self,P,CONTEST,mode='MIXED',TRAP_ERRORS=TRAP_ERRORS)
         
         self.MY_CAT = P.SETTINGS['MY_CAT']
-        self.BANDS = ['MW']+HF_BANDS+VHF_BANDS
+        self.BANDS = ['MW']+CONTEST_BANDS+VHF_BANDS
         self.MODES = ['CW','PH','DG']
         self.sec_cnt = np.zeros((len(FD_SECS),len(self.MODES),len(self.BANDS)),dtype=int)
         self.band_mode_cnt = np.zeros((len(self.MODES),len(self.BANDS)),dtype=int)
@@ -134,14 +134,14 @@ class FIELD_DAY_SCORING(CONTEST_SCORING):
         except:
             print('Uh Oh! call=',call,'\tcat_in=',cat_in)
             print('rec=',rec)
-            if TRAP_ERRORS:
+            if self.TRAP_ERRORS:
                 sys.exit(0)
             
         if not n.isdigit() or cat not in self.CATEGORIES:
             print('\nReceived category '+cat_in+' not recognized - srx=',rx)
             print('call=',call)
             print('rec=',rec)
-            if TRAP_ERRORS:
+            if self.TRAP_ERRORS:
                 sys.exit(0)
         if sec_in not in FD_SECS:
             #print('FD Secs=',FD_SECS)
@@ -150,7 +150,7 @@ class FIELD_DAY_SCORING(CONTEST_SCORING):
             print('call=',call)
             #print('History=',HIST[call])
             print('rec=',rec)
-            if TRAP_ERRORS:
+            if self.TRAP_ERRORS:
                 sys.exit(0)
         
         if False:
@@ -169,7 +169,7 @@ class FIELD_DAY_SCORING(CONTEST_SCORING):
             if sec_in not in valid_secs:
                 print('Call/section mismatch: call=',call,'\tsec_in=',sec_in,'\tshould be',valid_secs)
                 #pprint(vars(dx_station))
-                if TRAP_ERRORS:
+                if self.TRAP_ERRORS:
                     sys.exit(0)        
 
         # Count up the qsos
@@ -183,14 +183,14 @@ class FIELD_DAY_SCORING(CONTEST_SCORING):
             else:
                 print('FD - Unknown mode',mode)
                 #print('rec=',rec)
-                if TRAP_ERRORS:
+                if self.TRAP_ERRORS:
                     sys.exit(0)
 
             try:
                 self.CALLS[band+' '+mode].append(call)
             except:
                 print('\nWhoops! rec=',rec)
-                if TRAP_ERRORS:
+                if self.TRAP_ERRORS:
                     sys.exit(0)
 
             # Non-duplicate & points
@@ -202,7 +202,7 @@ class FIELD_DAY_SCORING(CONTEST_SCORING):
                 idx1 = FD_SECS.index(sec_in)
             except:
                 idx1=0
-                if TRAP_ERRORS:
+                if self.TRAP_ERRORS:
                     print('Wooooops!')
                     sys.exit(0)
             idx2 = self.MODES.index(mode)
@@ -350,7 +350,8 @@ class FIELD_DAY_SCORING(CONTEST_SCORING):
         else:
             mults = 2
             print('Power Mult                    =',mults)
-            bonus += 100*2          # Emergency power x2 transmitters
+            num_tx = int( self.MY_CAT[:-1] )
+            bonus += 100*num_tx     # Emergency power xN transmitters
             bonus += 100            # Solar power
             bonus += 100            # Copied W1AW bulletin
             bonus += 50             # Web entry

@@ -203,7 +203,7 @@ class no_connect:
             logging.info('Ignoring call')
         return 0
     
-    def get_response(self,cmd):
+    def get_response(self,cmd,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return ''
@@ -282,7 +282,7 @@ class no_connect:
     def get_date_time(self,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
-        return 0,0,0
+        return '20250101','000000','0'
     
     def set_date_time(self,VERBOSITY=0):
         if VERBOSITY>0:
@@ -318,6 +318,13 @@ class no_connect:
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 
+
+    def frontend(self,opt,pamp=0,atten=0):
+        VERBOSITY=1
+        if VERBOSITY>0:
+            print('DUMMY FRONTEND: opt=',opt,'\tpamp=',pamp,'\tatten=',atten,
+                  '\trig1=',self.rig_type1)
+        return
     
 
 # Dummy for the TYT9000d 220 FM rig so it will return something useful

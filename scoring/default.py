@@ -387,7 +387,7 @@ class CONTEST_SCORING:
                 # Simple fixed item - make sure all the same
                 mismatch = exchs.count(exchs[0]) != len(exchs)
                 if mismatch and self.TRAP_ERRORS:
-                    print(exchs)
+                    print('\tMismatches found:',exchs)
                     sys.exit(0)
             elif type(exchs[0]) is dict:
                 # Multiple items in exchange
