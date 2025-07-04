@@ -143,7 +143,7 @@ class no_connect:
             logging.info('Ignoring call')
         return '0'
 
-    def get_mode(self,VFO='A'):
+    def get_mode(self,VFO='A',VERBOSITY=0):
         if VERBOSITY>0:
             print('Hey DUMMY GET_MODE: VFO=',VFO)
             logging.info('Ignoring call')

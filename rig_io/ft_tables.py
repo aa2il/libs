@@ -225,12 +225,10 @@ CQ_ZONES = {'CT' : 5 , \
 
 # Put this here as both pySat and pyKeyer.py reference it.
 # Need the 'None' entry for list box in pyKeyer
-# SK sats: AO-85,92,109? FO-99, CAS-6?, EO-88? ,HO-113?, AO-27
-#          XW-2A?, 2F?, CAS-6?, Orbicraft-Zorkiy?,
-# IO-86 never gets bove the horizon in our part of the world
+# IO-86 never gets above the horizon in our part of the world
 SATELLITE_LIST = ['None','ISS','PO-101','SO-50', \
                   'AO-73','AO-91','AO-123','RS-44', \
-                  'CAS-2T','CAS-4A','CAS-4B', \
+                  'CAS-2T',\
                   'AO-7','JO-97','UVSQ-SAT', \
                   'LILACSAT-2','MO-122',\
                   'FO-29','HO-68','IO-117','IO-86',\

@@ -961,7 +961,12 @@ class hamlib_connect(direct_connect):
 
                 
     # Read rotor position - if at first we don't succeed, try try again
-    def get_position(self):
+    #
+    # p - get az el position
+    # _ - get info
+    # w - send command
+    #
+    def get_position(self,VERBOSITY=0):
         ntries=0
         MAX_TRIES=5
         while ntries<MAX_TRIES:
@@ -983,7 +988,11 @@ class hamlib_connect(direct_connect):
 
             
     # Set rotor position
-    def set_position(self,pos):
+    #
+    # P az.0 el.0 - Set position
+    # S - Stop!
+    #
+    def set_position(self,pos,VERBOSITY=0):
         #VERBOSITY=1
         if VERBOSITY>0:
             print('\nHAMLIB - SET_POSITION: pos=',pos)
@@ -1033,7 +1042,7 @@ class hamlib_connect(direct_connect):
         return 
 
     # Stop rotor 
-    def stop_rotor(self):
+    def stop_rotor(self,VERBOSITY=0):
         VERBOSITY=1
         if VERBOSITY>0:
             print('\nHAMLIB - STOP ROTOR')

@@ -33,9 +33,6 @@ import time
 from rig_io import SATELLITE_LIST
 from widgets_tk import FrameWithScrollBar
 
-#from PyQt5 import QtCore
-#from PyQt5.QtWidgets import *
-
 #########################################################################################
 
 KEYER_ATTRIBUTES = ['Call','Operator',

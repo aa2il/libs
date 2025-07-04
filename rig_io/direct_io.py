@@ -173,7 +173,7 @@ def try_rig(self,type1,type2,port,baud):
         else:
             TimeOut=0.1
 
-        print('\nTRY_RIG: Trying %s %s\nport=%s\nbaud=%d ...' %
+        print('\nTRY_RIG: Trying %s %s\t\tport=%s\tbaud=%d ...' %
               (type1,type2,port,baud) )
 
         self.s = serial.Serial(port,baud,timeout=TimeOut)
@@ -232,7 +232,7 @@ def find_direct_rig(self,port_in,baud_in,force=False):
     
     # The GS232 rotor
     if port_in==232:
-        port,vid=find_serial_device('GS232b',0,VERBOSITY=0)
+        port,vid=find_serial_device('GS232b',0,VERBOSITY=1)
         if try_rig(self,'Yaesu','GS232b',port,baud):
             return True
 
@@ -387,7 +387,8 @@ class direct_connect(no_connect):
         else:
             return True
 
-    def get_response(self,cmd,wait=False):
+
+    def get_response(self,cmd,wait=False,VERBOSITY=0):
         if VERBOSITY>0:
             if self.rig_type1=='Icom':
                 print('DIRECT GET RESPONSE cmd=',show_hex(cmd))
@@ -2090,25 +2091,48 @@ class direct_connect(no_connect):
             print('DIRECT_IO RECORDER: Ignoring call')
         return False
 
-    # Read rotor position - if at first we don't succeed, try try again
-    def get_position(self):
-        #VERBOSITY=1
+    # Set rotor position - if at first we don't succeed, try try again
+    #
+    # Maaa - Set Az direction (deg)
+    # Waaa eee - Set Az and El direction
+    # X1 to X4 - Rotation Speed Low to High
+    # R,L,U,D - Rotate Right (CW), Left (CCW), Up, Down
+    # P36 - 360-deg mode
+    # P45 - 450-deg mode
+    #
+    def set_position(self,pos,VERBOSITY=0):
+        VERBOSITY=1
         if VERBOSITY>0:
-            print('DIRECT_IO Get Position...')
-        if True:
-            x = self.get_response('C\r')
-            print('x=',x)
-            x = self.get_response('C\r')
-            print('x=',x)
-            x = self.get_response('C\r')
-            print('x=',x)
+            print('DIRECT_IO SET POSITION: pos=',pos)
+
+        az=int( pos[0] % 360 )
+        cmd='M'+str(az).zfill(3)+'\r'          # For some reason, need CR, not NL to terminate rotor commands
+        buf = self.get_response(cmd)
+        if VERBOSITY>0:
+            print('\tcmd=',cmd)
+            print('\tbuf=',buf)
+        
+        return
+        
+    # Read rotor position - if at first we don't succeed, try try again
+    #
+    # C - Az angle (deg)
+    # B - El angle
+    # C2 - Az and El angles
+    # H,H2,H3 - Help list of commands
+    #
+    def get_position(self,VERBOSITY=0):
+        VERBOSITY=1
+        if VERBOSITY>0:
+            print('DIRECT_IO GET POSITION...')
         
         ntries=0
         while ntries<3:
             x = self.get_response('C2\r')
-            print('x=',x,ntries)
+            if VERBOSITY>0:
+                print('\tx=',x,ntries)
             try:
-                pos = [float(x[3:6]),float(x[9:])]                
+                pos = [float(x[3:6]),float(x[9:])]                # AZ=aaaEL=eee
                 if VERBOSITY>0:
                     print('DIRECT - GET_POSITION:',pos)
                 return pos
@@ -2118,6 +2142,25 @@ class direct_connect(no_connect):
             print('\nDIRECT_IO - GET_POSITION - Unable to read rotor position')
             return [None,None]
 
+
+    # Stop rotor
+    #
+    # S - All STOP!
+    # A - Az STOP!
+    # E - El STOP!
+    #
+    def stop_rotor(self,VERBOSITY=0):
+        VERBOSITY=1
+        if VERBOSITY>0:
+            print('\DIRECT - STOP ROTOR')
+        cmd='S\r'
+        buf = self.get_response(cmd)
+        if VERBOSITY>0:
+            print('DIRECT - ROTOR STOPPED')
+            print('\tcmd=',cmd)
+            print('\tbuf=',buf)
+                        
+        
             
         
 # Empty structure
