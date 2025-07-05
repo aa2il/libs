@@ -52,6 +52,8 @@ class VHF_SCORING(CONTEST_SCORING):
         if SPONSER==None:
             if 'ARRL' in P.CONTEST_ID:
                 SPONSER='ARRL'
+            elif 'CQ' in P.CONTEST_ID:
+                SPONSER='CQ'
             else:
                 print('VHF SCORING: Cant figure out sponser - giving up')
                 print('VHF SCORING: CONTEST_ID=',P.CONTEST_ID)
@@ -63,6 +65,7 @@ class VHF_SCORING(CONTEST_SCORING):
                 month='JUN'
                 dm=1
         elif SPONSER=='CQ':
+            self.BANDS = ['6m','2m']
             contest_name=SPONSER+'-VHF'
         elif SPONSER=='CSVHF':
             contest_name='SPRING-SPRINT'
@@ -154,6 +157,7 @@ class VHF_SCORING(CONTEST_SCORING):
 
         MY_CALL = P.SETTINGS['MY_CALL']
         self.history = os.path.expanduser('~/'+MY_CALL+'/master.csv')
+        self.init_otf_scoring()
         
     # Contest-dependent header stuff
     def output_header(self,fp):
@@ -503,7 +507,19 @@ class VHF_SCORING(CONTEST_SCORING):
         else:
             qso_points=1
 
-        mults=1
+        for key in ['QTH','GRIDSQUARE','SRX_STRING']:
+            if key in qso:
+                grid = qso[key].upper()
+                break
+        else:
+            grid='????'
+        #print(grid)
+            
+        self.grids[band].add(grid)
+        mults=0
+        for b in self.BANDS:
+            mults+=len(self.grids[b])
+
         self.nqsos+=1
         self.total_points += qso_points
         self.score=self.total_points*mults
@@ -519,14 +535,15 @@ class VHF_SCORING(CONTEST_SCORING):
     def otf_summary(self):
 
         #print('GRIDS:',self.grids)
-        txt = 'GRIDS: '+' \t '.join(sorted( self.grids ))+'\n'
-        self.P.gui.txt.insert(END, txt, ('highlight'))
+        #txt = 'GRIDS: '+' \t '.join(sorted( self.grids ))+'\n'
+        #self.P.gui.txt.insert(END, txt, ('highlight'))
         
         mults=0
         for b in self.BANDS:
             grids = list( self.grids[b] )
             mults+=len(grids)
-            txt = '{:s} \t {:d}\n'.format(b,len(grids))
+            txt  = '{:s} \t {:d}\t'.format(b,len(grids))
+            txt += ' '.join(sorted(grids))+'\n'
             self.P.gui.txt.insert(END, txt, ('highlight'))
 
         txt = '{:s} \t {:d} QSOs x {:d} Grids = {:,d}\n'.\
