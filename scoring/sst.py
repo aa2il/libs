@@ -297,7 +297,7 @@ class SST_SCORING(CONTEST_SCORING):
         self.P.gui.txt.see(END)
             
         
-    # Function to check for new multipliers
+    # Function to check for new multipliers - need to combine with NAQP (same code)
     def new_multiplier(self,call,band):
         band=str(band)
         if band[-1]!='m':

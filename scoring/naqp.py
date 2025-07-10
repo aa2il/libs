@@ -290,7 +290,7 @@ class NAQP_SCORING(CONTEST_SCORING):
             self.P.gui.status_bar.setText(self.txt)
 
             
-    # Function to check for new multipliers - need to combine with SST
+    # Function to check for new multipliers - need to combine with SST (same code)
     def new_multiplier(self,call,band):
         band=str(band)
         if band[-1]!='m':

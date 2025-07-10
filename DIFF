@@ -30,7 +30,7 @@ echo PTH=$PTH
 set old=${ROOT}${PTH}
 
 # Overide if necessary
-#set OLD="save59"
+#set old="save59"
 echo OLD=$old
 
 rm -f DIFFS

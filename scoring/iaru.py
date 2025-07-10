@@ -223,7 +223,7 @@ class IARU_HF_SCORING(CONTEST_SCORING):
             if dx_station.country:
                 self.countries.add(dx_station.country)
 
-            if len(call)==4 and call[:2]=='I4':
+            if len(call)==4 and call[:2]=='I4' and False:
                 self.wrtc.add(call)
                     
             #print(call,zone,self.MY_ITU_ZONE,qso_points)
@@ -296,10 +296,11 @@ class IARU_HF_SCORING(CONTEST_SCORING):
         for i in range(len(dxcc)):
             print('   ',dxcc[i])
 
-        wrtc = sorted( list( self.wrtc ) )
-        print('\nWRTCs:\t',len(wrtc))
-        for i in range(len(wrtc)):
-            print('   ',wrtc[i])
+        if False:
+            wrtc = sorted( list( self.wrtc ) )
+            print('\nWRTCs:\t',len(wrtc))
+            for i in range(len(wrtc)):
+                print('   ',wrtc[i])
 
         #print('\nZONES:',self.ZONES)
         nmults=0
@@ -341,8 +342,8 @@ class IARU_HF_SCORING(CONTEST_SCORING):
         
 
 
-    # On the fly scoring needs work!
-    def otf_scoring_IARU(self,qso):
+    # On the fly scoring 
+    def otf_scoring(self,qso):
         #print("\nIARU->OTF SCORING: qso=",qso)
         self.nqsos+=1
 
@@ -351,52 +352,73 @@ class IARU_HF_SCORING(CONTEST_SCORING):
                 call = qso['CALL']
                 band = qso["BAND"]
                 mode = qso['MODE']
+                rx   = qso["SRX_STRING"]
             else:
                 call = qso['call']
                 band = qso["band"]
                 mode = qso['mode']
+                rx   = qso["srx_string"]
             mode = self.group_modes(mode)
+            rx   = rx.strip().upper().split(',')
         except:
             error_trap('FD->OTF SCORING - Unexpected error!')
             print('qso=',qso)
             return
 
-        bonus = 0                    # Boycotting unARRL submissions!
-        mults = 2                    # Power mult
-        if mode=='PH':
-            qso_points=1
-        elif mode=='CW' or mode=='DG':
-            qso_points=2
+        num_in = reverse_cut_numbers( rx[1] , 2)
+        if num_in.isdigit():
+            zone = int(num_in)
+        else:
+            zone = 0                    # Presumably, an HQ station
+
+        dx_station = Station(call)
+        #if dx_station.country:
+        #    self.countries.add(dx_station.country)
+
+        print('IARU->OTF SCORING: call=',call,'\tband=',band,'\tnum_in=',num_in,'\tmode=',mode,'\tzone=',zone)
+        
+        if zone==self.MY_ITU_ZONE or zone==0:
+            qso_points = 1
+        elif dx_station.continent=='NA':    # or call in SPECIAL_CALLS:
+            qso_points = 3
+        elif dx_station.continent in ['SA','EU','OC','AF','AS']:
+            qso_points = 5
+        else:
+            qso_points = 0
+
+        self.nqsos2 += 1;
+        self.ZONES[band].add(num_in)
+        self.NQSOS[band]+=1
+        #self.POINTS[band] += qso_points
         self.total_points += qso_points
-        self.score=self.total_points*mults + bonus
-        print("FD->SCORING: score=",self.score,self.nqsos)
 
-        idx2 = self.MODES.index(mode)
-        idx3 = self.BANDS.index(band)
-        self.band_mode_cnt[idx2,idx3] += 1
-
+        nmults=0
+        for b in self.BANDS:
+            nmults += len( self.ZONES[b] )
+        self.score=self.total_points*nmults
+        
         self.txt='{:3d} QSOs  x {:3d} Mults = {:6,d} Points \t\t\t Last Worked: {:s}' \
-            .format(self.nqsos,mults,self.score,call)
+            .format(self.nqsos,nmults,self.score,call)
         if self.P.gui:
             self.P.gui.status_bar.setText(self.txt)
     
 
-    # Put summary info in big text box - NEEDS WORK
-    def otf_summary_IARU(self):
+    # Put summary info in big text box 
+    def otf_summary(self):
 
-        mults=0
+        txt='Band\tQSOs\tMults'
+        self.P.gui.txt.insert(END, txt, ('highlight'))
+        
+        nmults=0
+        nqsos=0
         for b in self.BANDS:
-            idx3 = self.BANDS.index(b)
-            txt = '{:s}'.format(b)
-            for i in range(len(self.MODES)):
-                txt += ' \t {:d}'.format(self.band_mode_cnt[i,idx3])
-            txt += ' \t {:d}\n'.format( int(np.sum(self.band_mode_cnt[:,idx3],axis=0)) )
+            mults = len( self.ZONES[b] )
+            nmults+=mults
+            nqsos+=self.NQSOS[b]
+            txt = '{:s} \t {:d} \t {:d}\n'.format(b,self.NQSOS[b],mults)
             self.P.gui.txt.insert(END, txt, ('highlight'))
 
-        txt = '{:s}'.format('Totals:')
-        for i in range(len(self.MODES)):
-            txt += ' \t {:d}'.format(np.sum(self.band_mode_cnt[i,:]))
-        txt += ' \t {:d}\n'.format(int( np.sum(self.band_mode_cnt)))
+        txt = '{:s} \t {:d} \t {:d}\n'.format('Totals:',nqsos,nmults)
         self.P.gui.txt.insert(END, txt, ('highlight'))
         self.P.gui.txt.see(END)
 

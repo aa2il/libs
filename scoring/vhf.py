@@ -45,7 +45,8 @@ class VHF_SCORING(CONTEST_SCORING):
         # Determine contest based on sponser and month
         now = datetime.datetime.utcnow()
         month = now.strftime('%b').upper()
-        print('month=',month)
+        today  = int( now.strftime('%d').upper() )
+        print('month=',month,'\ttoday=',today)
 
         # Init base class
         dm=0
@@ -80,7 +81,7 @@ class VHF_SCORING(CONTEST_SCORING):
             print('\nVHF SCORING: *** ERROR - Invalid sponser ***\n')
             print('SPONSER=',SPONSER)
             sys.exit(0)
-        CONTEST_SCORING.__init__(self,P,contest_name,mode='MIXED',TRAP_ERRORS=TRAP_ERRORS)
+        #CONTEST_SCORING.__init__(self,P,contest_name,mode='MIXED',TRAP_ERRORS=TRAP_ERRORS)
 
         self.NQSOS = OrderedDict()
         grids = []
@@ -99,47 +100,62 @@ class VHF_SCORING(CONTEST_SCORING):
         # ARRL contest occurs on 2nd full weekend of June and Sept. For Jan, either 3rd or 4th
         # CQ contest occurs on 3rd full weekend in July ?
         day1=datetime.date(now.year,now.month-dm,1).weekday()             # Day of week of 1st of month 0=Monday, 6=Sunday
-        sat2=1 + ((5-day1) % 7) + 7                                    # Day no. for 2nd Saturday = 1 since day1 is the 1st of the month
-                                                                       #    no. days until 1st Saturday (day 5) + 7 more days 
+        sat1=1 + ((5-day1) % 7)                                        # Day no. for 1st Saturday 
+        #sat2=1 + ((5-day1) % 7) + 7                                    # Day no. for 2nd Saturday = 1 since day1 is the 1st of the month
+                                                                       #    no. days until 1st Saturday (day 5) + 7 more days
+        DESC=''
         if month=='JAN':
-            sat2+=7                                                    # 3rd Saturday
+            sat=sat1+14                                                # 3rd Saturday
             start=19                                                   # Jan starts at 1900 UTC on Saturday ...
-            hrs=33                                                     # ARRl contest is for 33 hours
+            hours=33                                                   # ARRl contest is for 33 hours
         elif SPONSER=='CQ' and month=='JUL':
             # CQ WW VHF
-            sat2+=7                                                    # 3rd Saturday
-            start=18                                                   # CQ WW starts at 1800 UTC on Saturday ...
-            hrs=27                                                     # CQ contest is for 27 hours
+            #sat+=7                                                    # 3rd Saturday - before 2025
+            #start=18                                                  # CQ WW starts at 1800 UTC on Saturday ...
+            #hours=27                                                  # CQ contest is for 27 hours
 
-            self.DIR_NAME = os.path.expanduser('~/Python/pyKeyer/CQ_VHF')
-            self.fname = 'CQ_VHF.adif'
+            # 2025
+            start=12
+            hours=24
+            if today>=sat1+14:
+                sat = sat1+14                                          # 3rd Saturday is digi
+                
+                contest_name=SPONSER+'-VHF-DIGI'
+                #self.fname = 'CQ_VHF_DIGI.adif'
+                DESC='DIGI_'
+            else:
+                sat = sat1                                             # 1st Saturday is analog
+                contest_name=SPONSER+'-VHF-SSBCW'
+                DESC='SSBCW_'
+                #self.fname = 'CQ_VHF_SSBCW.adif'
+            #self.DIR_NAME = os.path.expanduser('~/Python/pyKeyer/CQ_VHF')
             
         elif SPONSER=='CSVHF':
             # Central State VHF Soc Spring Sprints - not sure what their scheme is so just hardwire for noe
             sat2=13
             start=23
-            hrs=4
+            hours=4
         elif SPONSER=='SVHFS':
             # SE VHF Soc 50 MHz Fall Sprint - not sure what their scheme is so just hardwire for noe
             sat2=13
             start=23
-            hrs=4
+            hours=4
         elif SPONSER=='NAMSS':
             # NA Meteor Scatter Sprint - not sure what their scheme is so just hardwire for noe
             sat2=12
             start=15
-            hrs=48
+            hours=48
         else:
             start=18                                                   # June & Sept start at 1800 UTC on Saturday ...
-            hrs=33                                                     # ARRl contest is for 33 hours
-        self.date0=datetime.datetime(now.year,now.month-dm,sat2,start) 
-        self.date1 = self.date0 + datetime.timedelta(hours=hrs)    
-        print('day1=',day1,'\tsat2=',sat2,'\tdate0=',self.date0)
-        #sys.exit(0)
+            hours=33                                                     # ARRl contest is for 33 hours
+        self.date0=datetime.datetime(now.year,now.month-dm,sat,start) 
+        self.date1 = self.date0 + datetime.timedelta(hours=hours)    
+        print('day1=',day1,'\tsat=',sat,'\tdate0=',self.date0)
+
+        CONTEST_SCORING.__init__(self,P,contest_name,mode='MIXED',TRAP_ERRORS=TRAP_ERRORS)
 
         # Manual override
         if False:
-            self.date0 = datetime.datetime.strptime( "20210612 1800" , "%Y%m%d %H%M")  # Start of contest
             self.date0 = datetime.datetime.strptime( "20210911 1800" , "%Y%m%d %H%M")  # Start of contest
             self.date1 = date0 + datetime.timedelta(hours=33)
 
@@ -148,12 +164,13 @@ class VHF_SCORING(CONTEST_SCORING):
             print('now=',now,now.month-dm,month)
             print(SPONSER)
             print('day1=',day1,datetime.date(now.year,now.month-dm,1))
+            print('sat1=',sat1)
             print(self.date0)
             print(self.date1)
             sys.exit(0)
             
         # Name of output file
-        self.output_file = self.MY_CALL+'_'+SPONSER+'_'+month+'_VHF_'+str(self.date0.year)+'.LOG'
+        self.output_file = self.MY_CALL+'_'+SPONSER+'_'+month+'_VHF_'+DESC+str(self.date0.year)+'.LOG'
 
         MY_CALL = P.SETTINGS['MY_CALL']
         self.history = os.path.expanduser('~/'+MY_CALL+'/master.csv')
