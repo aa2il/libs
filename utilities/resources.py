@@ -114,15 +114,20 @@ def find_resource_file(f,VERBOSITY=1):
 ############################################################################
 
 # Function to list all of the serial devices
-def list_all_serial_devices(USB_ONLY=False):
+def list_all_serial_devices(USB_ONLY=False,SHORT_FORM=False):
     ports = lp.comports()
-    print('LIST ALL SERIAL DEVICES: USB_ONLY=',USB_ONLY)   #  ports=',ports,'\n')
+    print('LIST ALL SERIAL DEVICES: USB_ONLY=',USB_ONLY),'\tSHORT_FROM=',SHORT_FORM   #  ports=',ports,'\n')
     
     for port in ports:
         if not USB_ONLY or ('USB' in str(port)):
-            print('\nport=',port,':')
-            pprint(vars(port))
-            #print("\nport={}: desc={} hwid=[{}]".format(port.device, port.description, port.hwid))
+            if SHORT_FORM:
+                print(port.device)
+                print('\tdesc: ',port.description)
+                print('\thwid: ',port.hwid)
+            else:
+                print('\nport=',port,':')
+                pprint(vars(port))
+                #print("\nport={}: desc={} hwid=[{}]".format(port.device, port.description, port.hwid))
 
     return ports
 
@@ -197,10 +202,12 @@ def find_serial_device(device_name,device_number,PORT=None,VERBOSITY=0):
             print('\nMake sure MY_KEYER_DEVICE_ID is set in ~/.keyerrc')
             cmd='python3 -m serial.tools.list_ports -v'
             print('\nTo find a valid descriptor, use\n\n\t',cmd,'\n')
-            os.system(cmd)
+            #os.system(cmd)
+            list_all_serial_devices(SHORT_FORM=True)
             print('\nFIND SERIAL DEVICE: Unable to locate serial device',desc)
-            print('*** Giving up ***')
-            sys.exit(0)
+            return None,None
+            #print('*** Giving up ***')
+            #sys.exit(0)
         elif nports>1:
             print('FIND SERIAL DEVICE: Multiple devices found!',desc,nports)
             print('\tReturning device with location ending in',best)

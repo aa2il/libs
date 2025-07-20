@@ -2152,13 +2152,13 @@ class direct_connect(no_connect):
     def stop_rotor(self,VERBOSITY=0):
         VERBOSITY=1
         if VERBOSITY>0:
-            print('\DIRECT - STOP ROTOR')
+            print('\n--- DIRECT - STOP ROTOR ---')
         cmd='S\r'
         buf = self.get_response(cmd)
         if VERBOSITY>0:
             print('DIRECT - ROTOR STOPPED')
             print('\tcmd=',cmd)
-            print('\tbuf=',buf)
+            print('\tbuf=',buf,'\n')
                         
         
             

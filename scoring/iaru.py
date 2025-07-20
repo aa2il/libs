@@ -77,7 +77,8 @@ class IARU_HF_SCORING(CONTEST_SCORING):
 
         # Names of input files
         MY_CALL = P.SETTINGS['MY_CALL']
-        self.history = os.path.expanduser('~/'+MY_CALL+'/master.csv')
+        #self.history = os.path.expanduser('~/'+MY_CALL+'/master.csv')
+        self.history = os.path.expanduser(self.P.HIST_DIR+'/master.csv')
         if year==now.year:
             self.fname = MY_CALL+'.adif'
         else:
