@@ -119,16 +119,12 @@ class VHF_SCORING(CONTEST_SCORING):
             hours=24
             if today>=sat1+14:
                 sat = sat1+14                                          # 3rd Saturday is digi
-                
                 contest_name=SPONSER+'-VHF-DIGI'
-                #self.fname = 'CQ_VHF_DIGI.adif'
                 DESC='DIGI_'
             else:
                 sat = sat1                                             # 1st Saturday is analog
                 contest_name=SPONSER+'-VHF-SSBCW'
                 DESC='SSBCW_'
-                #self.fname = 'CQ_VHF_SSBCW.adif'
-            #self.DIR_NAME = os.path.expanduser('~/Python/pyKeyer/CQ_VHF')
             
         elif SPONSER=='CSVHF':
             # Central State VHF Soc Spring Sprints - not sure what their scheme is so just hardwire for noe
