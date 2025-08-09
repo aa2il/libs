@@ -39,7 +39,7 @@ def Select_Scoring(P):
         elif P.CONTEST_NAME in ['CWT']:
             sc=CWT_SCORING(P)
         elif P.CONTEST_NAME in ['NAQP']:
-            sc=NAQP_SCORING(P)
+            sc=NAQP_SCORING(P,'NAQP')
         else:
             sc=CONTEST_SCORING(P,'Default')
     else:

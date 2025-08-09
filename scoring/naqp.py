@@ -54,7 +54,7 @@ class NAQP_SCORING(CONTEST_SCORING):
             MODE='RTTY'
         elif MONTH=='AUG':
             m=8
-            dd=7
+            dd=0           # was 7?
             MODE='CW'
         else:
             m=8
