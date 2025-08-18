@@ -386,6 +386,7 @@ bands["10m"] = {"Code" : 9,
                 "FT8"  : 28074,
                 "FT8C" : 28160,
                 "FT4"  : 28180,
+                "MSK144"  : 28145,
                 "PSK"  : 28120, "MicGain": 13,
                 "CONTEST" : True}
 bands["6m"] = {"Code" : 10, 
