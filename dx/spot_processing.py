@@ -343,15 +343,15 @@ class Station(object):
                 self.call_prefix=None
                 self.call_number=None
                 self.call_suffix=None
+
+                #self.DEBUG = True
+                self.DEBUG = False
                 
                 self.call = call.rstrip().lstrip().upper()
                 self.homecall = self.obtain_homecall(self.call)
 
-                #self.DEBUG = True
-                self.DEBUG = False
-
                 if self.DEBUG :
-                    print('SPOT PROCESSING->Station: call=',call)
+                    print('SPOT PROCESSING->Station: call=',self.call,'\thomecall=',self.homecall)
 
                 if CTY_INFO==None:
                     print('\nSPOT PROCESSING->Station: call=',call)
@@ -367,14 +367,23 @@ class Station(object):
                     if self.DEBUG:
                         print('SPOT PROCESSING->Station: call=',call,'\tprefix=',self.prefix)
                     if not self.prefix:
+                        
                         self.valid = False
                         if not self.mm and not self.am and self.appendix=='':
-                            self._logger.warning("Busted Prefix: '"+ str(self.prefix) \
+                            self._logger.warning("STATION: Busted Prefix: '"+ str(self.prefix) \
                                                  + "' of " + self.call + " could not be decoded")
-                            #sys.exit(0)
+                            print('STATION: Busted prefix - call=',call)
+                            if self.DEBUG:
+                                sys.exit(0)
+                                
                     else:
-                        #print(self.call,self.prefix)
-                        cty_info = self.lookup_cty_info(self.prefix)
+                        
+                        if self.call in CTY_INFO:
+                            cty_info = self.lookup_cty_info(self.call)
+                        else:
+                            cty_info = self.lookup_cty_info(self.prefix)
+                        if self.DEBUG:
+                            print('\tcall=',self.call,'\tprefix=',self.prefix,'\tcty_info=',cty_info)
                         if not cty_info:
                             self.valid = False
                             print("Busted: No Country Info found for " + self.call )
@@ -415,20 +424,39 @@ class Station(object):
             """truncate call until it corresponds to a Prefix in the database"""
 
             prefix = call
+            if self.DEBUG:
+                print('SPOT PROCESSING->Iterate ENTRY: call=',call)
+                a=(prefix in CTY_INFO)
+                if a:
+                    b=CTY_INFO[prefix]['ExactCallsign']
+                else:
+                    b=None
+                print('\tin=',a,'\texact=',b)
             Done=False
             #Done=(prefix in CTY_INFO) and not CTY_INFO[prefix]['ExactCallsign']
             while not Done:
-                #print('SPOT PROCESSING->Iterate Prefix: prefix=',prefix,len(prefix))
+                #print('\tprefix1=',prefix)
                 if len(prefix) == 0:
                     break
                 else:
                     prefix = prefix.replace(' ','')[:-1]
+                #print('\tprefix2=',prefix)
+                if self.DEBUG:
+                    print('SPOT PROCESSING->Iterate Prefix: prefix=',prefix,'\tlen=',len(prefix))
+                    a=(prefix in CTY_INFO)
+                    if a:
+                        b=CTY_INFO[prefix]['ExactCallsign']
+                    else:
+                        b=None
+                    print('\t',a,b)
                 Done=(prefix in CTY_INFO) and not CTY_INFO[prefix]['ExactCallsign']
 
             if self.DEBUG:
-                print('SPOT PROCESSING->Iterate Prefix: call=',call,'\tprefix=',prefix,len(prefix))
+                print('SPOT PROCESSING->Iterate Prefix: call=',call,'\tprefix=',prefix)
                 #if len(prefix)>0:
-                print(CTY_INFO[prefix])
+                print('\tCTY_INFO for',prefix,'=',CTY_INFO[prefix])
+                if call in CTY_INFO:
+                    print('\tCTY_INFO for',call,'=',CTY_INFO[call])
 
             return(prefix)
                 
@@ -497,7 +525,8 @@ class Station(object):
                     if re.search(r'/[A-Z0-9]{2,4}/[A-Z0-9]{1,4}$', call):
                         call = re.sub('/[A-Z0-9]{1,4}$', '', call) # cut off 2. appendix DH1TW/HC2/P -> DH1TW/HC2
 
-                    #print('OBTAIN_PREFIX: call2=',call)
+                    if self.DEBUG :
+                        print('\tcall2=',call)
                     if re.search(r'/[A-Z0-9]{2,4}$', call):  # case call/xxx, but ignoring /p and /m or /5
                         appendix = re.search(r'/[A-Z0-9]{1,4}$', call)
                         appendix = re.sub('/', '', appendix.group(0))
@@ -536,6 +565,8 @@ class Station(object):
                             for i in range(len(appendix)):
                                 has_digit = has_digit or appendix[i].isdigit()
                             bogus = len(appendix)>1 and (appendix.isdigit() or not has_digit)
+                            if self.DEBUG :
+                                print('\tbogus=',bogus)
 
                             if not bogus:
                                 # It looks like a valid appendix
@@ -565,13 +596,17 @@ class Station(object):
                             call = re.sub(r'[\d]+',area_nr, call)
                             prefix = self.__iterate_prefix(call)
                         else:
-                            #print('call=',call)
+                            if self.DEBUG :
+                                print('\tcall3=',call)
                             prefix = self.__iterate_prefix(call)
                             self._logger.debug("obtain_prefix(): appendix: " + appendix)
                         
                     elif re.match(r'^[\d]{0,1}[A-Z]{1,2}\d([A-Z]{1,4}|\d{3,3}|\d{1,3}[A-Z])[A-Z]{0,5}$', call, re.I):  # normal callsigns
+                        if self.DEBUG :
+                            print('\tcall4a=',call)
                         prefix = self.__iterate_prefix(call)
-                        #print call,prefix
+                        if self.DEBUG :
+                            print('\tcall4b=',call,'\tprefix=',prefix)
                         self._logger.debug("obtain_prefix(): Prefix found: " + str(prefix) )
                     
                     else:
@@ -587,8 +622,12 @@ class Station(object):
                     
                     #--------identify Prefix of Callsign ------------
                     
+                    if self.DEBUG :
+                        print('\tcall5=',call)
                     if re.search('^[A-Z0-9]{1,4}/', entire_call):  # case xxxx/call
                         if re.search('^[A-Z0-9]{4}/', entire_call) and len(entire_call) < 8:
+                            if self.DEBUG :
+                                print('\tcall6=',call)
                             pass
                         else:
                             pfx = re.search('^[A-Z0-9]{1,4}/', entire_call)
@@ -603,6 +642,8 @@ class Station(object):
                         self._logger.debug("obtain_prefix(): return False; No Prefix found for " + call )
                         return(False)
                     
+                    if self.DEBUG :
+                        print('\tcall7=',call,'\tprefix=',prefix)
                     return(prefix) #everything went well - return prefix
                 
                 else:
@@ -930,8 +971,20 @@ class Spot(object):
                                 self.spotter_call = re.sub(':', '', spotter_call_temp.group(0))
                         else:
                                 self._logger.debug("Missing Semicolon ?!")
-                                self.spotter_call = re.sub(r'[^A-Za-z0-9\/]+', '', raw_string[6:15])
 
+                                # JBA - fix probelm with some rbn nodes named AC0C-1 or JH7CSU1
+                                #self.spotter_call = re.sub(r'[^A-Za-z0-9\/]+', '', raw_string[6:15])
+                                #self.spotter_call = re.sub(r'[^A-Za-z0-9\/]+-', '', raw_string[6:15])
+                                tmp = re.sub(r'[^A-Za-z0-9\/]+-', '', raw_string[6:15])
+                                self.spotter_call = tmp.split('-')[0]
+                                if self.spotter_call[-2]!='/' and ord(self.spotter_call[-1])<ord('A'):
+                                    self.spotter_call=self.spotter_call[:-1]
+
+                        # JBA - fix since some spots are longer than normal
+                        n=len(raw_string)-75
+                        if n>0:
+                            raw_string=raw_string[n:]
+                            
                         frequency_temp = re.search(r'[0-9\.]{5,12}', raw_string[10:25])
                         if frequency_temp: 
                                 self.frequency = float(frequency_temp.group(0))
@@ -948,7 +1001,6 @@ class Spot(object):
                         #    self.dx_call = 'CE0YHO'
 
                         self.comment = re.sub(r'[^\sA-Za-z0-9\.,;\#\+\-!\?\$\(\)@\/]+', ' ', raw_string[39:69])
-#                        print "Hey",raw_string[70:74]
                         time_temp = re.sub(r'[^0-9]+', '', raw_string[70:74])
                         self.utc=time_temp
                         self.time = datetime.utcnow().replace(hour=int(time_temp[0:2]), \
