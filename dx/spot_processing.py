@@ -972,7 +972,7 @@ class Spot(object):
                         else:
                                 self._logger.debug("Missing Semicolon ?!")
 
-                                # JBA - fix probelm with some rbn nodes named AC0C-1 or JH7CSU1
+                                # JBA - fix problem with some rbn nodes named AC0C-1 or JH7CSU1
                                 #self.spotter_call = re.sub(r'[^A-Za-z0-9\/]+', '', raw_string[6:15])
                                 #self.spotter_call = re.sub(r'[^A-Za-z0-9\/]+-', '', raw_string[6:15])
                                 tmp = re.sub(r'[^A-Za-z0-9\/]+-', '', raw_string[6:15])
@@ -981,10 +981,11 @@ class Spot(object):
                                     self.spotter_call=self.spotter_call[:-1]
 
                         # JBA - fix since some spots are longer than normal
+                        raw_string = raw_string.strip()
                         n=len(raw_string)-75
                         if n>0:
                             raw_string=raw_string[n:]
-                            
+                                                            
                         frequency_temp = re.search(r'[0-9\.]{5,12}', raw_string[10:25])
                         if frequency_temp: 
                                 self.frequency = float(frequency_temp.group(0))
