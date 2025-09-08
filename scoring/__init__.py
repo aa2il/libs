@@ -29,3 +29,4 @@ from .wpx import *
 from .vhf import *
 from .fd import *
 from .iaru import *
+from .cwopen import *
