@@ -359,7 +359,7 @@ def write_adif_record(fp,rec,P,long=False,sort=True,VERBOSITY=0):
                 val=str(val).replace(':','').zfill(6)
             if VERBOSITY>1:
                 print(fld,val)
-            if len(val)>0:
+            if val!=None and len(val)>0:
                 fp.write('<%s:%d>%s%s' % (fld,len(val),val,NL) )
 
     """

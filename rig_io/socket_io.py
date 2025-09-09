@@ -104,7 +104,7 @@ def open_rig_connection(connection,host=0,port=0,baud=0,tag='',
     if connection=='NONE':
         return no_connect(host,port)
 
-    if rig=='TYT9000d':
+    if rig=='TYT9000d' or connection=='TYT9000d':
         print('HEY TYT!!!')
         #sock = tyt9000d_connect()
         sock = no_connect(RIG_TYPE='TYT9000d')

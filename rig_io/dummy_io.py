@@ -41,6 +41,7 @@ class no_connect:
 
         self.s          = None
         self.active     = False
+        self.active     = True
         self.connection = 'NONE'
         self.wpm        = 0
         self.freq       = 0
@@ -145,12 +146,13 @@ class no_connect:
 
     def get_mode(self,VFO='A',VERBOSITY=0):
         if VERBOSITY>0:
-            print('Hey DUMMY GET_MODE: VFO=',VFO)
+            print('DUMMY GET_MODE: VFO=',VFO,'\tmode=',self.default_mode)
             logging.info('Ignoring call')
         return self.default_mode
         
     def set_mode(self,mode,VFO='A',Filter=None):
         if VERBOSITY>0:
+            print('DUMMY SET_MODE: VFO=',VFO,'\tmode=',mode)
             logging.info('Ignoring call')
         self.default_mode=mode
         return mode
