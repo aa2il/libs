@@ -447,9 +447,11 @@ class AudioIO():
                 else:
                     x = 0 + 1j*x                       # Copy mono data to R channel
                     #print rb.tag,x.dtype,nchan,rb.Chan
-            data = x.astype(np.complex64).tostring()
+            #data = x.astype(np.complex64).tostring()
+            data = x.astype(np.complex64).tobytes()
         else:
-            data = x.astype(np.float32).tostring()
+            #data = x.astype(np.float32).tostring()
+            data = x.astype(np.float32).tobytes()
         
         self.last=len(data)
         if DEBUG>=2 or status!=0:

@@ -104,9 +104,13 @@ class VHF_SCORING(CONTEST_SCORING):
         #sat2=1 + ((5-day1) % 7) + 7                                    # Day no. for 2nd Saturday = 1 since day1 is the 1st of the month
                                                                        #    no. days until 1st Saturday (day 5) + 7 more days
         DESC=''
-        if month=='JAN':
-            sat=sat1+14                                                # 3rd Saturday
-            start=19                                                   # Jan starts at 1900 UTC on Saturday ...
+        if SPONSER=='ARRL':
+            if month=='JAN':
+                sat=sat1+14                                            # 3rd Saturday
+                start=19                                               # Jan starts at 1900 UTC on Saturday ...
+            else:
+                sat=sat1                                               # 1st Saturday
+                start=13                                               # Jun and Sept start at 1800 UTC on Saturday ...
             hours=33                                                   # ARRl contest is for 33 hours
         elif SPONSER=='CQ' and month=='JUL':
             # CQ WW VHF

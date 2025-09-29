@@ -233,13 +233,13 @@ class CWT_SCORING(CONTEST_SCORING):
 
     # On-the-fly scoring
     def otf_scoring(self,qso):
-        print("SCORING: qso=",qso)
+        print("CWT OTF SCORING: qso=",qso)
         self.nqsos+=1
         call=qso['CALL']
         self.calls.add(call)
         mults = len(self.calls)
         score=self.nqsos * mults
-        print("SCORING: score=",score)
+        print("CWT OTF SCORING: nqsos=",self.nqsos,"\tmults=",mults,"\tscore=",score)
 
         band=qso['BAND']
         idx2 = self.BANDS.index(band)

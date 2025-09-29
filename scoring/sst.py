@@ -244,7 +244,7 @@ class SST_SCORING(CONTEST_SCORING):
         
     # On-the-fly scoring
     def otf_scoring(self,qso):
-        print("\nSCORING: qso=",qso)
+        print("\nSST OTF SCORING: qso=",qso)
         self.nqsos+=1
 
         try:
@@ -274,7 +274,7 @@ class SST_SCORING(CONTEST_SCORING):
         
         mults = np.sum( np.sum(self.sec_cnt,axis=0) )
         self.score=self.nqsos * mults
-        print("SCORING: score=",self.score,self.nqsos,mults)
+        print("SST OTF SCORING: score=",self.score,self.nqsos,mults)
 
         self.txt='{:3d} QSOs  x {:3d} Mults = {:6,d} \t\t\t Last Worked: {:s}' \
             .format(self.nqsos,mults,self.score,call)

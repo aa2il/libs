@@ -37,6 +37,7 @@ from scp import *
 
 ############################################################################################
 
+VERBOSITY=0
 UTC = datetime.UTC
 
 def similar(a, b):
@@ -147,7 +148,8 @@ class CONTEST_SCORING:
 
         mults = 1
         self.score=self.nqsos * mults
-        print("DEFAULT->SCORING: score=",self.score,self.nqsos,mults)
+        if VERBOSITY>0:
+            print("DEFAULT->SCORING: score=",self.score,self.nqsos,mults)
 
         self.txt='{:3d} QSOs  x {:3d} Mults = {:6,d} \t\t\t Last Worked: {:s}' \
             .format(self.nqsos,mults,self.score,call)
@@ -388,7 +390,9 @@ class CONTEST_SCORING:
                 mismatch = exchs.count(exchs[0]) != len(exchs)
                 if mismatch and self.TRAP_ERRORS:
                     print('\tMismatches found:',exchs)
-                    sys.exit(0)
+                    print(self.contest)
+                    if self.contest[2:]!='-QSO-PARTY':
+                        sys.exit(0)
             elif type(exchs[0]) is dict:
                 # Multiple items in exchange
                 mismatch=False

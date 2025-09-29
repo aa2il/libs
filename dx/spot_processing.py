@@ -278,6 +278,11 @@ def load_cty_info(DIR=None):
         
         # Load Country File
         print('LOADing CTY INFO ... DIR=',DIR)
+        if CTY_INFO!=None:
+            error_trap('CTY INFO already loaded!')
+            #sys.exit(0)
+            return
+        
         CTY_INFO = ""
         if DIR==None:
             DIR='~/Python/data'
