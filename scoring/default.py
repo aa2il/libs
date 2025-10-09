@@ -55,6 +55,7 @@ class CONTEST_SCORING:
         self.contest       = contest
         self.my_mode       = mode
         self.category_band = 'ALL'
+        self.min_time_gap  = 30  # Minutes
 
         self.total_score   = 0
         self.total_km      = 0
@@ -78,10 +79,17 @@ class CONTEST_SCORING:
         self.num_cwops   = 0
         self.num_running = 0
         self.num_sandp   = 0
+        self.county_liners = 0
+        self.county_line_qsos = 0
+        self.special_calls = set([])
+
+        self.times=[]
+        self.scores=[]
 
         # On-the-fly scoring
         self.nqsos=0
         self.calls=set([])
+        self.dupers=[]
                 
         # History file
         self.history = os.path.expanduser( '~/Python/history/data/master.csv' )
@@ -129,7 +137,31 @@ class CONTEST_SCORING:
                 if age<MAX_AGE:
                     self.otf_scoring(qso)
         print('\nINIT SCORING:',self.nqsos,' QSOs from logbook found for this contest')
+
+    # Dummy scoring routine
+    def compute_score(self,rec=None):
+        mults = 1
+        score = mults*self.nqsos
+        self.gather_scores(rec,score)
+        return score,mults
+
+    def gather_scores(self,rec,score):
+        if rec:
+            #print(self.date0,type(self.date0))
+            #print(date_off,rec["qso_date_off"])
+            #print(time_off,rec["time_off"])
+            date_off = datetime.datetime.strptime( rec["qso_date_off"] , "%Y%m%d").strftime('%Y-%m-%d')
+            time_off = datetime.datetime.strptime( rec["time_off"] , '%H%M%S').strftime('%H:%M:%S')
+            qso_date = datetime.datetime.strptime( date_off + ' ' + time_off , '%Y-%m-%d %H:%M:%S')
+            #print(qso_date,type(qso_date))
+            td = ( qso_date - self.date0 ).total_seconds()/60.
+            #print(td,type(td))
         
+            self.times.append(td)
+            self.scores.append(score)
+        #sys.exit(0)
+
+    
     # Dummies that need override for each specific contest
     # Defaults is just to count thenumber of QSOs
     def otf_scoring(self,qso):
@@ -217,6 +249,8 @@ class CONTEST_SCORING:
 
         # Count no. of raw qsos
         self.nqsos1+=1
+        #print('CEHCK DUPES: contest=',self.contest)
+        #sys.exit(0)
 
         # Check for dupes
         call = rec["call"]
@@ -266,8 +300,7 @@ class CONTEST_SCORING:
                     print(rec2)
                     sys.exit(0)
                 
-            #elif self.contest=='CA-QSO-PARTY':
-            elif self.contest[3:]=='QSO-PARTY':
+            elif self.contest=='CQP' or self.contest[3:]=='QSO-PARTY':
 
                 try:
                     dupe = call==call2 and band==band2

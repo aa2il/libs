@@ -40,6 +40,7 @@ class CWT_SCORING(CONTEST_SCORING):
         self.sec_cnt = np.zeros(len(self.BANDS),dtype=int)
         self.calls=set([])
         self.TRAP_ERRORS = TRAP_ERRORS
+        self.min_time_gap  = 30  # Minutes
         self.init_otf_scoring()
 
         # Determine contest time - assumes this is done within a few hours of the contest
@@ -198,7 +199,11 @@ class CWT_SCORING(CONTEST_SCORING):
                         
         # Count no. of CWops guys worked
         self.count_cwops(call,HIST,rec)
-                
+
+        # Keep score vs time history
+        self.compute_score(rec)
+
+        # Generate cabrillo file line for this qso
 #000000000111111111122222222223333333333444444444455555555556666666666777777777788
 #123456789012345678901234567890123456789012345678901234567890123456789012345678901
 #                              -----info sent------ -----info rcvd------
@@ -208,6 +213,17 @@ class CWT_SCORING(CONTEST_SCORING):
              call,name,qth)
         
         return line
+
+
+    # Routine to compute current score
+    def compute_score(self,rec=None):
+        mults = len(self.calls)
+        score = mults*self.nqsos2
+
+        self.gather_scores(rec,score)
+
+        return score,mults
+        
                         
     # Summary & final tally
     def summary(self):
@@ -219,9 +235,11 @@ class CWT_SCORING(CONTEST_SCORING):
         for i in range(len(self.BANDS)):
             print(self.BANDS[i],'\t',self.sec_cnt[i])
         print('\nTotals:\t',self.nqsos2)
-        mults = len(self.calls)
+        #mults = len(self.calls)
+        score,mults=self.compute_score()
         print('mults=',mults)
-        print('\nClaimed score =',mults*self.nqsos2,'\t(',mults*self.nqsos1,')')
+        #print('\nClaimed score =',mults*self.nqsos2,'\t(',mults*self.nqsos1,')')
+        print('\nClaimed score =',score,'\t(',mults*self.nqsos1,')')
 
         print('\n# CWops Members =',self.num_cwops,' =',
               int( (100.*self.num_cwops)/self.nqsos1+0.5),'%')
@@ -229,6 +247,9 @@ class CWT_SCORING(CONTEST_SCORING):
               int( (100.*self.num_running)/self.nqsos1+0.5),'%')
         print('# QSOs S&P      =',self.num_sandp,' =',
               int( (100.*self.num_sandp)/self.nqsos1+0.5),'%')
+
+        #rint(self.times)
+        #rint(self.scores)
         
 
     # On-the-fly scoring

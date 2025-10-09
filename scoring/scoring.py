@@ -21,8 +21,15 @@
 
 import sys
 from .default import CONTEST_SCORING
-from .sst import SST_SCORING
-from .naqp import NAQP_SCORING
+from .sst     import SST_SCORING
+from .mst     import MST_SCORING
+from .cwt     import CWT_SCORING
+from .cqp     import CQP_SCORING
+from .fd      import FIELD_DAY_SCORING
+from .cwopen  import CWOPEN_SCORING
+from .iaru    import IARU_HF_SCORING
+from .naqp    import NAQP_SCORING
+from .vhf     import VHF_SCORING
 
 ############################################################################################
 
@@ -38,8 +45,20 @@ def Select_Scoring(P):
             sc=MST_SCORING(P)
         elif P.CONTEST_NAME in ['CWT']:
             sc=CWT_SCORING(P)
+        elif P.CONTEST_NAME in ['CQP']:
+            sc=CQP_SCORING(P)
+        elif P.CONTEST_NAME in ['FD']:
+            sc=FIELD_DAY_SCORING(P)
+        elif P.CONTEST_NAME in ['CWOPEN']:
+            sc=CWOPEN_SCORING(P)
+        elif P.CONTEST_NAME in ['IARU']:
+            sc=IARU_HF_SCORING(P)
         elif P.CONTEST_NAME in ['NAQP']:
             sc=NAQP_SCORING(P,'NAQP')
+        elif P.CONTEST_NAME in ['VHF']:
+            sc=VHF_SCORING(P)
+        elif P.CONTEST_NAME in ['WPX']:
+            sc=WPX_SCORING(P)
         else:
             sc=CONTEST_SCORING(P,'Default')
     else:

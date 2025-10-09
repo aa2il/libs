@@ -1,4 +1,4 @@
-############################################################################################
+###########################################################################################
 #
 # cqp.py - Rev 1.0
 # Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
@@ -22,13 +22,14 @@
 import sys
 import datetime
 import numpy as np
-from rig_io.ft_tables import CQP_MULTS,COUNTIES
+from rig_io.ft_tables import CQP_MULTS,COUNTIES,CQP_COUNTRIES,CQP_STATES
 from scoring import CONTEST_SCORING
 from dx.spot_processing import Station, Spot, WWV, Comment, ChallengeData
 from pprint import pprint
 from fileio import parse_adif
-from utilities import reverse_cut_numbers,Oh_Canada
+from utilities import reverse_cut_numbers,Oh_Canada, error_trap
 from tkinter import END
+from collections import OrderedDict 
 
 ############################################################################################
 
@@ -36,8 +37,9 @@ from tkinter import END
 class CQP_SCORING(CONTEST_SCORING):
  
     def __init__(self,P,TRAP_ERRORS=False):
-        super().__init__(P,P.CONTEST_ID,mode='CW')
-        print('CQP Scoring Init ...')
+        super().__init__(P,'CQP',mode='CW')
+        print('CQP Scoring Init ... TRAP_ERRORS=',TRAP_ERRORS)
+        #sys.exit(0)
         
         # Inits
         self.BANDS       = ['160m','80m','40m','20m','15m','10m']           
@@ -54,6 +56,7 @@ class CQP_SCORING(CONTEST_SCORING):
         self.MY_NAME     = P.SETTINGS['MY_NAME']
         self.MY_SECTION  = P.SETTINGS['MY_SEC']
         self.MY_COUNTY   = P.SETTINGS['MY_COUNTY']
+        self.min_time_gap  = 15  # Minutes
 
         # History file
         #self.history = os.path.expanduser( '~/Python/history/data/master.csv' )
@@ -108,7 +111,7 @@ class CQP_SCORING(CONTEST_SCORING):
             sys.exit(0)
         if len(HIST2)==0 and False:
             HIST2=HIST
-            if TRAP_ERRORS and False:
+            if self.TRAP_ERRORS and False:
                 print('\n**** WARNING **** Dup hist files - check this!!! ****\n')
                 sys.exit(0)
                 
@@ -118,6 +121,8 @@ class CQP_SCORING(CONTEST_SCORING):
 
         # Pull out relavent entries
         call = rec["call"].upper()
+        if len(call)==3:
+            self.special_calls.add(call)
         rx   = rec["srx_string"].strip().upper()
         if "station_callsign" in rec:
             my_call = rec["station_callsign"].strip().upper()
@@ -148,7 +153,7 @@ class CQP_SCORING(CONTEST_SCORING):
             print('Time   =',rec["time_off"])
             print('rec=',rec)
             self.list_all_qsos(call,qsos)
-            if TRAP_ERRORS:
+            if self.TRAP_ERRORS:
                 sys.exit(0)
             else:
                 qth_in = qth_in.replace('?','')
@@ -165,7 +170,7 @@ class CQP_SCORING(CONTEST_SCORING):
                 print('Date   =',rec["qso_date_off"])
                 print('Time   =',rec["time_off"])
                 self.list_all_qsos(call,qsos)
-                if TRAP_ERRORS:
+                if self.TRAP_ERRORS:
                     sys.exit(0)
                 
         try:
@@ -175,7 +180,7 @@ class CQP_SCORING(CONTEST_SCORING):
             print('a0=',a[0])
             print('rec=',rec)
             print('Problem with serial:',a)
-            if TRAP_ERRORS:
+            if self.TRAP_ERRORS:
                 sys.exit(0)
             else:
                 num_in=0
@@ -185,10 +190,10 @@ class CQP_SCORING(CONTEST_SCORING):
             print('num_in=',num_in,'\ta0=',a[0])
             print('rec=',rec)
             print('Problem with serial:',a)
-            if TRAP_ERRORS:
+            if self.TRAP_ERRORS:
                 sys.exit(0)
                 
-        self.check_serial_out(num_out,rec,TRAP_ERRORS)
+        self.check_serial_out(num_out,rec,self.TRAP_ERRORS)
         
         if MY_MODE=='CW':
             mode='CW'
@@ -212,9 +217,11 @@ class CQP_SCORING(CONTEST_SCORING):
         if '/' in qth_in:
             # County line
             print('County line ...',qth_in)
+            self.county_liners += 1
             qth_in2=qth_in.split('/')
             for qth1 in qth_in2:
                 print(qth1)
+                self.county_line_qsos += 1
                 if qth1 in COUNTIES['CA']:
                     qth='CA'
                     idx1 = COUNTIES['CA'].index(qth1)
@@ -222,7 +229,7 @@ class CQP_SCORING(CONTEST_SCORING):
                     county_line=True
                 else:
                     county_line=False
-                    if TRAP_ERRORS:
+                    if self.TRAP_ERRORS:
                         print('\nI have no idea what Im doing here!')
                         print(rec)
                         sys.exit(0)
@@ -247,6 +254,7 @@ class CQP_SCORING(CONTEST_SCORING):
             
         if dupe:
             self.ndupes += 1;
+            self.dupers.append(call)
             pass
         else:
             self.nqsos2 += 1;
@@ -262,7 +270,7 @@ class CQP_SCORING(CONTEST_SCORING):
                 print('\n$$$$$$$$$$$$$$$$$$$$$$',self.nqsos2)
                 print(qth,' not found in list of CQP sections')
                 print(rec)
-                if TRAP_ERRORS:
+                if self.TRAP_ERRORS:
                     print('History=',call,HIST[call])
                     sys.exit(0)
                 print('$$$$$$$$$$$$$$$$$$$$$$')
@@ -270,7 +278,7 @@ class CQP_SCORING(CONTEST_SCORING):
         # Error checking
         if country=='Canada':
             qth2,secs2=Oh_Canada(dx_station,CQP=True)
-            if qth2!=qth_in and TRAP_ERRORS:
+            if qth2!=qth_in and self.TRAP_ERRORS:
                 print('rec     =',rec)
                 print('call    =',call)
                 print('Oh Canada: qth_in=',qth_in,'\tqth2=',qth2)
@@ -288,7 +296,7 @@ class CQP_SCORING(CONTEST_SCORING):
                 print('History=',HIST[call])
             except:
                 print('Hmmm - cant show history for this call')
-            if TRAP_ERRORS:
+            if self.TRAP_ERRORS:
                 sys.exit(0)
 
         # Compare to history
@@ -303,7 +311,7 @@ class CQP_SCORING(CONTEST_SCORING):
                 print('Time   =',rec["time_off"])
                 self.list_all_qsos(call,qsos)
                 print(' ')
-                if TRAP_ERRORS:
+                if self.TRAP_ERRORS:
                     sys.exit(0)
             
         elif call2 in keys:
@@ -338,7 +346,11 @@ class CQP_SCORING(CONTEST_SCORING):
                         
         # Count no. of CWops guys worked
         self.count_cwops(call,HIST,rec)
-                
+
+        # Keep score vs time history
+        self.compute_score(rec)
+        
+        # Generate cabrillo file line for this qso
 #000000000111111111122222222223333333333444444444455555555556666666666777777777788
 #123456789012345678901234567890123456789012345678901234567890123456789012345678901
 #                              -----info sent------ -----info rcvd------
@@ -347,12 +359,14 @@ class CQP_SCORING(CONTEST_SCORING):
 #QSO: 28050 CW 2012-10-06 1600 K6AAA         1 SCLA W1AAA         1 ME 
 #QSO: 28450 PH 2012-10-06 1601 K6AAA         2 SCLA K6ZZZ         2 AMAD 
 
-        if True:
+        if False:
+            # This will not split up qsos with county-line ops - seems to be accepted
             line='QSO: %5d %2s %10s %4s %-10s %4s %-4s %-10s %4s %-4s' % \
                 (freq_khz,mode,date_off,time_off,
                  my_call,str(num_out),qth_out,
                  call,str(num_in),qth_in.replace('?',''))
         else:
+            # This splits up qsos with county-line ops
             line=[]
             for qth_in2 in qth_in.split('/'):
                 line.append(
@@ -362,7 +376,24 @@ class CQP_SCORING(CONTEST_SCORING):
                      call,str(num_in),qth_in2.replace('?','')) )
 
         return line
-                        
+
+    # Routine to compute current score
+    def compute_score(self,rec=None):
+
+        mults=0
+        for i in range(len(self.sec_cnt)):
+            if self.sec_cnt[i]>0:
+                mults += 1
+
+        nqsos = self.nqsos2 + self.county_line_qsos - self.county_liners
+        score = 3*min(mults,58)*nqsos
+
+        self.gather_scores(rec,score)
+        
+        return score,mults
+
+        
+    
     # Summary & final tally
     def summary(self):
 
@@ -371,7 +402,10 @@ class CQP_SCORING(CONTEST_SCORING):
         for i in range(len(self.sec_cnt)):
             if self.sec_cnt[i]>0:
                 mults += 1
-                tag=''
+                if self.sec_cnt[i]<=2:
+                    tag='+++++'
+                else:
+                    tag=''
             else:
                 tag='*****'
             print(i,'\t',CQP_MULTS[i],'\t',int(self.sec_cnt[i]),'\t',tag)
@@ -391,12 +425,17 @@ class CQP_SCORING(CONTEST_SCORING):
         uniques = np.unique( self.calls )
         uniques.sort()
         print('\nThere were',len(uniques),'unique calls:\n',uniques)
+        print('\nDUPERS:',self.dupers)
+        print('Special Calls:',self.special_calls)
 
-        print('\nNo. raw QSOS (nqsos1)    =\t',self.nqsos1)
-        print('No. unique QSOS (nqsos2) =\t',self.nqsos2)
+        print('\nNo. raw QSOs (nqsos1)    =\t',self.nqsos1)
+        print('No. unique QSOs (nqsos2) =\t',self.nqsos2)
         print('No. Dupes                =\t',self.ndupes)
-        print('Multipiers               =\t',mults)
-        print('Claimed Score            =\t',3*mults*self.nqsos2)
+        print('No. County Line ops      =\t',self.county_liners,'\tQSOs =',self.county_line_qsos)
+        self.nqsos2 += self.county_line_qsos - self.county_liners
+        print('Total QSO Count          =\t',self.nqsos2)
+        print('Multipiers               =\t',mults,'\tCapped at 58')
+        print('Claimed Score            =\t',3*min(mults,58)*self.nqsos2)
         print('No. flagged QSOS         =\t',self.nq)
 
         print('\n# CWops Members =',self.num_cwops,' =',
@@ -486,22 +525,29 @@ class CQP_SCORING(CONTEST_SCORING):
     def otf_scoring(self,qso):
         print("\nCQP OTF SCORING: qso=",qso)
         self.nqsos+=1        
-        call=qso['CALL']
 
         try:
-            qth  = qso["QTH"].upper()
+            if 'CALL' in qso:
+                call=qso['CALL']
+                band = qso["BAND"]
+                qth  = qso["QTH"].upper()
+            else:
+                call=qso['call']
+                band = qso["band"]
+                qth  = qso["qth"].upper()
+        
             if '/' in qth:
                 qth=qth.split('/')[0]
             if qth in COUNTIES['CA']:
                 qth='CA'
             if qth!='DX':
                 idx1 = CQP_MULTS.index(qth)
-
-            band = qso["BAND"]
             idx2 = self.BANDS.index(band)
+            
         except:
-            self.P.gui.status_bar.setText('Unrecognized/invalid QTH!')
-            error_trap('CQP->OTF SCORING - Unrecognized/invalid QTH!')
+            error_trap('CQP->OTF SCORING - Unexpected error!')
+            if self.P.gui:
+                self.P.gui.status_bar.setText('CQP->OTF SCORING - Unexpected error!')
             return
         
         self.band_cnt[idx2] += 1
@@ -534,13 +580,19 @@ class CQP_SCORING(CONTEST_SCORING):
         
 
     # Function to check for new multipliers - need to combine with NAQP (same code, different mult list)
-    def new_multiplier(self,call,band):
+    def new_multiplier(self,call,band,VERBOSITY=0):
+        #VERBOSITY=1
+        
         band=str(band)
         if band[-1]!='m':
             band+='m'
-        #print('SST->NEW MULTIPLIER: call=',call,'\tband=',band)
+        if VERBOSITY:
+            print('CQP->NEW MULTIPLIER: call=',call,'\tband=',band)
+            #print('\tkeys=',self.keys)
 
         new_mult=False
+        idx1=None
+        state=None
         try:
             if call in self.keys:
                 #print 'hist=',HIST[call]
@@ -552,6 +604,10 @@ class CQP_SCORING(CONTEST_SCORING):
         except:
             pass
 
+        if VERBOSITY:
+            #print('\tCQP_MULTS=',CQP_MULTS)
+            print('\tstate=',state,'\tidx1=',idx1,'new_mult=',new_mult)
+            
         return new_mult
 
         
