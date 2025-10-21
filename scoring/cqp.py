@@ -570,7 +570,10 @@ class CQP_SCORING(CONTEST_SCORING):
         mults = np.sum(self.sec_cnt)
         nqsos = np.sum(self.band_cnt)
         score = 3*nqsos*mults
-        
+
+        missing,txt = self.missing_mults(CQP_MULTS)
+        self.P.gui.txt.insert(END,txt,('highlight'))
+                    
         for i in range(len(self.BANDS)):
             txt = '{:s} \t {:3d}\n'.format(self.BANDS[i],self.band_cnt[i])
             self.P.gui.txt.insert(END, txt, ('highlight'))

@@ -195,6 +195,19 @@ class CONTEST_SCORING:
         
     def new_multiplier(self,call,band):
         return
+
+    # Routine to compile list of missing multipliers
+    def missing_mults(self,MULTS):
+        
+        missing=[]
+        txt='Missing Mults: '
+        for i in range(len(self.sec_cnt)):
+            if self.sec_cnt[i]==0:
+                missing.append(MULTS[i])
+                txt+=' '+MULTS[i]
+        txt += ' - '+str(len(missing))+' of '+str(len(MULTS))+'\n'
+                
+        return missing,txt
     
     # Function to count the no. of CWops memebrs worked in this contest
     # Also counts no. qsos made while running

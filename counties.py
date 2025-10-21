@@ -385,9 +385,15 @@ for s in W1_STATES:
 # As does the 7th call area (7QP)
 W7_STATES=['AZ','ID','MT','NV','OR','UT','WA7QP','WY']
 COUNTIES['7QP'] = []
+COUNTIES_NV = []
 for s in W7_STATES:
     for c in COUNTIES[s]:
         COUNTIES['7QP'].append(s[:2]+c)
+        if s in ['NV']:
+            COUNTIES_NV.append(s[:2]+c)
+
+# NV Uses all 5-letters in their QSO Party            
+COUNTIES['NV']=COUNTIES_NV
 
 # They also combined the call history files for the IN, 7QP, DE and
 # New England QPs since they happen on the same weekend

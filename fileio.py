@@ -381,7 +381,7 @@ def write_adif_record(fp,rec,P,long=False,sort=True,VERBOSITY=0):
 # Function to write out an ADIF file 
 #FIELDS=['FREQ','CALL','MODE','NAME','QSO_DATE','QSO_DATE_OFF','TIME_OFF','TIME_ON','QTH','RST_RCVD','RST_SENT','BAND', \
 #        'COUNTRY','SRX_STRING','STATION_CALLSIGN','MY_GRIDSQUARE','MY_CITY'
-def write_adif_log(qsos,fname,P,SORT_KEYS=True):
+def write_adif_log(qsos,fname,P,SORT_KEYS=True,IGNORE=[]):
     VERBOSITY=0
     
     fname2 = fname.replace('.LOG','.adif')
@@ -405,10 +405,11 @@ def write_adif_log(qsos,fname,P,SORT_KEYS=True):
             
         qso2=OrderedDict()
         #print('qso=',qso)
+        IGNORE.append('X-Notes')
         for key in keys:
             if VERBOSITY>0:
                 print('key=',key)
-            if key=='X-Notes' and True:
+            if key in IGNORE:
                 continue
             if key in qso:
                 # Fill in any missing fields that LoTW requires
