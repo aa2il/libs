@@ -100,6 +100,8 @@ class CONTEST_SCORING:
         self.MY_SECTION  = P.SETTINGS['MY_SEC']
         self.MY_SEC      = self.MY_SECTION
         self.MY_PREC     = P.SETTINGS['MY_PREC']
+        self.MY_CHECK    = P.SETTINGS['MY_PREC']
+        self.MY_COUNTY   = P.SETTINGS['MY_COUNTY']
         try:
             self.MY_CHECK    = int( P.SETTINGS['MY_CHECK'] )
         except:

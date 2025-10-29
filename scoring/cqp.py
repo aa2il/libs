@@ -52,10 +52,10 @@ class CQP_SCORING(CONTEST_SCORING):
         self.TRAP_ERRORS = TRAP_ERRORS
         self.init_otf_scoring()
 
-        self.MY_CALL     = P.SETTINGS['MY_CALL']
-        self.MY_NAME     = P.SETTINGS['MY_NAME']
-        self.MY_SECTION  = P.SETTINGS['MY_SEC']
-        self.MY_COUNTY   = P.SETTINGS['MY_COUNTY']
+        #self.MY_CALL     = P.SETTINGS['MY_CALL']
+        #self.MY_NAME     = P.SETTINGS['MY_NAME']
+        #self.MY_SECTION  = P.SETTINGS['MY_SEC']
+        #self.MY_COUNTY   = P.SETTINGS['MY_COUNTY']
         self.min_time_gap  = 15  # Minutes
 
         # History file
@@ -392,8 +392,7 @@ class CQP_SCORING(CONTEST_SCORING):
         
         return score,mults
 
-        
-    
+            
     # Summary & final tally
     def summary(self):
 
