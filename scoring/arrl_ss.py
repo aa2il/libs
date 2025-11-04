@@ -36,12 +36,14 @@ class ARRL_SS_SCORING(CONTEST_SCORING):
     def __init__(self,P,TRAP_ERRORS=False):
         super().__init__(P,'ARRL-SS-CW',mode='CW')
         
+        # Inits
         self.BANDS = ['160m','80m','40m','20m','15m','10m']
         self.band_cnt = np.zeros(len(self.BANDS),dtype=np.int32)
         self.sec_cnt  = np.zeros(len(ARRL_SECS), dtype=np.int32)
         self.TRAP_ERRORS = TRAP_ERRORS
         self.nproblems=0
         self.nwarnings=0
+        self.init_otf_scoring()
 
         # Contest occurs on 1st full weekend of November
         now = datetime.datetime.utcnow()
@@ -90,8 +92,9 @@ class ARRL_SS_SCORING(CONTEST_SCORING):
             # Things should be properly formatted by pyKeyer
             rexch  = rec["srx_string"]
             if '?' in rexch:
-                print('\ncall=',call,'\trexech=',rexch)
-                print('Uncertain field(s) - need to fix ADIF entry')
+                print('\nSS->QSO SCORING: Uncertain field(s) - need to fix ADIF entry')
+                print('\tcall=',call,'\trexech=',rexch)
+                print('\tdate=',date_off,'\ttime_off=',time_off)
                 if self.TRAP_ERRORS:
                     sys.exit(0)
                 else:
@@ -173,9 +176,10 @@ class ARRL_SS_SCORING(CONTEST_SCORING):
                 self.sec_cnt[idx1] += 1
             except Exception as e: 
                 print('\n$$$$$$$$$$$$$$$$$$$$$$')
-                print( str(e) )
-                print(sec,' not found in list of ARRL sections',len(sec))
+                print('\tError=',str(e) )
+                print('\t',sec,' not found in list of ARRL sections',len(sec))
                 print(rec)
+                print('\tdate=',date_off,'\ttime_off=',time_off)
                 print('$$$$$$$$$$$$$$$$$$$$$$')
                 if self.TRAP_ERRORS:
                     sys.exit(0)
@@ -285,13 +289,17 @@ class ARRL_SS_SCORING(CONTEST_SCORING):
         try:
             if 'CALL' in qso:
                 call=qso['CALL']
+                band = qso["BAND"]
                 qth  = qso["QTH"].upper()
             else:
                 call=qso['call']
+                band = qso["band"]
                 qth  = qso["qth"].upper()
         
             idx1 = ARRL_SECS.index(qth)
             self.sec_cnt[idx1] = 1
+            idx2 = self.BANDS.index(band)
+            self.band_cnt[idx2] += 1
             
         except:
             error_trap('ARRL_SS->OTF SCORING - Unexpected error!')
@@ -332,7 +340,7 @@ class ARRL_SS_SCORING(CONTEST_SCORING):
 
     # Function to check for new multipliers - need to combine with NAQP (same code, different mult list)
     def new_multiplier(self,call,band,VERBOSITY=0):
-        #VERBOSITY=1
+        VERBOSITY=0
         
         band=str(band)
         if band[-1]!='m':
@@ -343,20 +351,18 @@ class ARRL_SS_SCORING(CONTEST_SCORING):
 
         new_mult=False
         idx1=None
-        state=None
+        sec=None
         try:
             if call in self.keys:
-                #print 'hist=',HIST[call]
-                #state=self.P.HIST[call]['state']
-                state=self.P.MASTER[call]['state']
-                if state in ARRL_SECS:
-                    idx1 = ARRL_SECS.index(state)
+                sec=self.P.MASTER[call]['sec']
+                if sec in ARRL_SECS:
+                    idx1 = ARRL_SECS.index(sec)
                     new_mult = self.sec_cnt[idx1] == 0
         except:
             pass
 
         if VERBOSITY:
             #print('\tARRL_SECS=',ARRL_SECS,len(ARRL_SECS))
-            print('\tstate=',state,'\tidx1=',idx1,'new_mult=',new_mult)
+            print('\sec=',sec,'\tidx1=',idx1,'new_mult=',new_mult)
             
         return new_mult

@@ -30,6 +30,7 @@ from .cwopen  import CWOPEN_SCORING
 from .iaru    import IARU_HF_SCORING
 from .naqp    import NAQP_SCORING
 from .vhf     import VHF_SCORING
+from .arrl_ss import ARRL_SS_SCORING
 
 ############################################################################################
 
@@ -47,6 +48,8 @@ def Select_Scoring(P):
             sc=CWT_SCORING(P)
         elif P.CONTEST_NAME in ['CQP']:
             sc=CQP_SCORING(P)
+        elif P.CONTEST_NAME in ['SS']:
+            sc=ARRL_SS_SCORING(P)
         elif P.CONTEST_NAME in ['FD']:
             sc=FIELD_DAY_SCORING(P)
         elif P.CONTEST_NAME in ['CWOPEN']:
