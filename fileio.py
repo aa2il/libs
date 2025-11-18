@@ -230,7 +230,8 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False):
         tags = re.findall('<(.*?):(\d+).*?>([^<]+)',record)
 
         if '# FLAG IT!' in record:
-            print('# FLAG ON THE FIELD!')
+            if verbosity>0:
+                print('# FLAG ON THE FIELD!')
             try:
                 logbook[-1]['flagged']='1'
                 #print(logbook[-1])
