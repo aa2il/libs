@@ -982,7 +982,7 @@ class direct_connect(no_connect):
         return [filt1,filt2]
 
 
-    def set_breakin(self,onoff):
+    def set_breakin(self,onoff,VERBOSITY=0):
         #VERBOSITY=1
         if VERBOSITY>0:
             print('DIRECT SET_BREAKIN: onoff=',onoff,type(onoff))

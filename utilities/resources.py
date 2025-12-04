@@ -24,7 +24,7 @@ import os
 import numpy as np
 import time
 
-from subprocess import check_output, CalledProcessError
+from subprocess import check_output, CalledProcessError, getoutput
 import platform
 import socket
 
@@ -32,6 +32,7 @@ import serial.tools.list_ports as lp
 from pprint import pprint
 import platform
 import json
+from tkinter import messagebox
 
 ############################################################################
 
@@ -292,11 +293,28 @@ def check_internet():
 # Routine to get PID of a process by name
 def get_PIDs(name):
     if platform.system()=='Linux':
+        pidlist = []
         try:
-            cmd=['pidof','-x',name]
-            pidlist = list(map(int, check_output(cmd).split()))
+            #cmd=['pidof','-x',name]      # This doesnt work anymore since script is run under uv
+            #pidlist = list(map(int, check_output(cmd).split()))
+
+            # Get current and parent pids so we don't included them
+            current_parrent=[os.getpid(),os.getppid()]
+            #print('current=',current_parrent)
+
+            # Look for other processes
+            cmd1="ps axf | grep "+name+" | grep -v grep"
+            cmd=cmd1 + " | awk '{print $1}'"
+            #print('GET PIDS: cmd=',cmd)
+            #os.system(cmd1)    # This doesnt capture output of the command
+            for pid in list(map(int,getoutput(cmd).split())):
+                if pid not in current_parrent:
+                    pidlist.append(pid)
+            #print('pidlist=',pidlist)
+            #sys.exit(0)
         except CalledProcessError:
-            pidlist = []
+            pass
+        
     elif platform.system()=='Windows':
         #name='chrome'
         name=name+'.exe'
@@ -323,6 +341,24 @@ def get_PIDs(name):
     #print('GET_PISD: List of PIDs = ',pidlist)
     #sys.exit(0)
     return pidlist
+
+
+
+# Routine to kill other processes that might be interfering 
+def Clobber_Procs(pids):
+    
+    print('\nCLOBBER PROCS pids=',pids)
+    
+    msg='Try Clobbering These Processes?'
+    lab="pyKeyer"
+    result=messagebox.askyesnocancel(lab,msg)
+    if result==True:
+        
+        for pid in pids:
+            cmd='kill -9 '+str(pid)
+            os.system(cmd)                    
+        
+
 
 """
  In windoz, use wmic:

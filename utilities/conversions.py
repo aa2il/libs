@@ -22,6 +22,9 @@
 # Function to convert frequency (MHz) to nominald band
 def freq2band(frq):
 
+    if type(frq)==str:
+        frq=float(frq)
+
     if frq<0:
         band=None
     elif frq<1.7:

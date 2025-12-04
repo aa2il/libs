@@ -26,7 +26,7 @@ import csv
 from collections import OrderedDict
 from zipfile import ZipFile
 from io import TextIOWrapper
-from utilities import error_trap
+from utilities import error_trap,freq2band
 
 import time
 import numpy as np
@@ -34,6 +34,9 @@ import wave
 import struct
 from scipy.io import wavfile
 from sig_proc import up_dn
+
+import pandas as pd 
+import sqlite3
 
 #######################################################################################
 
@@ -241,10 +244,30 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False):
                 #continue
         
         for tag in tags:
+
+            # Fix-up some old bugs from fldigi
+            if 'CNTR><' in tag[0]:
+                #print('PARSE ADIF: Bad Tag=',tag,' - Repaired')
+                #print('fname=',fname)
+                #print('record=',record)
+                tag = (tag[0][6:], tag[1], tag[2] )
+                #print('fixup=',tag)
+                #sys.exit(0)
+
             if upper_case:
                 qso[tag[0].upper()] = tag[2][:int(tag[1])]
             else:
                 qso[tag[0].lower()] = tag[2][:int(tag[1])]
+
+        # More fixups
+        for key in ['time_off','TIME_OFF','time_on','TIME_ON']:
+            if key in qso and len(qso[key])==4:
+                qso[key]+='00'
+                print('PARSE ADIF: Time fixup, qso=',qso)
+
+        for b,f in zip(['BAND','band'] , ['FREQ','freq']):
+            if f in qso and b not in qso:
+                qso[b]=freq2band(qso[f])
 
         if 'call' in qso or 'CALL' in qso:
             if upper_case:
@@ -552,6 +575,50 @@ def write_csv_file(fname,keys,qsos):
     fp.close()
 
 
+
+def write_sql_file(fname,keys,qsos):
+    
+    # Create SQLite connection
+    print('Writing SQL file ',fname,'...')
+    conn = sqlite3.connect(fname)
+
+    # Convert to data frame 
+    df = pd.DataFrame.from_dict(qsos)
+    print('\nWRITE QSL FILE: Orig:\n',df)
+
+    # Get rid of useless columns
+    cols = df.columns
+    print('\ncols=',cols)
+    USELESS=['flagged','file_name']
+    for col in cols:
+        if 'app_lotw' in col:
+            USELESS.append(col)
+    print('USELESS=',USELESS)
+    df.drop(columns=USELESS, inplace=True)
+    print('\nWRITE QSL FILE: Cleaned-up:\n',df)
+    cols = df.columns
+    print('\ncols=',cols)
+
+    # Remove dupes    
+    dupes = df[df.duplicated()]
+    print('\nWRITE QSL FILE: Dupes:\n',dupes)
+    df.drop_duplicates(inplace=True)
+    print('\nWRITE QSL FILE: Less Dupes:\n',df)
+    
+    # Export to SQL
+    #pd.set_option('display.max_columns', None)
+    df.to_sql('QSOs', conn, if_exists='replace', index=False)
+
+    # Close connection
+    conn.close()
+
+    if False:
+        #pd.set_option('display.max_rows', None)
+        for i in range(5):
+            print('\nRow',i,':\n',df.iloc[i])
+
+        diff=df.loc[4].compare(df.loc[3]) 
+        print('\nDiff 4-3:\n',diff)
 
 
 

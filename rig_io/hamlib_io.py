@@ -1307,7 +1307,7 @@ class hamlib_connect(direct_connect):
         buf=self.get_response(cmd)
         
             
-    def set_breakin(self,onoff):
+    def set_breakin(self,onoff,VERBOSITY=0):
         if VERBOSITY>0:
             print('HAMLIB_IO SET_BREAKIN: onoff=',onoff)
         cmd='U FBKIN '+str(onoff)
