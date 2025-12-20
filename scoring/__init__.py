@@ -32,3 +32,4 @@ from .iaru import *
 from .cwopen import *
 from .cqp import *
 from .arrl_ss import *
+from .rttyru import *

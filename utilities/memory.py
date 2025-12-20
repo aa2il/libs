@@ -56,13 +56,13 @@ class Memory_Monitor:
         else:
             self.LOG = None
 
-    def take_snapshot(self,VERBOSITY=0):
+    def take_snapshot(self,TXT='',VERBOSITY=0):
         mem = self.process.memory_info().rss / 1024**2
         dt = time.time() - self.t0
         if VERBOSITY>0:
             print('MEMORY USAGE:',dt/60.,'min.\t',mem,'Mb\n')
         if self.LOG:
-            self.LOG.write('%8.1f,%8.1f\n' % (dt,mem))
+            self.LOG.write('%8.1f,\t%8.1f\t: %s\n' % (dt,mem,TXT))
             self.LOG.flush()        
 
 

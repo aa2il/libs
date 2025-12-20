@@ -78,15 +78,23 @@ def parse_file_name(fname):
 
 #######################################################################################
 
-def sort_keys(KEYS):
-    KEYS=sorted( list(KEYS) )
-    #print('Keys=',KEYS)
-    KEYS.remove('call')
-    keys1=['srx_string','qth','name']
-    for key in keys1:
-        if key in KEYS:
-            KEYS.remove(key)
-    KEYS2=['call']+KEYS+keys1
+def sort_keys(KEYS,method=2):
+    if method==0:
+        return
+
+    elif method==1:
+        KEYS2=sorted( list(KEYS) )
+
+    else:
+        KEYS=sorted( list(KEYS) )
+        #print('Keys=',KEYS)
+        KEYS.remove('call')
+        keys1=['srx_string','qth','name']
+        for key in keys1:
+            if key in KEYS:
+                KEYS.remove(key)
+        KEYS2=['call']+KEYS+keys1
+    
     return KEYS2
 
 #######################################################################################
@@ -182,7 +190,7 @@ def read_adif(fname):
 
 
 # Function to read list of qsos from input file
-def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False):
+def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False,DF=False):
     logbook =[]
 
     if verbosity>0:
@@ -214,7 +222,7 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False):
         
         error_trap('FILE_IO->PARSE_ADIF: *** Unable to open file or other error')
         print('fname=',fname)
-        return logbook
+        return None
         
     raw = re.split('(?i)<eor>',raw1[-1] )
     if verbosity>0:
@@ -263,7 +271,8 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False):
         for key in ['time_off','TIME_OFF','time_on','TIME_ON']:
             if key in qso and len(qso[key])==4:
                 qso[key]+='00'
-                print('PARSE ADIF: Time fixup, qso=',qso)
+                if verbosity>0:
+                    print('PARSE ADIF: Time fixup, qso=',qso)
 
         for b,f in zip(['BAND','band'] , ['FREQ','freq']):
             if f in qso and b not in qso:
@@ -285,7 +294,13 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False):
         #else:
         #    print('Empty record:\n',record)
 
-    return logbook
+    if DF:
+        # Convert to pandas data frame
+        df = pd.DataFrame.from_dict(logbook)
+        return df
+    else:
+        # Return dict    
+        return logbook
 
 
 # Convert dict keys to upper case
@@ -296,7 +311,7 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False):
 
 # Function to create entire ADIF record and write it to a file
 def write_adif_record(fp,rec,P,long=False,sort=True,VERBOSITY=0):
-    #VERBOSITY=2
+    #VERBOSITY=1
     if VERBOSITY>=1:
         print('rec=',rec)
 
@@ -358,14 +373,18 @@ def write_adif_record(fp,rec,P,long=False,sort=True,VERBOSITY=0):
     if VERBOSITY>1:
         print('keys=',fields)
     for fld in fields:
+        
         val = qso[fld]
         if VERBOSITY>1:
             print('WRITE_ADIF_RECORD:',fld,val)
+        if type(val)==float and np.isnan(val):
+            #val=None
+            #print('Skipping NaN val for field',fld)
+            continue
 
         if fld in ['FILE_NAME'] and True:
             # Skip these fields
             continue
-        
         elif fld=='SAT_NAME':
             if val!='None' and val!='':
                 if val=='ISS':
@@ -405,19 +424,37 @@ def write_adif_record(fp,rec,P,long=False,sort=True,VERBOSITY=0):
 # Function to write out an ADIF file 
 #FIELDS=['FREQ','CALL','MODE','NAME','QSO_DATE','QSO_DATE_OFF','TIME_OFF','TIME_ON','QTH','RST_RCVD','RST_SENT','BAND', \
 #        'COUNTRY','SRX_STRING','STATION_CALLSIGN','MY_GRIDSQUARE','MY_CITY'
-def write_adif_log(qsos,fname,P,SORT_KEYS=True,IGNORE=[]):
-    VERBOSITY=0
+def write_adif_log(QSOs,fname,P,SORT_KEYS=1,IGNORE=[],VERBOSITY=0):
     
     fname2 = fname.replace('.LOG','.adif')
     print("WRITE_ADIF_LOG: ADIF file name=",fname2)
     fp = open(fname2, 'w')
     fp.write('Simple Log Export<eoh>\n')
 
-    for qso in qsos:
-        if SORT_KEYS:
-            keys=sort_keys(qso.keys())
+    if VERBOSITY>=1:
+        print(QSOs)
+        print(type(QSOs))
+    DF=isinstance(QSOs, pd.DataFrame)
+    if DF:
+        nqsos=QSOs.shape[0]
+    else:
+        nqsos=len(QSOs)
+    if VERBOSITY>=0:
+        print(nqsos)
+    
+    for i in range(nqsos):
+        #print(i)
+        if DF:
+            qso=QSOs.loc[i]
         else:
-            keys=qso.keys()
+            qso=QSOs[i]
+            
+        keys=list( qso.keys() )
+        if SORT_KEYS:
+            keys=sort_keys(keys,SORT_KEYS)
+
+        #print('\n',i,'\n',qso)
+        #print('keys=',keys)
 
         # LoTW requires these fields
         if 'qso_date' not in keys:
@@ -446,7 +483,7 @@ def write_adif_log(qsos,fname,P,SORT_KEYS=True,IGNORE=[]):
         if VERBOSITY>0:
             print(qso2)
         
-        write_adif_record(fp,qso2,P,sort=False)
+        write_adif_record(fp,qso2,P,sort=False,VERBOSITY=VERBOSITY)
         
     fp.close()
             

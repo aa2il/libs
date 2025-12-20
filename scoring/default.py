@@ -67,6 +67,7 @@ class CONTEST_SCORING:
         self.score         = 0
         self.txt           = ''
         self.countries     = set([])
+        self.zones         = set([])
         self.longest       = None
         self.total_points  = 0
         self.total_points_all = 0

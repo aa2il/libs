@@ -303,15 +303,40 @@ def get_PIDs(name):
             #print('current=',current_parrent)
 
             # Look for other processes
-            cmd1="ps axf | grep "+name+" | grep -v grep"
-            cmd=cmd1 + " | awk '{print $1}'"
-            #print('GET PIDS: cmd=',cmd)
+            cmd1="ps aux | grep "+name+" | grep -v grep"
             #os.system(cmd1)    # This doesnt capture output of the command
-            for pid in list(map(int,getoutput(cmd).split())):
-                if pid not in current_parrent:
-                    pidlist.append(pid)
-            #print('pidlist=',pidlist)
-            #sys.exit(0)
+            if True:
+                print(' ')
+                #print('GET PIDS: cmd1=\n',cmd1)
+                #print('GET PIDS: out=\n',getoutput(cmd1))
+                for line in getoutput(cmd1).split('\n'):
+                    #print('\tline=',line)
+                    out=line.split()
+                    #print('\tout=',out)
+                    if len(out)>1:
+                        pid=int(out[1])
+                    else:
+                        continue
+                    if len(out)>10:
+                        exe=' '.join(out[10:])
+                    else:
+                        exe=''
+                    print('\tpid=',pid,'\t',exe)
+                    if pid not in current_parrent:
+                        pidlist.append(pid)
+                print('pidlist=',pidlist)
+                #sys.exit(0)
+
+            else:
+                cmd1="ps axf | grep "+name+" | grep -v grep"
+                cmd=cmd1 + " | awk '{print $1}'"
+                #print('GET PIDS: cmd=',cmd)
+                for pid in list(map(int,getoutput(cmd).split())):
+                    if pid not in current_parrent:
+                        pidlist.append(pid)
+                #print('pidlist=',pidlist)
+                #sys.exit(0)
+                
         except CalledProcessError:
             pass
         
@@ -349,7 +374,7 @@ def Clobber_Procs(pids):
     
     print('\nCLOBBER PROCS pids=',pids)
     
-    msg='Try Clobbering These Processes?'
+    msg='Try Clobbering Processes?'
     lab="pyKeyer"
     result=messagebox.askyesnocancel(lab,msg)
     if result==True:

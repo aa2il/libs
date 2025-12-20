@@ -31,6 +31,7 @@ from .iaru    import IARU_HF_SCORING
 from .naqp    import NAQP_SCORING
 from .vhf     import VHF_SCORING
 from .arrl_ss import ARRL_SS_SCORING
+from .rttyru  import ARRL_RTTY_RU_SCORING
 
 ############################################################################################
 
@@ -62,6 +63,8 @@ def Select_Scoring(P):
             sc=VHF_SCORING(P)
         elif P.CONTEST_NAME in ['WPX']:
             sc=WPX_SCORING(P)
+        elif P.CONTEST_NAME in ['ARRL-RTTY','ARRL-10','CQ-160']:
+            sc=ARRL_RTTY_RU_SCORING(P,P.CONTEST_NAME)
         else:
             sc=CONTEST_SCORING(P,'Default')
     else:

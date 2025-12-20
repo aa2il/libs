@@ -115,6 +115,7 @@ THIRTEEN_COLONIES=['K2A','K2B','K2C','K2D','K2E','K2F','K2G','K2H','K2I','K2J','
 
 PROVINCES1 = ['NB', 'NS', 'BC','AB','SK','MB','ON', 'QC', 'NWT', 'NF', 'LB', 'NU', 'YT', 'PEI']
 PROVINCES2 = ['NB', 'NS', 'BC','AB','SK','MB','ON', 'QC', 'NT', 'NL', 'NU', 'YT', 'PE']
+PROVINCES3 = ['NB', 'NS', 'BC','AB','SK','MB','ON', 'QC', 'NT', 'NF', 'LB', 'NU', 'YT', 'PE']
 
 # Mexican states
 XE_STATES=['AGS','BAC','BCS','CAM','CHI','CHH','CMX','COA','COL','DGO','EMX','GTO','GRO','HGO', \
@@ -128,7 +129,7 @@ CQ_STATES = LOWER48 + PROVINCES2 + ['DC']
 
 FTRU_SECS = LOWER48 + PROVINCES1 + ['DC']
 RTTYRU_SECS = LOWER48 + PROVINCES2 + ['DC']
-TEN_METER_SECS = STATES + PROVINCES2 + XE_STATES + ['DC']
+TEN_METER_SECS = STATES + PROVINCES3 + XE_STATES + ['DC']
 
 ARRL_SECS = ['CT','EMA','ME','NH','RI','VT','WMA',  \
              'ENY','NLI','NNJ','NNY','SNJ','WNY',  \

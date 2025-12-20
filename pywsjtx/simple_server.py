@@ -30,6 +30,7 @@ class SimpleServer(object):
         self.old_status=None
         self.prev_time=None
         self.prev_band=None
+        self.addr_port=None
 
         if kwargs.get("timeout") is not None:
             self.timeout = kwargs.get("timeout")
