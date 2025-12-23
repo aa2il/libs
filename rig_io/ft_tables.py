@@ -224,15 +224,14 @@ CQ_ZONES = {'CT' : 5 , \
             'PE' : 5 , \
             'NU' : 2 }
 
-# Put this here as both pySat and pyKeyer.py reference it.
+# This is here as both pySat and pyKeyer.py reference it.
 # Need the 'None' entry for list box in pyKeyer
 # IO-86 never gets above the horizon in our part of the world
 SATELLITE_LIST = ['None','ISS','PO-101','SO-50', \
                   'AO-123','AO-73','AO-91','RS-44', \
                   'AO-7','JO-97','UVSQ-SAT', \
-                  'MO-122',\
-                  'EO-79,','FO-29','HO-68','IO-117','IO-86',\
-                  'NO-44','SO-124','SO-125']
+                  'MO-122','FO-29',\
+                  'SO-124','SO-125']
 
 # Celestial bodies of interest - i.e. Sun and Moon
 CELESTIAL_BODY_LIST=['Sun','Moon']
