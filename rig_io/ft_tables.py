@@ -229,7 +229,7 @@ CQ_ZONES = {'CT' : 5 , \
 # IO-86 never gets above the horizon in our part of the world
 SATELLITE_LIST = ['None','ISS','PO-101','SO-50', \
                   'AO-123','AO-73','AO-91','RS-44', \
-                  'AO-7','JO-97','UVSQ-SAT', \
+                  'AO-7','JO-97',\
                   'MO-122','FO-29',\
                   'SO-124','SO-125']
 

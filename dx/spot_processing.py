@@ -711,7 +711,7 @@ class Spot(object):
                 self.comment = ""
                 self.mode = None
                 self.snr = ''
-                self.wpm = None
+                self.wpm = ''
                 self.band = None
                 self.locator = None
                 if self.__process_spot(raw_spot):
@@ -733,64 +733,33 @@ class Spot(object):
                 snr=''
                 df=''
                 wpm=''
-                if "CW" in comment.upper(): 
+                cc=comment.split()
+                #if len(cc)==0:
+                #        pass
+                if 'CW' in comment.upper():
                         mode="CW"
-                        idx1 = comment.find('WPM')
-                        if idx1>0:
-                            wpm = comment[(idx1-3):(idx1-1)]
-                        idx1 = comment.find('dB')
-                        if idx1>0:
-                            snr = comment[(idx1-3):(idx1-1)]
-                elif "RTTY" in comment.upper(): 
-                        mode="RTTY"
-                elif "PSK31" in comment.upper(): 
-                        mode="PSK31"
-                elif "PSK63" in comment.upper(): 
-                        mode="PSK63"
-                elif "PSK125" in comment.upper(): 
-                        mode="PSK125"
-                elif "FT8" in comment.upper(): 
-                        mode="FT8"
-                        if self.spotter_call=='AA2IL':
-                            idx1 = comment.find('dB')
-                            if idx1>0:
-                                snr = comment[4:(idx1-1)]
-                            idx2 = comment.find('Hz')
-                            if idx2>0:
-                                df = comment[(idx1+2):(idx2-1)]
-                        #print comment
-                        #print idx1,idx2
-                        #print snr
-                        #print df
-                elif "FT4" in comment.upper(): 
-                        mode="FT4"
-                        if self.spotter_call=='AA2IL':
-                            idx1 = comment.find('dB')
-                            if idx1>0:
-                                snr = comment[4:(idx1-1)]
-                            idx2 = comment.find('Hz')
-                            if idx2>0:
-                                df = comment[(idx1+2):(idx2-1)]
-                        #print comment
-                        #print idx1,idx2
-                        #print snr
-                        #print df
-                elif "JT9" in comment.upper(): 
-                        mode="JT9"
-                elif "JT65" in comment.upper(): 
-                        mode="JT65"
-                elif "SIM31" in comment.upper(): 
-                        mode="SIM31"                                                    
-                elif "OPERA" in comment.upper(): 
-                        mode="OPERA"                    
-                elif "SSB" in comment.upper(): 
-                        mode="SSB"                      
-                elif "USB" in comment.upper(): 
-                        mode="LSB"                      
-                elif "LSB" in comment.upper(): 
-                        mode="USB"                      
-
-                if mode!='FT8' and mode!='FT4':
+                        if len(cc)>2 and cc[2]=='dB':
+                            snr=cc[1]
+                        if len(cc)>4 and cc[4]=='WPM':
+                            wpm=cc[3]
+                else:
+                    FT_MODES=["FT8","FT4"]
+                    OTHER_MODES=["RTTY","PSK31","PSK63","PSK125",
+                                  "JT9","JT65","SIM31","OPERA",
+                                  "SSB","LSB","USB"]
+                    for m in FT_MODES+OTHER_MODES:
+                        if m in comment.upper():
+                            mode=m
+                            if m in FT_MODES:
+                                idx1 = comment.find('dB')
+                                if idx1>0:
+                                    snr = comment[4:(idx1-1)]
+                                idx2 = comment.find('Hz')
+                                if idx2>0:
+                                    df = comment[(idx1+2):(idx2-1)]
+                            break
+                        
+                if mode!='FT8' and mode!='FT4' and False:
                     freqx=self.frequency
                     if int(float(freqx))==144489 or int(float(freqx))==70091 or \
                        int(float(freqx))== 50276 or int(float(freqx))==28076 or \

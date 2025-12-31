@@ -39,9 +39,8 @@ def get_logger(name):
 def connection(TEST_MODE,CLUSTER,MY_CALL,fname=None,ip_addr=None,port=None):
     
     if TEST_MODE:
-#        tn = open('spots.dat', 'r')
-        tn = open('all_spots.dat', 'r')
-#        tn = open('bad2.dat', 'r')
+        #tn = open('/tmp/ALL_SPOTS.DAT', 'r')
+        tn = open(fname, 'r')
     
     elif CLUSTER=='WSJT':
         if READ_ALL_TXT:
