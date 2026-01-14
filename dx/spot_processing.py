@@ -28,6 +28,7 @@ from pprint import pprint
 import xlrd
 from unidecode import unidecode
 from utilities import find_resource_file, error_trap,stack_trace
+import pandas as pd
 
 ################################################################################
 
@@ -41,7 +42,7 @@ root_logger_name = "dxcsucker"
 ################################################################################
 
 class ChallengeData:
-    def __init__(self,fname):
+    def __init__(self,fname,DATA_DIR=None):
 
         # Init
         self.dxccs=[]
@@ -51,8 +52,11 @@ class ChallengeData:
         self.nrows2=0
         self.cwops_worked=[]
         self.cwops_nums=[]
-        if fname==None:
-            return
+
+        fname=os.path.expanduser(fname)
+        if DATA_DIR==None:
+            DATA_DIR='~/Python/data'
+        DATA_DIR=os.path.expanduser(DATA_DIR)
 
         # Read XLS format spreadsheet and pull out sheets we want
         # There are newer modules for this - look into them sometime
@@ -65,6 +69,8 @@ class ChallengeData:
 
         # Read sheet with CWops members we've worked
         print('CHALLENGE DATA: Reading CWops member list ..')
+        """
+        # No longer stored in a separate sheet
         self.sheet3 = book.sheet_by_name('CWops')
         for i in range(1,self.sheet3.nrows):
             try:
@@ -77,6 +83,36 @@ class ChallengeData:
                 error_trap('Problem reading CWOPS member data - giving up')
                 print(i,self.sheet3.nrows)
                 break
+        """
+
+        data = pd.read_csv(DATA_DIR+'/aca.csv')
+        self.cwops_aca  = data['Call'].tolist()
+        self.cwops_nums = data['CWops'].tolist()
+        
+        data = pd.read_csv(DATA_DIR+'/acma.csv')
+        self.cwops_acma  = data['Call'].tolist()
+        
+        data = pd.read_csv(DATA_DIR+'/dxcc.csv')
+        DXCCs = data['DXCC'].tolist()
+        self.cwops_dxccs = []
+        for dxcc in DXCCs:
+            idx=dxcc.find(' (')
+            if idx>0:
+                dxcc=dxcc[:idx]
+            dxcc=dxcc.replace('I.','ISLAND')   \
+                     .replace('IS.','ISLANDS') \
+                     .replace('ST.','SAINT')   \
+                     .replace('SABA & SAINT','SABA & ST') 
+            self.cwops_dxccs.append(dxcc)
+
+        self.cwops_worked = self.cwops_aca       # Backward compatability
+        
+        if False:
+            print('CHALLENGE DATA: CWops members worked so far this year:')
+            print(self.cwops_worked,len(self.cwops_worked))
+            print(self.cwops_nums,len(self.cwops_nums))
+            print('\n',self.cwops_dxccs,len(self.cwops_dxccs))
+            sys.exit(0)
 
         # Read in spreadsheet with band slots - much faster this way
         for i in range(1, self.sheet1.nrows):

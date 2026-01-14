@@ -130,6 +130,7 @@ class NAQP_SCORING(CONTEST_SCORING):
                 print('\tqth=',qth)
                 print('\tname=',name)
                 print('\trx_string=',rx_string)
+                self.num_errors+=1
                 if self.TRAP_ERRORS:
                     sys.exit(0)
             
@@ -155,6 +156,7 @@ class NAQP_SCORING(CONTEST_SCORING):
             print('\n??? Check this one again: ???')
             print('call=',call,'\t\tname=',name,'\t\tqth=',qth)
             self.list_all_qsos(call,qsos)
+            self.num_errors+=1
             if self.TRAP_ERRORS:
                 print('HIST=',HIST[call.replace('?','')])
                 sys.exit(0)
@@ -176,6 +178,7 @@ class NAQP_SCORING(CONTEST_SCORING):
                 print(qth,' not found in list of NAQP sections',len(qth))
                 print(rec)
                 print('$$$$$$$$$$$$$$$$$$$$$$')
+                self.num_errors+=1
                 if self.TRAP_ERRORS:
                     sys.exit(0)
     
@@ -249,6 +252,9 @@ class NAQP_SCORING(CONTEST_SCORING):
         print('# QSOs S&P      =',self.num_sandp,' =',
               int( (100.*self.num_sandp)/self.nqsos1+0.5),'%')
 
+        if not self.TRAP_ERRORS:
+            print('\nNumber of potential errors =',self.num_errors)
+
         
     # On-the-fly scoring - need to combine with SST
     def otf_scoring(self,qso):
@@ -311,6 +317,7 @@ class NAQP_SCORING(CONTEST_SCORING):
                     #print('\tidx1,idx,new=',idx1,idx,new_mult)
         except:
             #error_trap('NAQP->NEW MULTIPLIER: Ooops!')
+            print('\nOoops!')
             pass
 
         return new_mult

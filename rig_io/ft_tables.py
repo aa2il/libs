@@ -122,7 +122,7 @@ XE_STATES=['AGS','BAC','BCS','CAM','CHI','CHH','CMX','COA','COL','DGO','EMX','GT
            'JAL','MIC','MOR','NAY','NLE','OAX','PUE','QRO','QUI','SLP','SIN','SON','TAB','TAM',	\
            'TLX','VER','YUC','ZAC']
 
-NA_COUNTRIES=['AK','PR','ZF','VI','HI','XE','V3','TI','8P','DX','KP4','HR','CY9','HP','KP2','HH','DR','CM','J8','VP5','6Y','HI6']
+NA_COUNTRIES=['AK','PR','ZF','VI','HI','XE','V3','TI','8P','DX','KP4','HR','CY9','HP','KP2','HH','DR','CM','J8','VP5','6Y','HI6','VP2']
 NAQP_SECS = STATES + PROVINCES2 + NA_COUNTRIES + ['DC']
 SST_SECS  = STATES + PROVINCES2  + ['CWA','DX','AUS','NT','DC','PR']
 CQ_STATES = LOWER48 + PROVINCES2 + ['DC']

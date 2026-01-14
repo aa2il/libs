@@ -191,14 +191,15 @@ def read_adif(fname):
 
 # Function to read list of qsos from input file
 def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False,DF=False):
-    logbook =[]
 
     if verbosity>0:
         print('PARSE_ADIF: Reading',fname,'...')
 
-    # We'll need an attribute to hold the file pointer
+    # Init - We'll need an attribute to hold the file pointer
+    logbook =[]
     if not hasattr(parse_adif, "fp"):
         parse_adif.fp=None
+        nflagged=0
 
     try:
 
@@ -222,7 +223,7 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False,DF=Fal
         
         error_trap('FILE_IO->PARSE_ADIF: *** Unable to open file or other error')
         print('fname=',fname)
-        return None
+        return None            # ,nflagged
         
     raw = re.split('(?i)<eor>',raw1[-1] )
     if verbosity>0:
@@ -241,6 +242,7 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False,DF=Fal
         tags = re.findall('<(.*?):(\d+).*?>([^<]+)',record)
 
         if '# FLAG IT!' in record:
+            nflagged+=1
             if verbosity>0:
                 print('# FLAG ON THE FIELD!')
             try:
@@ -297,10 +299,10 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False,DF=Fal
     if DF:
         # Convert to pandas data frame
         df = pd.DataFrame.from_dict(logbook)
-        return df
+        return df             #,nflagged
     else:
         # Return dict    
-        return logbook
+        return logbook          #,nflagged
 
 
 # Convert dict keys to upper case
