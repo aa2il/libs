@@ -24,7 +24,7 @@
 ############################################################################################
 
 from .ft_tables import *
-from .direct_io import direct_connect
+from .direct_io import direct_connect,set_date_time_FT991a,set_date_time_IC9700
 from .dummy_io import no_connect
 import socket
 import time
@@ -1054,7 +1054,7 @@ class hamlib_connect(direct_connect):
             print('\tx=',x)
                         
     # Routine to put rig into split mode
-    def split_mode(self,opt):
+    def split_mode(self,opt,VERBOSITY=0):
         #VERBOSITY=1
         if VERBOSITY>0:
             print('HAMLIB - SPLIT_MODE: opt=',opt)
@@ -1093,7 +1093,8 @@ class hamlib_connect(direct_connect):
     """
         
     # Routine to put rig into sat mode
-    def sat_mode(self,opt):
+    def sat_mode(self,opt,VERBOSITY=0):
+        #VERBOSITY=1
         if VERBOSITY>0:
             print('HAMLIB - SAT_MODE:',opt)
 
@@ -1275,6 +1276,8 @@ class hamlib_connect(direct_connect):
 
         if self.rig_type2=='FT991a':
 
+            set_date_time_FT991a(self,date,time,VERBOSITY)
+            """
             print('\nSetting Rig Date ...',date)
             #cmd='w DT0'+date+';BY;'                               # Old style b4 4.6.2
             cmd='W DT0'+date+'; 0'
@@ -1292,10 +1295,15 @@ class hamlib_connect(direct_connect):
             cmd='W DT2+0000; 0' 
             buf=self.get_response(cmd)
             print('cmd=',cmd,'\tbuf=',buf)
+            """
+            
+        elif self.rig_type2 in ['IC9700','IC7300']:
+
+            set_date_time_IC9700(self,date,time,VERBOSITY)
             
         else:
 
-            print('DIRECT SET_DATE_TIME - Unknown rig',self.rig_type2)
+            print('HAMLIB_IO: SET_DATE_TIME - Unknown rig',self.rig_type2)
             sys.exit(0)
             
     def set_power(self,p):
@@ -1529,7 +1537,7 @@ class hamlib_connect(direct_connect):
                     print('HAMLIB_IO FRONT-END: Swapping MAIN and SUB RXs')
                     cmd = 'G XCHG'
                     x   = self.get_response(cmd)
-                    print('DIRECT FRONTEND: x   =',x)
+                    print('HAMLIB_IO: FRONTEND: x   =',x)
                     
                     if pamp in [0,1]:
                         print('HAMLIB_IO FRONT-END: Setting P-AMP on SUB RX')
@@ -1546,7 +1554,7 @@ class hamlib_connect(direct_connect):
                     print('HAMLIB_IO FRONT-END: Swapping MAIN and SUB RXs')
                     cmd = 'G XCHG'
                     x   = self.get_response(cmd)
-                    print('DIRECT FRONTEND: x   =',x)
+                    print('HAMLIB_IO: FRONTEND: x   =',x)
                     
         else:
             print('DIRECT FRONTEND: Unknown option',opt)

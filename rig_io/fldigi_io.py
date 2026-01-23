@@ -460,7 +460,7 @@ class fldigi_xlmrpc(direct_connect):
         return x
 
     # Function to set rig freq 
-    def set_freq(self,frq_KHz,VFO='A'):
+    def set_freq(self,frq_KHz,VFO='A',VERBOSITY=0):
         if VERBOSITY>0:
             print('FLDIGI SET_FREQ:',frq_KHz,VFO)
             
@@ -1210,7 +1210,7 @@ class fldigi_xlmrpc(direct_connect):
         return state
 
     # Routine to get/put rig split mode
-    def split_mode(self,opt):
+    def split_mode(self,opt,VERBOSITY=0):
         if VERBOSITY>0:
             print('FLDIGI_IO - SPLIT_MODE: opt=',opt)
 

@@ -46,6 +46,57 @@ VERBOSITY=0
 
 #######################################################################################
 
+def set_date_time_FT991a(self,date,time,VERBOSITY=0):
+    if VERBOSITY>0:
+        print('\nSetting Date on FT991a to',date,'...')
+        cmd='DT0'+date+';'
+        self.send(cmd)
+            
+    if VERBOSITY>0:
+        print('\nSetting Time on FT991a to',time,'...')
+        cmd='DT1'+time+';'
+        self.send(cmd)
+            
+    if VERBOSITY>0:
+        print('Setting UTC offset on FT991a ...')
+        cmd='DT2+0000;'
+        self.send(cmd)
+        
+def set_date_time_IC9700(self,date,time,VERBOSITY=0):
+    
+    if VERBOSITY>0:
+        print('Setting UTC offset on IC9700 ...')
+    cmd =  self.civ.icom_form_command([0x1a,0x05,0x01,0x84,0x0,0x0,0x0])
+    #print('cmd=',show_hex(cmd))
+    x=self.get_response(cmd)
+    y=self.civ.icom_response(cmd,x)
+    if VERBOSITY>1:
+        print('cmd=',show_hex(cmd))
+        print('y=',y)
+    
+    if VERBOSITY>0:
+        print('\nSetting Date on IC9700 to',date,'...')
+    d=int2bcd(int(date),4,1)
+    cmd =  self.civ.icom_form_command([0x1a,0x05,0x01,0x79]+d)  
+    #print('cmd=',show_hex(cmd))
+    x=self.get_response(cmd)
+    y=self.civ.icom_response(cmd,x)
+    if VERBOSITY>1:
+        print('cmd=',show_hex(cmd))
+        print('y=',y)
+
+    if VERBOSITY>0:
+        d#print('\nSetting Time on IC9700 to',time,'...')
+        t=int2bcd(int(time[0:4]),2,1)
+        cmd =  self.civ.icom_form_command([0x1a,0x05,0x01,0x80]+t)  
+        #print('cmd=',show_hex(cmd))
+        x=self.get_response(cmd)
+        y=self.civ.icom_response(cmd,x)
+    if VERBOSITY>1:
+        print('cmd=',show_hex(cmd))
+        print('y=',y)
+
+
 # Routine to strip off any leading garbage (e.g. ?;)
 def strip_garbage(buf,cmd):
     #print(cmd)
@@ -716,7 +767,7 @@ class direct_connect(no_connect):
         self.freq=frq
         return frq
 
-    def set_freq(self,frq_KHz,VFO='A'):
+    def set_freq(self,frq_KHz,VFO='A',VERBOSITY=0):
         #VERBOSITY=1
         if VERBOSITY>0:
             print('\nDirect Set Freq:',frq_KHz,VFO,self.rig_type2)
@@ -1403,55 +1454,12 @@ class direct_connect(no_connect):
 
         if self.rig_type2=='FT991a':
 
-            if VERBOSITY>0:
-                print('\nSetting Date on FT991a to',date,'...')
-            cmd='DT0'+date+';'
-            self.send(cmd)
-            
-            if VERBOSITY>0:
-                print('\nSetting Time on FT991a to',time,'...')
-            cmd='DT1'+time+';'
-            self.send(cmd)
-            
-            if VERBOSITY>0:
-                print('Setting UTC offset on FT991a ...')
-            cmd='DT2+0000;'
-            self.send(cmd)
+            set_date_time_FT991a(self,date,time,VERBOSITY)
             
         elif self.rig_type2 in ['IC9700','IC7300']:
-        
-            if VERBOSITY>0:
-                print('Setting UTC offset on IC9700 ...')
-            cmd =  self.civ.icom_form_command([0x1a,0x05,0x01,0x84,0x0,0x0,0x0])
-            #print('cmd=',show_hex(cmd))
-            x=self.get_response(cmd)
-            y=self.civ.icom_response(cmd,x)
-            if VERBOSITY>1:
-                print('cmd=',show_hex(cmd))
-                print('y=',y)
-    
-            if VERBOSITY>0:
-                print('\nSetting Date on IC9700 to',date,'...')
-            d=int2bcd(int(date),4,1)
-            cmd =  self.civ.icom_form_command([0x1a,0x05,0x01,0x79]+d)  
-            #print('cmd=',show_hex(cmd))
-            x=self.get_response(cmd)
-            y=self.civ.icom_response(cmd,x)
-            if VERBOSITY>1:
-                print('cmd=',show_hex(cmd))
-                print('y=',y)
 
-            if VERBOSITY>0:
-                d#print('\nSetting Time on IC9700 to',time,'...')
-            t=int2bcd(int(time[0:4]),2,1)
-            cmd =  self.civ.icom_form_command([0x1a,0x05,0x01,0x80]+t)  
-            #print('cmd=',show_hex(cmd))
-            x=self.get_response(cmd)
-            y=self.civ.icom_response(cmd,x)
-            if VERBOSITY>1:
-                print('cmd=',show_hex(cmd))
-                print('y=',y)
-
+            set_date_time_IC9700(self,date,time,VERBOSITY)
+            
         else:
 
             print('DIRECT SET_DATE_TIME - Unknown rig',self.rig_type2)
@@ -1473,7 +1481,7 @@ class direct_connect(no_connect):
             
         
     # Routine to put rig into sat mode
-    def sat_mode(self,opt):
+    def sat_mode(self,opt,VERBOSITY=0):
         #VERBOSITY=1
         if VERBOSITY>0:
             print('DIRECT - SAT_MODE: opt=',opt,self.rig_type2)
@@ -1563,7 +1571,7 @@ class direct_connect(no_connect):
     
 
     # Routine to put rig into split mode
-    def split_mode(self,opt):
+    def split_mode(self,opt,VERBOSITY=0):
         #VERBOSITY=1
         if VERBOSITY>0:
             print('DIRECT - SPLIT_MODE:',opt)

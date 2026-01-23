@@ -199,7 +199,7 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False,DF=Fal
     logbook =[]
     if not hasattr(parse_adif, "fp"):
         parse_adif.fp=None
-        nflagged=0
+        parse_adif.nflagged=0
 
     try:
 
@@ -242,7 +242,7 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False,DF=Fal
         tags = re.findall('<(.*?):(\d+).*?>([^<]+)',record)
 
         if '# FLAG IT!' in record:
-            nflagged+=1
+            parse_adif.nflagged+=1
             if verbosity>0:
                 print('# FLAG ON THE FIELD!')
             try:
