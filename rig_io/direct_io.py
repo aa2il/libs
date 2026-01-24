@@ -710,7 +710,7 @@ class direct_connect(no_connect):
                 
                 
     
-    def get_freq(self,VFO='A'):
+    def get_freq(self,VFO='A',VERBOSITY=0):
         #VERBOSITY=1
         if VERBOSITY>0:
             print('DIRECT Get Freq - vfo=',VFO,'...')
@@ -850,7 +850,7 @@ class direct_connect(no_connect):
 
 
     # Function to set active VFO
-    def select_vfo(self,VFO):
+    def select_vfo(self,VFO,VERBOSITY=0):
         #VERBOSITY=1
         if VERBOSITY>0:
             print('DIRECT SELECT_VFO:',VFO,self.rig_type,self.rig_type1)

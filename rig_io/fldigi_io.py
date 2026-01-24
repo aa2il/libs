@@ -400,7 +400,7 @@ class fldigi_xlmrpc(direct_connect):
 
 
     # Function to read rig freq 
-    def get_freq(self,VFO='A'):
+    def get_freq(self,VFO='A',VERBOSITY=0):
         if VERBOSITY>0:
             print('FLDIGI_IO: GET_FREQ vfo=',VFO)
         

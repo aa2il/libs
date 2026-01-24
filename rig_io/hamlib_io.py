@@ -418,22 +418,27 @@ class hamlib_connect(direct_connect):
         return x.replace(NULL,'')
 
     
-    def get_freq(self,VFO='A'):
+    def get_freq(self,VFO='A',VERBOSITY=0):
         #VERBOSITY=0
         if VERBOSITY>0:
-            print('HAMLIB_IO: GET_FREQ: vfo=',VFO)
+            print('HAMLIB_IO: GET_FREQ: vfo=',VFO,VFO!='A')
         if self.rig_type1 == 'Icom' or False:
             # This actually might work for all rigs but only tested on 9700 so far
-            self.select_vfo(VFO)            
+            self.select_vfo(VFO,VERBOSITY=VERBOSITY)            
         elif VFO!='A':
             #print('*** ERROR *** HAMLIB_IO: GET_FREQ: VFO B not implemented yet - ',self.rig_type1)
             #return
             # Need to clean this up!!!!
             # Hamlib doesn't seem to have a nice way of changing freq of VFO B without interrupting the
             # rig so just issue the direct FB command for Yaesu and Kenwood rigs
-            buf = self.get_response('F'+VFO+';')
+            cmd='F'+VFO+';'
+            buf = self.get_response(cmd)
+            if VERBOSITY>0:
+                print('HAMLIB_IO: GET_FREQ: cmd=',cmd,'\nbuf=',buf)
             if buf[0]=='?':
-                buf = self.get_response('F'+VFO+';')
+                buf = self.get_response(cmd)
+                if VERBOSITY>0:
+                    print('HAMLIB_IO: GET_FREQ: cmd=',cmd,'\nbuf=',buf)
         
             try:
                 #frq = float(buf[2:-1])
@@ -446,19 +451,10 @@ class hamlib_connect(direct_connect):
             self.freq=frq
             return frq
             
-        # Hamlib can be rather slow so do a crude "debouncing"
-        # Not sure why I thought this was necessary???!!!!  Perhaps for v3.3???
-        # If this works out, get rid of dt and tlast
-        dt = time.time() - self.tlast
-        #print 'HAMLIB_IO: GET_FREQ: B',dt
-        if dt>1.5 or True:
-            #print 'HAMLIB_IO: GET_FREQ: C'
-            cmd='f'
-            x = self.get_response('f')
-        else:
-            cmd='bounce'
-            x=self.freq
-        #print 'HAMLIB_IO: GET_FREQ: x=',x,type(x)
+        cmd='f'
+        x = self.get_response('f')
+        if VERBOSITY>0:
+            print('HAMLIB_IO: GET_FREQ: cmd=',cmd,'\nx=',x)
         
         try:
             if x==None:
@@ -488,17 +484,14 @@ class hamlib_connect(direct_connect):
 
         if self.rig_type1 == 'Icom' or False:
             # This actually might work for all rigs but only tested on 9700 so far
-            self.select_vfo(VFO)            
-        #elif VFO!='A':
-            #print('\n*** ERROR *** HAMLIB_IO SET_FREQ: VFO B not implemented yet\n')
-            #return
+            self.select_vfo(VFO,VERBOSITY=VERBOSITY)
             
         self.tlast = time.time()
-        if VFO=='A':     #  or self.rig_type1 == 'Icom':
+        if VFO=='A' or self.rig_type1 == 'Icom':
             # Change freq of VFO A using regular hamlib F command
             self.freq  = frq_KHz*1e3
             cmd='F '+str( int(self.freq) ).zfill(8)
-        elif VFO=='B' and self.rig_type1 in['Dummy','Icom']:
+        elif VFO=='B' and self.rig_type1 in['Dummy']:
             frq  = int( frq_KHz*1000 )
             cmd='I '+str( int(frq) ).zfill(8)
         else:
@@ -532,7 +525,7 @@ class hamlib_connect(direct_connect):
         buf=self.get_response(cmd)
         print('HAMLIB_IO SET_BAND:',buf)
 
-    def set_mode(self,mode,VFO='A',Filter=None):
+    def set_mode(self,mode,VFO='A',Filter=None,VERBOSITY=0):
         VERBOSITY=0
         if VERBOSITY>0:
             print('HAMLIB_IO - SET MODE: mode=',mode,'\tVFO=',VFO,'\tFilter=',Filter)
@@ -584,7 +577,11 @@ class hamlib_connect(direct_connect):
 
         # Form hamlib command
         bw=str(bw).replace('Hz','')
-        if VFO in 'AM':
+        if self.rig_type1 == 'Icom' or False:
+            # This actually might work for all rigs but only tested on 9700 so far
+            self.select_vfo(VFO,VERBOSITY=VERBOSITY)
+            cmd  = 'M '+mode+' '+bw
+        elif VFO in 'AM':
             # VFO A or Main
             cmd  = 'M '+mode+' '+bw
         elif VFO in 'BS':
@@ -623,8 +620,12 @@ class hamlib_connect(direct_connect):
             print('HAMLIB_IO: Get mode - vfo=',VFO)
 
         use_direct=False     # True
-            
-        if VFO=='A':
+
+        if self.rig_type1 == 'Icom' or False:
+            # This actually might work for all rigs but only tested on 9700 so far
+            self.select_vfo(VFO,VERBOSITY=VERBOSITY)
+            cmd  = 'm'
+        elif VFO=='A':
             cmd  = 'm'
         elif VFO=='B':
             # Hamlib interrupts the rig so do it using direct commands instead
@@ -1125,7 +1126,7 @@ class hamlib_connect(direct_connect):
         return buf[0]
     
     # Function to set active VFO
-    def select_vfo(self,VFO):
+    def select_vfo(self,VFO,VERBOSITY=0):
         #VERBOSITY=1
         if VERBOSITY>0:
             print('HAMLIB SELECT_VFO:',VFO,self.rig_type2)
@@ -1159,9 +1160,9 @@ class hamlib_connect(direct_connect):
         buf = self.get_response(cmd)
         if VERBOSITY>0:
             if self.rig_type1 == 'Icom':
-                print('HAMLIB SELECT_VFO: buf=',show_hex(buf))
+                print('HAMLIB SELECT_VFO: cmd=',cmd,'\n\tbuf=',show_hex(buf))
             else:
-                print('HAMLIB SELECT_VFO: cmd/buf=',cmd,buf)
+                print('HAMLIB SELECT_VFO: cmd=',cmd,'\n\tbuf=',buf)
                 
 
     # Function to control RIT
