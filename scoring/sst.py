@@ -317,7 +317,7 @@ class SST_SCORING(CONTEST_SCORING):
                     new_mult = self.sec_cnt[idx1,idx] == 0
                     print('\tidx1,idx=',idx1,idx,
                           '\tcnt=',self.sec_cnt[idx1,idx],
-                          '\tnew mult=',,new_mult)
+                          '\tnew mult=',new_mult)
         except:
             pass
 
