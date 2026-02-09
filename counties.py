@@ -44,9 +44,11 @@ COUNTIES['AR']=['ASH','BAX','BEN','BOO','BRA','CAL','CAR','CHI','CLK','CLA','CLE
 COUNTIES['AZ']=['APH','CHS','CNO','GLA','GHM','GLE','LPZ','MCP','MHV','NVO','PMA','PNL','SCZ',
                 'YVP','YMA']
 
+# Cobbled together - RES may be another 
 COUNTIES['BC']=['ABF','BNS','BUS','CHP','CLC','CML','COA','CPC','CPG','CSN','DEL','ESQ','FPK','KEL',
                 'KOC','KTC','LAA','MMF','NAL','NOS','NPR','NVA','NWB','PMC','PMM','PPN','RIC','SBV',
-                'SGI','STR','SUC','SUN','SWK','SWR','VAC','VAE','VAG','VAK','VAQ','VAS','VIC','WVS']
+                'SGI','STR','SUC','SUN','SWK','SWR','VAC','VAE','VAG','VAK','VAQ','VAS','VIC','WVS',
+                'KSC','NVC','RCM','LTF','KTN','VLM']
 
 COUNTIES['CA']=['ALAM', 'MARN', 'SMAT', 'ALPI', 'MARP', 'SBAR', 'AMAD', 'MEND', 'SCLA', 'BUTT', 'MERC', 'SCRU', \
                 'CALA', 'MODO', 'SHAS', 'COLU', 'MONO', 'SIER', 'CCOS', 'MONT', 'SISK', 'DELN', 'NAPA', 'SOLA', \
@@ -191,7 +193,7 @@ COUNTIES['MS']=['ADA','ALC','AMI','ATT','BEN','BOL','CHI','CHO','CAL','CLB','CLA
                 'ITA','JEF','JON','KEM','LAF','LAM','LAU','LAW','LEA','LEE','LEF','LIN','LOW','MRN',
                 'MAD','MGY','MON','MAR','NES','NEW','NOX','OKT','PAN','PER','PIK','PEA','PON','PRE',
                 'QUI','RAN','SMI','STO','SUN','TAL','TAT','TIP','TIS','TUN','UNI','WAL','WAS','WAY',
-                'WEB','WIN','WIL','WAR','YAL','YAZ']
+                'WEB','WIN','WIL','WAR','YAL','YAZ','SCO','JAC','JDV']
 
 COUNTIES['MT']=['BEA','BIG','BLA','BRO','CRB','CRT','CAS','CHO','CUS','DAN','DAW','DEE','FAL','FER',
                 'FLA','GAL','GAR','GLA','GOL','GRA','HIL','JEF','JUD','LAK','LEW','LIB','LIN','MAD',
@@ -348,7 +350,7 @@ COUNTIES['VA']=['ACC','ALB','ALX','ALL','AME','AMH','APP','ARL','AUG','BAT','BED
                 'SCO','SHE','SMY','SHA','SPO','STA','STX','SUX','SUR','SUS','TAZ','VBX','WAR','WAS',
                 'WAX','WES','WMX','WIX','WIS','WYT','YOR']
 
-COUNTIES['VT']=['ADD','BEN','CAL','CHI','ESS','FRA','GRA','LAM','ORA','ORL','RUT','WAS','WNH','WND']
+COUNTIES['VT']=['ADD','BEN','CAL','CHI','ESS','FRA','GRA','LAM','ORA','ORL','RUT','WAS','WNH','WNS']
 
 # There is a different set of abbrevs for the 7QP and Salman Run (WA State QP)
 COUNTIES['WA7QP'] = ['ADA','ASO','BEN','CHE','CLL','CLR','COL','COW','DOU','FER','FRA','GAR','GRN',

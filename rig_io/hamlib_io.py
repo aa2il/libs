@@ -1322,7 +1322,12 @@ class hamlib_connect(direct_connect):
         cmd='U FBKIN '+str(onoff)
         self.get_response(cmd)
 
-
+    def send_morse(self,msg,VERBOSITY=0):
+        if VERBOSITY>0:
+            print('HAMLIB_IO SEND_MORSE: msg=',msg)
+        cmd='b '+str(msg)
+        self.get_response(cmd)        
+    
     def set_if_shift(self,shift):
         if VERBOSITY>0:
             print('HAMLIB_IO SET_IF_SHIFT: shift=',shift)

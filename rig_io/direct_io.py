@@ -1032,7 +1032,12 @@ class direct_connect(no_connect):
             
         return [filt1,filt2]
 
-
+    def send_morse(self,msg,VERBOSITY=0):
+        print('DIRECT_IO SEND_MORSE: Command has not been implemented (yet)')
+        if VERBOSITY>0:
+            print('DIRECT_IO SEND_MORSE: msg=',msg)
+        return
+    
     def set_breakin(self,onoff,VERBOSITY=0):
         #VERBOSITY=1
         if VERBOSITY>0:

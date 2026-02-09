@@ -34,6 +34,9 @@ import platform
 import json
 from tkinter import messagebox
 
+import webbrowser
+import platform
+
 ############################################################################
 
 VERBOSITY=0
@@ -382,8 +385,23 @@ def Clobber_Procs(pids):
         for pid in pids:
             cmd='kill -9 '+str(pid)
             os.system(cmd)                    
-        
 
+
+############################################################################
+
+# Routine to open a web page in a browser
+def open_web_page(url):
+
+    if platform.machine()=='aarch64':
+        # RPi - default is www-browser which is nonsense
+        browser=webbrowser.get('chromium')
+    else:
+        # Everything else - use chromw
+        browser=webbrowser.get()
+    print('browser=',browser,'\t',browser.name)
+    browser.open(url,new=2)
+
+############################################################################
 
 """
  In windoz, use wmic:

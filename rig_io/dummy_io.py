@@ -119,6 +119,11 @@ class no_connect:
             logging.info('Ignoring call')
         return 0
 
+    def send_morse(self,msg,VERBOSITY=0):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
+        return 0
+    
     def set_breakin(self,onoff):
         if VERBOSITY>0:
             logging.info('Ignoring call')
@@ -150,20 +155,20 @@ class no_connect:
             logging.info('Ignoring call')
         return self.default_mode
         
-    def set_mode(self,mode,VFO='A',Filter=None):
+    def set_mode(self,mode,VFO='A',Filter=None,VERBOSITY=0):
         if VERBOSITY>0:
             print('DUMMY SET_MODE: VFO=',VFO,'\tmode=',mode)
             logging.info('Ignoring call')
         self.default_mode=mode
         return mode
         
-    def get_freq(self,VFO='A'):
+    def get_freq(self,VFO='A',VERBOSITY=0):
         if VERBOSITY>0:
             print('Hey DUMMY GET_FREQ: VFO=',VFO)
             logging.info('Ignoring call')
         return self.default_freq
 
-    def set_freq(self,f,VFO='A'):
+    def set_freq(self,f,VFO='A',VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
             #print('Ignoring call to SET_FREQ')
@@ -340,13 +345,13 @@ class tyt9000d_connect(no_connect):
         self.rig_type1  = 'TYT'
         self.rig_type2  = 'TYT9000d'
     
-    def get_mode(self,VFO='A'):
+    def get_mode(self,VFO='A',VERBOSITY=0):
         if VERBOSITY>0:
             print('Hey TYT GET_MODE: VFO=',VFO)
             logging.info('TYT9000d GET MODE')
         return 'FM'
         
-    def get_freq(self,VFO='A'):
+    def get_freq(self,VFO='A',VERBOSITY=0):
         if VERBOSITY>0:
             print('Hey TYT GET_FREQ: VFO=',VFO)
             logging.info('TYT9000d GET FREQ')

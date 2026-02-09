@@ -302,7 +302,7 @@ class SST_SCORING(CONTEST_SCORING):
         band=str(band)
         if band[-1]!='m':
             band+='m'
-        #print('SST->NEW MULTIPLIER: call=',call,'\tband=',band)
+        print('SST->NEW MULTIPLIER: call=',call,'\tband=',band)
 
         new_mult=False
         try:
@@ -310,10 +310,14 @@ class SST_SCORING(CONTEST_SCORING):
                 #print 'hist=',HIST[call]
                 #state=self.P.HIST[call]['state']
                 state=self.P.MASTER[call]['state']
+                print('\tstate=',state,'\t Valid State=',state in SST_SECS)
                 if state in SST_SECS:
                     idx1 = SST_SECS.index(state)
                     idx = self.BANDS.index(band)
                     new_mult = self.sec_cnt[idx1,idx] == 0
+                    print('\tidx1,idx=',idx1,idx,
+                          '\tcnt=',self.sec_cnt[idx1,idx],
+                          '\tnew mult=',,new_mult)
         except:
             pass
 

@@ -298,7 +298,7 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False,DF=Fal
 
     if DF:
         # Convert to pandas data frame
-        df = pd.DataFrame.from_dict(logbook)
+        df = pd.DataFrame.from_dict(logbook).fillna('').astype(str)
         return df             #,nflagged
     else:
         # Return dict    

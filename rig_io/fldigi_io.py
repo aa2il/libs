@@ -1326,6 +1326,12 @@ class fldigi_xlmrpc(direct_connect):
         print('Keyer not yet supported for FLRIG')
         return -1
 
+    # This should be possible via flrig?
+    def send_morse(self,msg,VERBOSITY=0):
+        print('FLDIGI_IO SEND_MORSE: Command has not been implemented (yet)')
+        if VERBOSITY>0:
+            print('FLDIGI_IO SEND_MORSE: msg=',msg)
+        return
 
     def read_meter(self,meter):
         if VERBOSITY>0:

@@ -28,7 +28,7 @@ from collections import OrderedDict
 import csv
 import os.path
 
-import pandas               # Need to learn how to use this more
+import pandas as pd
 import chardet
 
 from unidecode import unidecode
@@ -36,10 +36,17 @@ from dx.spot_processing import Station
 from dx.cluster_connections import get_logger
 from pprint import pprint
 import glob 
-from rig_io import NAQP_SECS,ARRL_SECS
+from rig_io import NAQP_SECS,ARRL_SECS,OUT_OF_STATE
 from zipfile import ZipFile
 from counties import COUNTIES
 from utilities import error_trap
+
+###################################################################
+
+USE_PANDAS = False
+USE_PANDAS = True
+
+Problem_Children=[]
 
 ###################################################################
 
@@ -51,7 +58,7 @@ def load_history(history,DEBUG_CALL=None):
     HIST = OrderedDict()
     ALL_FIELDS=['name','state','sec','check','county','cwops',       \
                 'fdcat','fdsec','ituz','cqz','grid','skccnr','city', \
-                'fistsnr','foc','names','status']
+                'fistsnr','foc','names','status']     # Dont include call here!
 
     # If no history file, we're done
     if history=='':
@@ -70,7 +77,7 @@ def load_history(history,DEBUG_CALL=None):
         history=files[-1]
         #print(files[-1]) 
         #sys.exit(0)
-    print('LOAD_HISTORY: History=',history)
+    print('\nLOAD_HISTORY: Call History File=',history)
      
     # Open logger file used by spot_processing routines
     rootlogger = "dxcsucker"
@@ -97,13 +104,17 @@ def load_history(history,DEBUG_CALL=None):
         print(COUNTIES[STATE_QP])
         sys.exit(0)
 
+    if fname=='master.csv':
+        HIST= read_master_call_history(history)
+        return HIST,history
+
     if ext=='.xlsx':
         if history.find('CWops')>=0:
             #book  = xlrd.open_workbook(history)  #,formatting_info=True)
             #sheet = book.sheet_by_name('Roster')
             #book = openpyxl.load_workbook(history)
             #sheet = book['Roster']
-            sheet = pandas.read_excel(history, sheet_name='Roster')
+            sheet = pd.read_excel(history, sheet_name='Roster')
             #print(sheet)
             #print(sheet.iloc[2,1])
             #print(sheet.shape[0])
@@ -186,50 +197,84 @@ def load_history(history,DEBUG_CALL=None):
 
     else:
 
-        with open(history, 'rb') as f:
-            line=f.readline()    # read()
-            result = chardet.detect(line)
-            #sys.exit(0)
+        if not USE_PANDAS:
+            with open(history, 'rb') as f:
+                line=f.readline()    # read()
+                result = chardet.detect(line)
+                #sys.exit(0)
 
-        if result['encoding']=='UTF-16':
-            print('\tLooks like this file uses',result)
-            enc='utf-16'
-        else:
-            enc='utf-8'
+            if result['encoding']=='UTF-16':
+                print('\tLooks like this file uses',result)
+                enc='utf-16'
+            else:
+                enc='utf-8'
             
-        #with open(history,'r',encoding='utf-8') as csvfile:
-        with open(history,'r',encoding=enc) as csvfile:
-            #try:
-            hist = csvfile.read()
-            #except:
-            #    error_trap('LOAD HISTORY:Oooops!')
-                
-            hist = hist.split("\n")
-            csvfile.close()
+            #with open(history,'r',encoding='utf-8') as csvfile:
+            with open(history,'r',encoding=enc) as csvfile:
+                    hist = csvfile.read()
+                    hist = hist.replace('"', '')            
+                    hist = hist.split("\n")
+        else:
+
+            hist = read_history_pd(history,delim)
+            hist = hist.rename(columns={'Callsign': 'call',
+                                        'Member Number': 'fistsnr'})
+            KEYS=[]
+            for key in list( hist.keys() ):
+                #if key=='!!Order!!':
+                #    hist=hist.drop(KEYS[-1],axis=1)
+                #else:
+                key2=map_field(fname,key,STATE_QP)
+                KEYS.append(key2)
+            hist.columns=KEYS
+            
+            #print('KEYS=',KEYS)
+            #print(hist)
+
+            for key in KEYS:
+                if key not in ['call','qth'] and key not in ALL_FIELDS:
+                    hist = hist.drop(key, axis=1)
+                    #print('Dropped',key)
+                    
+            KEYS=list( hist.keys() )
+            #print('hist=\n',hist)
+            #print('KEYS=',KEYS)
+            #sys.exit(0)
+            
+    nrows=len(hist)
+    if False:
+        print(nrows)
+        for i in range(10):
+            print(i,hist[i])
+            row=hist[i].split(delim)
+            print(i,row)
+        print(type(row))
+        sys.exit(0)
+    #print(hist)
 
     if True:
-        nrows=len(hist)
-        if False:
-            print(nrows)
-            for i in range(10):
-                #row=hist.iloc[i].tolist()
-                row=hist[i].split(delim)
-                print(i,row)
-            print(type(row))
-            sys.exit(0)
-        #print(hist)
-
         for n in range(nrows):
-            row=hist[n].split(delim)
-            #print('n=',n,'row=',row,'len=',len(row))
+            if USE_PANDAS:
+                row=list( hist.iloc[n] )
+                row0=row[0]
+            else:
+                row=hist[n].split(delim)
+                row0=row[0].strip('"')
+            #print('\nn=',n,'row=',row,'len=',len(row))
+
+            # Skip over comment and blank lines
+            if len(row0)==0 or row0[0]=='#':
+                continue 
+            #sys.exit(0)
 
             if len(row)>0 and len(row[0])>0 and row[0]!=' ':
                 #row0=row[0]
                 #print('row0=',row0,len(row0))
                 #print(ord(row0))
 
-                if row[0][0]=='!' or \
-                   (n==0 and ('skcc' in history or 'fists' in history)):
+                if not USE_PANDAS and \
+                   (row[0][0]=='!' or (n==0 and \
+                                       ( ('skcc' in history) or ('fists' in history) or ('CORRECTIONS' in history) )) ):
                     #print('Howdy Ho!')
                     KEYS=[]
                     #print('row=',row)
@@ -261,7 +306,7 @@ def load_history(history,DEBUG_CALL=None):
                                 key='cqz'
                             elif fname[:6]=='CWOPS_' and key=='exch1':
                                 key='cwops'
-                            elif (fname=='foc.txt' or fname[:7]=='FOCBWQP') and key=='exch1':
+                            elif (fname=='foc.txt' or fname[:7]=='FOCBWQP' or fname[:5]=='FOCCW') and key=='exch1':
                                 key='foc'
                             elif fname[:8]=='K1USNSST' and key=='exch1':
                                 key='state'
@@ -321,6 +366,7 @@ def load_history(history,DEBUG_CALL=None):
                     for i in range(len(KEYS)):
                         key=KEYS[i].strip()
                         if len(row)>i:
+                            #print(i,row[i],key)
                             val = row[i].replace(',',' ').upper()
                             val = val.encode('ascii',errors='ignore').decode()
                         elif hasattr(HIST[call],key):
@@ -332,9 +378,12 @@ def load_history(history,DEBUG_CALL=None):
 
                         if key=='loc1':
                             key='grid'
-                            
+
+                        if key=='name' and val.upper() in ['NONE','NONE YET :(']:
+                            val==''
+
                         elif STATE_QP and key=='qth':
-                            
+
                             if val in COUNTIES[STATE_QP] or val[2:] in COUNTIES[STATE_QP] or '/' in val:
                                 # In state --> county or county line
                                 # Some tack on the abbrev for the state in front, hence the 2: above
@@ -342,8 +391,8 @@ def load_history(history,DEBUG_CALL=None):
                             elif (STATE_QP in ['PA','NV']) and (val in ARRL_SECS):
                                 # Out of state - A few send arrl section
                                 key='sec'
-                            elif val in NAQP_SECS:
-                                # Out of state - most send state
+                            elif val in OUT_OF_STATE:       # NAQP_SECS:
+                                # Out of state - most send state (or DX)
                                 key='state'
                             else:
                                 if len(val)>0:
@@ -378,20 +427,29 @@ def load_history(history,DEBUG_CALL=None):
                             
     # Some fix-ups
     for call in HIST.keys():
+        
         # Fix-up for Field day
         if len(HIST[call]['fdcat'])>0 and len(HIST[call]['fdsec'])==0:
             HIST[call]['fdsec'] = HIST[call]['sec']
         
         # Fill in ITU & CQ Zones
         if len(HIST[call]['cqz'])==0 or len(HIST[call]['ituz'])==0:
-            #print call
-            #print HIST[call]
             dx_station = Station(call)
+            #if str(dx_station.cqz).upper()=='NONE' or\
+            #   str(dx_station.ituz).upper()=='NONE':
+            #    pprint(vars(dx_station))
+            #    sys.exit(0)
+            if not dx_station.valid:
+                Problem_Children.append(call)
             if len(HIST[call]['cqz'])==0:
-                HIST[call]['cqz'] = str( dx_station.cqz )
+                cqz = str( dx_station.cqz ).upper()
+                if cqz!='NONE':
+                    HIST[call]['cqz'] = cqz
             if len(HIST[call]['ituz'])==0:
-                HIST[call]['ituz'] = str( dx_station.ituz )
-
+                ituz = str( dx_station.ituz ).upper()
+                if ituz!='NONE':
+                    HIST[call]['ituz'] = ituz
+        
         if call==DEBUG_CALL:
             print('LOAD_HISTORY 3 - After fix-ups: call=',call,'\nHIST=',HIST[call])
             pprint(vars(dx_station))
@@ -404,3 +462,139 @@ def load_history(history,DEBUG_CALL=None):
     return HIST,history
 
 
+
+def map_field(fname,fld,STATE_QP,VERBOSITY=0):
+
+    #VERBOSITY=1
+    if VERBOSITY>0:
+        print('fname=',fname,'\tfield=',fld,'\tSTATE QP=',STATE_QP)
+    
+    key=fld.strip().lower()
+                    
+    if key=='sect':
+        if fname[:4]=='IARU':
+            key='ituz'
+        else:
+            key='sec'
+    elif key=='ck':
+        key='check'
+    elif fname[:5]=='FD_20' or fname[:6]=='FDGOTA' or fname[:5]=='WFD_2':
+        if key=='exch1':
+            key='fdcat'
+        elif key=='sec':
+            key='fdsec'
+    elif fname[:7]=='ARRL160' and key=='exch1':
+            key='sec'
+    elif STATE_QP and key=='exch1':
+        key='qth'
+    elif fname[:7]=='13COLON' and key=='exch1':
+        key='state'
+    elif (fname[:6]=='CQWWCW' or fname[:7]=='CQWWSSB') \
+         and key=='exch1':
+        key='cqz'
+    elif fname[:6]=='CWOPS_' and key=='exch1':
+        key='cwops'
+    elif (fname=='foc.txt' or fname[:7]=='FOCBWQP') and key=='exch1':
+        key='foc'
+    elif fname[:8]=='K1USNSST' and key=='exch1':
+        key='state'
+    elif key=='loc1':
+        key='grid'
+    elif key=='callsign':
+        key='call'
+    elif key=='member number':
+        key='fistsnr'
+    #elif 'fists' in fname and item==row[-1]:
+    #    key=''
+    return key
+
+
+
+def read_history_pd(history,delim,VERBOSITY=0):
+
+    #VERBOSITY=1
+    
+    hist = pd.read_csv(history,
+                       header=None,
+                       names=range(20),
+                       dtype=str,
+                       sep=delim,
+                       comment='#').fillna('').astype(str)
+    nrows=hist.shape[0]
+    
+    mask=hist[0]=='!!Order!!'
+    hdr_idx=mask[mask].index.tolist()
+
+    if VERBOSITY>0:
+        print('hist1=\n',hist)
+        #print(hist.keys())
+        KEYS=list( hist.keys() )
+        print('KEYS1=',KEYS)
+        print('hdr_indx=',hdr_idx,'\tnrows=',nrows)
+        #print(hist[mask])
+        #print(hist.iloc[hdr_idx])
+
+    if len(hdr_idx)==0:
+        hdr_idx=[0]
+        #hist.reset_index(inplace=True, drop=True)
+        #return hist
+        
+    hdr_idx.append(nrows)
+    n=len(hdr_idx)
+    hist2=pd.DataFrame({})
+    for i in range(n-1):
+        idx1=hdr_idx[i]+1
+        idx2=hdr_idx[i+1]
+        #print(i,idx1,idx2)
+        keys=hist.iloc[idx1-1]
+        #print('keys1=',keys)
+        keys=list( keys[keys!=''] )
+        #print('keys2=',keys)
+        if keys[0]=='!!Order!!':
+            del keys[0]
+        #print('keys3=',keys)
+        df=hist.iloc[idx1:idx2,:len(keys)]
+        df.columns=keys
+        #df.reset_index(inplace=True, drop=True)
+        if VERBOSITY>1:
+            print('df=\n',df)
+            print('keys=',keys)
+            print(df.shape)
+
+        hist2 = pd.concat([hist2, df], axis=0, ignore_index=True) \
+                  .fillna('')
+                    
+        #print('hist2=',hist2)
+        #sys.exit(0)
+
+    return hist2
+
+
+
+
+def read_master_call_history(fname=None):
+
+    if fname==None:
+        fname=os.path.expanduser('~/Python/data/master.csv')
+
+    # Read the master.csv file
+    delim=','
+    df = pd.read_csv(fname,dtype=str).fillna('').astype(str)
+
+    # Check the column headers and fix if necessary
+    hdr=df.columns.tolist()
+    if hdr[0]=='!!Order!!':
+        hdr=hdr[1:]+['Garbage']
+        df.columns=hdr
+        df.drop('Garbage', axis=1,inplace=True)
+
+    # Convert pandas data frame to a dict of dicts
+    data = df.to_dict('records')
+    #HIST = OrderedDict()
+    HIST = {}
+    for item in data:
+        call = item.pop('call')
+        HIST[call] = item
+
+    return HIST
+   

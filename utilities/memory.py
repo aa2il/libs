@@ -37,6 +37,7 @@ class Memory_Monitor:
         # Init memory monitoing stuff
         self.process = psutil.Process(os.getpid())
         self.t0      = time.time()
+        self.dt      = 0
         if fname:
             if sys.platform == "linux" or sys.platform == "linux2":
                 # linux
@@ -51,18 +52,20 @@ class Memory_Monitor:
                 sys.exit(0)
             
             self.LOG = open(fname,'w') 
-            self.LOG.write('#Time (sec),Mem Usage (Mb)\t'+str(self.process)+'\n')
+            self.LOG.write('#Time (sec),dT (sec),Mem Usage (Mb)\t'+str(self.process)+'\n')
             self.LOG.flush()
         else:
             self.LOG = None
 
     def take_snapshot(self,TXT='',VERBOSITY=0):
         mem = self.process.memory_info().rss / 1024**2
-        dt = time.time() - self.t0
+        dt  = time.time() - self.t0
+        dt2 = dt - self.dt
+        self.dt = dt
         if VERBOSITY>0:
             print('MEMORY USAGE:',dt/60.,'min.\t',mem,'Mb\n')
         if self.LOG:
-            self.LOG.write('%8.1f,\t%8.1f\t: %s\n' % (dt,mem,TXT))
+            self.LOG.write('%8.1f,%8.1f,\t%8.1f\t: %s\n' % (dt,dt2,mem,TXT))
             self.LOG.flush()        
 
 
