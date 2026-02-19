@@ -761,6 +761,15 @@ class hamlib_connect(direct_connect):
                 # Make sure ant tuner is off for port 3
                 self.tuner(0)
 
+    # Function to set/clear APF
+    def set_apf(self,iopt,VERBOSITY=0):
+        if VERBOSITY>0:
+            print('HAMLIB_IO: Set APF',iopt)
+            
+        # This only applies to the FTdx3000
+        if self.rig_type2=='FTdx3000':
+            buf = self.get_response('U APF '+str(int(iopt)))            
+                
     # Function to effect pressing of TUNE button
     def tuner(self,opt):
         if VERBOSITY>0:

@@ -601,6 +601,15 @@ class direct_connect(no_connect):
                 # Make sure ant tuner is off for port 3
                 self.tuner(0)
 
+    # Function to set/clear APF
+    def set_apf(self,iopt,VERBOSITY=0):
+        if VERBOSITY>0:
+            print('DIRECT: Set APF',iopt)
+            
+        # This only applies to the FTdx3000
+        if self.rig_type2=='FTdx3000':
+            buf = self.get_response('CO'+str(int(iopt)).zfill(4))
+                
     def get_PLtone(self):
         #VERBOSITY=1
         if VERBOSITY>0:

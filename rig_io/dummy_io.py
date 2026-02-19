@@ -144,6 +144,11 @@ class no_connect:
             logging.info('Ignoring call')
         return 0
         
+    def set_apf(self,iopt,VERBOSITY=0):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
+        return 0
+        
     def get_fldigi_mode(self):
         if VERBOSITY>0:
             logging.info('Ignoring call')

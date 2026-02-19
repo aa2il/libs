@@ -57,6 +57,10 @@ class Memory_Monitor:
         else:
             self.LOG = None
 
+        # Take an initial snapshot
+        self.take_snapshot('After Memory Monitor Init')
+
+
     def take_snapshot(self,TXT='',VERBOSITY=0):
         mem = self.process.memory_info().rss / 1024**2
         dt  = time.time() - self.t0

@@ -81,7 +81,7 @@ def read_settings(fname,attr=None):
         print('Settings:',SETTINGS)
         print('Writing settings to',RCFILE,'...')
         with open(RCFILE, "w") as outfile:
-            json.dump(SETTINGS, outfile)
+            json.dump(SETTINGS, outfile, indent=4)
 
     # Fill in the blanks
     if ('MY_OPERATOR' not in SETTINGS) or (SETTINGS['MY_OPERATOR'] == ''):
@@ -204,7 +204,7 @@ class SETTINGS_GUI():
             print('Writing settings to',self.P.RCFILE,'...')
             print(self.P.SETTINGS)
             with open(self.P.RCFILE, "w") as outfile:
-                json.dump(self.P.SETTINGS, outfile)
+                json.dump(self.P.SETTINGS, outfile, indent=4)
                 outfile.write('\n')
 
         if self.refreshCB:
@@ -359,7 +359,7 @@ class SETTINGS_GUI_QT(QMainWindow):
         
         # Write out the resource file
         with open(self.P.RCFILE, "w") as outfile:
-            json.dump(self.P.SETTINGS, outfile)
+            json.dump(self.P.SETTINGS, outfile, indent=4)
 
         # Hide the sub-window
         self.hide()
