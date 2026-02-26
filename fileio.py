@@ -19,9 +19,7 @@
 #
 #######################################################################################
 
-import sys
-import os
-import re
+import sys,os,re
 import csv
 from collections import OrderedDict
 from zipfile import ZipFile
@@ -37,6 +35,7 @@ from sig_proc import up_dn
 
 import pandas as pd 
 import sqlite3
+import json
 
 #######################################################################################
 
@@ -155,7 +154,6 @@ def parse_simple_log(fn,args):
     return logbook
 
 #######################################################################################
-
 
 # This is an experimental routine
 import codecs
@@ -424,8 +422,6 @@ def write_adif_record(fp,rec,P,long=False,sort=True,VERBOSITY=0):
 
 
 # Function to write out an ADIF file 
-#FIELDS=['FREQ','CALL','MODE','NAME','QSO_DATE','QSO_DATE_OFF','TIME_OFF','TIME_ON','QTH','RST_RCVD','RST_SENT','BAND', \
-#        'COUNTRY','SRX_STRING','STATION_CALLSIGN','MY_GRIDSQUARE','MY_CITY'
 def write_adif_log(QSOs,fname,P,SORT_KEYS=1,IGNORE=[],VERBOSITY=0):
     
     fname2 = fname.replace('.LOG','.adif')
@@ -502,8 +498,7 @@ def qso_time(rec):
     dt = 3600.*( int(toff[0:2]) - int(ton[0:2]) ) + 60.*(int(toff[2:4]) - int(ton[2:4])) + 1.*( int(toff[4:6]) - int(ton[4:6]) )
     return dt
 
-
-
+#######################################################################################
 
 def read_csv_file(fname,delim=',',FLAT_DATA=False,VERBOSITY=0):
 
@@ -613,7 +608,7 @@ def write_csv_file(fname,keys,qsos):
     #fp.flush()
     fp.close()
 
-
+#######################################################################################
 
 def write_sql_file(fname,keys,qsos):
     
@@ -689,6 +684,21 @@ def read_text_file(fname,KEEP_BLANKS=True,UPPER=False,KEEP_COMMENTS=True):
                     lines.append(line)
 
     return lines
+
+#######################################################################################
+
+def read_json_file(fname):
+    fname2=os.path.expanduser(fname)
+    with open(fname2) as json_file:
+        data   = json.load(json_file)
+    #print(len(data),type(data))
+
+    return data
+
+def pretty_json(data):
+    pretty = json.dumps(data, indent=4)
+    #print(len(pretty),type(pretty))
+    return pretty
 
 ############################################################################
 ############################################################################
