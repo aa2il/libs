@@ -100,7 +100,7 @@ class hamlib_connect(direct_connect):
                 print('HAMLIB_IO: pos=',frq,' on port',port)
             else:
                 s = self.split_mode(-1)
-                m = self.get_mode()
+                m,bw = self.get_mode()
                 frq = self.get_freq()
                 if frq==-1:
                     # Try again
@@ -526,14 +526,20 @@ class hamlib_connect(direct_connect):
         print('HAMLIB_IO SET_BAND:',buf)
 
     def set_mode(self,mode,VFO='A',Filter=None,VERBOSITY=0):
-        VERBOSITY=0
+        #VERBOSITY=0
         if VERBOSITY>0:
             print('HAMLIB_IO - SET MODE: mode=',mode,'\tVFO=',VFO,'\tFilter=',Filter)
 
         bw=None
-        if Filter and type(Filter) is list:
-            bw=Filter[1]
-            Filter=Filter[0]
+        if Filter:
+            if type(Filter) is list:
+                bw=Filter[1]
+                Filter=Filter[0]
+            elif type(Filter) is str:
+                pass
+            else:
+                bw=Filter
+        print('\tFilter=',Filter,'\tbw=',bw)
             
         if mode==None:
             return
@@ -617,13 +623,13 @@ class hamlib_connect(direct_connect):
     def get_mode(self,VFO='A',VERBOSITY=0):
         #VERBOSITY=1
         if VERBOSITY>0:
-            print('HAMLIB_IO: Get mode - vfo=',VFO)
+            print('HAMLIB_IO: Get mode - vfo=',VFO,' ...')
 
         use_direct=False     # True
 
         if self.rig_type1 == 'Icom' or False:
             # This actually might work for all rigs but only tested on 9700 so far
-            self.select_vfo(VFO,VERBOSITY=VERBOSITY)
+            self.select_vfo(VFO,VERBOSITY=0*VERBOSITY)
             cmd  = 'm'
         elif VFO=='A':
             cmd  = 'm'
@@ -638,8 +644,8 @@ class hamlib_connect(direct_connect):
             else:
                 cmd  = 'x'
         else:
-            print('HAMLIB_IO: Get mode Unknwo VFO',VFO)
-            return ''
+            print('HAMLIB_IO: Get Mode - Unknown VFO',VFO)
+            return '',None
         
         buf = self.get_response(cmd)
         if VERBOSITY>0:
@@ -648,27 +654,29 @@ class hamlib_connect(direct_connect):
         if VFO=='B' and self.rig_type1=='Yaesu' and use_direct:
             print('idx=',idx)
             mode = Decode_Mode( buf[idx] )
+            bw = None
         elif buf:
             x=buf.split("\n")
             mode=x[0]
+            bw=int( x[1] )
             #if mode in ['PKTUSB','PSK-U','DATA-U']:
             #    mode='RTTY'
         else:
             print('HAMLIB_IO: GET_MODE: Unable to determine mode - cmd=',cmd,'\tbuf=',buf)
             mode=None
+            bw = None
 
         if VERBOSITY>0:
-            print('HAMLIB_IO: Get Mode',cmd,mode)
-        return mode
+            print('HAMLIB_IO: Get Mode',mode,bw)
+        return mode,bw
 
 
-    def set_filter(self,filt,mode=None):
-        VERBOSITY=0
+    def set_filter(self,filt,mode=None,VERBOSITY=0):
         if VERBOSITY>0:
             print('\nHAMLIB_IO SET_FILTER: filt=',filt,'\tmode=',mode)
 
         if mode==None:
-            mode=self.get_mode()
+            mode,bw=self.get_mode()
             
         if filt in ['Auto','Narrow','Wide']:
             if mode in ['USB','SSB','LSB']:
@@ -862,10 +870,10 @@ class hamlib_connect(direct_connect):
         # I think we really want this to use xlmrpc to get the fldigi mode but it was probably
         # put in like this just as a place holder ???????
         print('HAMLIB - GET_FLDIGI_MODE - Not sure this is really doing what we want??????')
-        x=self.get_mode()
+        m,bw=self.get_mode()
         if VERBOSITY>0:
             print('HAMLIB_IO: Get FLDIGI mode',x)
-        return x
+        return m
 
     def set_log_fields(self,fields):
         if VERBOSITY>0:
@@ -1182,8 +1190,7 @@ class hamlib_connect(direct_connect):
     #
     # Disabled broken code in newcat.c so now this works
     # Keep an eye on it
-    def rit(self,opt,df,VFO='A'):
-        VERBOSITY=0
+    def rit(self,opt,df,VFO='A',VERBOSITY=0):
         if VERBOSITY>0:
             print('HAMLIB RIT: opt=',opt,'\tdf=',df,'\tvfo=',VFO)
 
@@ -1227,6 +1234,33 @@ class hamlib_connect(direct_connect):
         else:
 
             print('HAMLIB RIT: Invalid opt',opt)
+            return -1
+
+
+    # Function to spectrum display
+    def spectrum(self,opt,span,VERBOSITY=0):
+        if VERBOSITY>0:
+            print('HAMLIB SPECTRUM: opt=',opt,'\tspan=',span,' KHz')
+
+        if opt==-1:
+            # Read current setting
+            cmd='l SPECTRUM_SPAN'
+            buf=self.get_response(cmd)
+            return int(0.001*float(buf))
+    
+        elif opt<2:
+            
+            # Set span
+            cmd='L SPECTRUM_SPAN '+str(int(1000.*float(span)))
+            buf=self.get_response(cmd)
+            if VERBOSITY>0:
+                print('\topt   =',opt)
+                print('\tcmd    =',cmd)
+                print('\tbuf    =',buf)
+            
+        else:
+
+            print('HAMLIB SPECTRUM: Invalid opt',opt)
             return -1
 
 
@@ -1344,6 +1378,27 @@ class hamlib_connect(direct_connect):
         buf=self.get_response(cmd)
 
     def mic_setting(self,m,iopt,src=None,lvl=None,prt=None):
+        if VERBOSITY>0:
+            print('HAMLIB_IO MIC_SETTING:',m,iopt,src,lvl,prt)
+            
+        if m=='CW' or m=='RTTY':
+            return
+        
+        if iopt==0:
+            # Read
+            cmd='l MICGAIN'
+            buf=self.get_response(cmd)
+            src=None
+            lvl=float(buf)
+            port=None
+            print('HAMLIB_IO MIC_SETTING Get: cmd=',cmd,'\n\tbuf=',buf)
+            return [src,int(100*lvl),prt]
+        else:
+            # Set
+            cmd='L MICGAIN '+str(0.01*lvl)
+            buf=self.get_response(cmd)
+            print('HAMLIB_IO MIC_SETTING Set: cmd=',cmd,'\n\tbuf=',buf)
+        
         return 0
 
     def set_vfo(self,rx=None,tx=None,op=None):

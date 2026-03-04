@@ -1069,8 +1069,7 @@ class direct_connect(no_connect):
             print('DIRECT SET_BREAKIN: buf=',buf)
 
 
-    def set_filter(self,filt,mode=None):
-        #VERBOSITY=1
+    def set_filter(self,filt,mode=None,VERBOSITY=0):
         if VERBOSITY>0:
             print('\nDIRECT SET_FILTER: filt=',filt,'\tmode=',mode,mode[0:2])
             
@@ -1096,7 +1095,7 @@ class direct_connect(no_connect):
             print('\nDIRECT SET_FILTER: filt=',filt,'\tmode=',mode)
             
         if self.rig_type1=='Icom':
-            print('DIRECT_IO: SET_POWER not support yet for Icom rigs')
+            print('DIRECT_IO: SET_FILTER not support yet for Icom rigs')
             return False
             
         if self.rig_type=='Kenwood':
@@ -1129,7 +1128,7 @@ class direct_connect(no_connect):
                 m=mode
             else:
                 if len(self.mode)==0:
-                    self.mode=self.get_mode()
+                    self.mode,bw=self.get_mode()
                 m=self.mode
             if VERBOSITY>0:
                 print('DIRECT SET_FILTER: Mode=',m,filt[0])
@@ -1221,7 +1220,7 @@ class direct_connect(no_connect):
             time.sleep(DELAY)
             self.send('FR0;')
         mode = Decode_Mode( buf[idx] )
-        return mode
+        return mode,None
             
     def get_fldigi_mode(self):
         return self.get_mode()
@@ -1332,6 +1331,11 @@ class direct_connect(no_connect):
     def close(self):
         self.s.close()
 
+    # Function to spectrum display
+    def spectrum(self,opt,span,VERBOSITY=0):
+        print('Spectrum Display not yet supported for DIRECT')
+        return -1
+        
     # Function to effect pressing of TUNE button
     def tuner(self,opt):
         #VERBOSITY=1

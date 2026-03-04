@@ -158,7 +158,7 @@ class no_connect:
         if VERBOSITY>0:
             print('DUMMY GET_MODE: VFO=',VFO,'\tmode=',self.default_mode)
             logging.info('Ignoring call')
-        return self.default_mode
+        return self.default_mode,None
         
     def set_mode(self,mode,VFO='A',Filter=None,VERBOSITY=0):
         if VERBOSITY>0:
@@ -337,6 +337,10 @@ class no_connect:
             print('DUMMY FRONTEND: opt=',opt,'\tpamp=',pamp,'\tatten=',atten,
                   '\trig1=',self.rig_type1)
         return
+
+    def spectrum(self,opt,span,VERBOSITY=0):
+        print('Spectrum Display not yet supported for DUMMY')
+        return -1
     
 
 # Dummy for the TYT9000d 220 FM rig so it will return something useful
@@ -354,7 +358,7 @@ class tyt9000d_connect(no_connect):
         if VERBOSITY>0:
             print('Hey TYT GET_MODE: VFO=',VFO)
             logging.info('TYT9000d GET MODE')
-        return 'FM'
+        return 'FM',None
         
     def get_freq(self,VFO='A',VERBOSITY=0):
         if VERBOSITY>0:

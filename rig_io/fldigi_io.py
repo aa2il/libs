@@ -543,8 +543,8 @@ class fldigi_xlmrpc(direct_connect):
                 print('FLDIGI SET BAND: Failed to acquire lock')
 
     # Function to read rig mode 
-    def get_mode(self,VFO='A'):
-        VERBOSITY=0
+    def get_mode(self,VFO='A',VERBOSITY=0):
+        #VERBOSITY=0
         if VERBOSITY>0:
             print('FLDIGI_IO GET_MODE: vfo=',VFO,'...')
             
@@ -571,7 +571,7 @@ class fldigi_xlmrpc(direct_connect):
             
         if VERBOSITY>0:
             print('FLDIGI_IO GET_MODE: ... mode=',m)
-        return m
+        return m,None
 
     # Function to read fldigi mode 
     def get_fldigi_mode(self):
@@ -739,10 +739,9 @@ class fldigi_xlmrpc(direct_connect):
 
 
     # Function to set rig mode - return old mode
-    def set_mode(self,mode,VFO='A',Filter=None):
-        VERBOSITY=1
+    def set_mode(self,mode,VFO='A',Filter=None,VERBOSITY=0):
         if VERBOSITY>0:
-            print("FLDIGI_IO - SET_MODE: mode=",mode,'\tVFO=',VFO,self.v4,'\tFilter=',Filter)
+            print("FLDIGI_IO - SET_MODE: mode=",mode,'\tVFO=',VFO,'\tFilter=',Filter)
         mode2=mode       # Fldigi mode needs to match rig mode
 
         # Translate rig mode into something rig understands
@@ -855,13 +854,13 @@ class fldigi_xlmrpc(direct_connect):
             if VERBOSITY>0:
                 print("FLDIGI_IO SET_MODE: mout=",mout)
 
-            if Filter=='Wide':
+            if Filter=='Wide' and False:
                 if VERBOSITY>0:
                     print("FLDIGI_IO SET_MODE: Setting filter to ",Filter)
                 time.sleep(DELAY)
                 self.s.rig.set_bandwidth(2000)
                 if VERBOSITY>0:
-                    print("FLDIGI_IO SET_MODE: Filter Set")                
+                    print("FLDIGI_IO SET_MODE: Filter Set from rig:")                
                     time.sleep(DELAY)
                     print(self.s.rig.get_bw())
                     print(self.s.rig.get_bwA())
@@ -881,15 +880,70 @@ class fldigi_xlmrpc(direct_connect):
                 return mode
 
 
-        if Filter=='Auto':
+        #if Filter=='Auto':
+        if Filter!=None and True:
             if VERBOSITY>0:
-                print("FLDIGI_IO: SET MODE - Setting filter ...\n")
-            self.set_filter(Filter,mode=mout)
+                print("FLDIGI_IO: SET MODE - Setting Filter =",Filter,'..\n')
+            self.set_filter(Filter,mode=mout,VERBOSITY=VERBOSITY)
 
         if VERBOSITY>0:
             print("FLDIGI_IO: SET MODE Done.\n")
             
         return mout
+
+
+    def set_filter(self,filt,mode=None,VERBOSITY=0):
+        if VERBOSITY>0:
+            print('\nFLDIGI_IO SET_FILTER: filt=',filt,'\tmode=',mode)
+
+        if mode==None:
+            mode,bw=self.get_mode()
+            
+        if filt in ['Auto','Wide']:
+            if mode in ['USB','SSB','LSB']:
+                filt=['Wide','2400']
+            elif mode[0:2]=='CW':
+                filt=['Wide','500']   
+            elif mode in ['RTTY','DATA']:
+                filt=['Wide','3000']
+            elif filt=='Auto':
+                filt=['Wide']
+        elif filt in ['Narrow']:
+            if mode in ['USB','SSB','LSB']:
+                filt=['Narrow','1800']
+            elif mode[0:2]=='CW':
+                filt=['Narrow','200']   
+            elif mode in ['RTTY','DATA']:
+                filt=['Narrow','1000']
+            elif filt=='Auto':
+                filt=['Wide']
+        elif type(filt) in [int,float]:
+            if filt<=500:
+                filt=['Narrow',filt]
+            else:
+                filt=['Wide',filt]
+                
+        if not type(filt) is list:
+            filt=[filt]
+        
+        if VERBOSITY>0:
+            print('\nFLDIGI_IO SET_FILTER: filt=',filt,'\tmode=',mode)
+
+        acq=self.lock.acquire(timeout=1.0)
+        if not acq:
+            print('FLDIGI SET MODE: Failed to acquire lock')
+            return ' '
+                
+        if self.fldigi_active:
+                
+            print('SET_FILTER not yet available for FLDIGI')
+                
+        elif self.flrig_active:
+
+            #self.set_mode(mode,Filter=filt)
+            self.s.rig.set_bandwidth(int(filt[1]))
+        
+        self.lock.release()
 
     
     # Function to set call 
@@ -1314,7 +1368,7 @@ class fldigi_xlmrpc(direct_connect):
             self.lock.release()
         else:
             # Set
-            if lvl!=None and level:
+            if lvl!=None:
                 self.lock.acquire()
                 buf=self.s.rig.set_micgain(lvl)
                 self.lock.release()
@@ -1326,6 +1380,12 @@ class fldigi_xlmrpc(direct_connect):
         print('Keyer not yet supported for FLRIG')
         return -1
 
+    # Function to spectrum display
+    def spectrum(self,opt,span,VERBOSITY=0):
+        print('Spectrum Display not yet supported for FLRIG')
+        return -1
+
+    
     # This should be possible via flrig?
     def send_morse(self,msg,VERBOSITY=0):
         print('FLDIGI_IO SEND_MORSE: Command has not been implemented (yet)')
