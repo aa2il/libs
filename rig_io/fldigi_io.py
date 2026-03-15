@@ -1,7 +1,7 @@
 ############################################################################################
 #
 # Fldigi IO - Rev 1.0
-# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
+# Copyright (C) 2021-6 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Functions to control rig through FLDIGI or FLRIG from python.
 # See methods.txt for list of methods for these two protocols
@@ -1381,9 +1381,9 @@ class fldigi_xlmrpc(direct_connect):
         return -1
 
     # Function to spectrum display
-    def spectrum(self,opt,span,VERBOSITY=0):
-        print('Spectrum Display not yet supported for FLRIG')
-        return -1
+    #def spectrum(self,opt,span,VERBOSITY=0):
+    #    print('Spectrum Display not yet supported for FLRIG')
+    #    return -1
 
     
     # This should be possible via flrig?

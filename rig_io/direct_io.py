@@ -1,7 +1,7 @@
 #######################################################################################
 #
 # Direct Rig IO - Rev 1.0
-# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
+# Copyright (C) 2021-6 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Socket I/O routines related to commanding the radio via a
 # direct USB connection.
@@ -720,7 +720,6 @@ class direct_connect(no_connect):
                 
     
     def get_freq(self,VFO='A',VERBOSITY=0):
-        #VERBOSITY=1
         if VERBOSITY>0:
             print('DIRECT Get Freq - vfo=',VFO,'...')
             
@@ -777,7 +776,6 @@ class direct_connect(no_connect):
         return frq
 
     def set_freq(self,frq_KHz,VFO='A',VERBOSITY=0):
-        #VERBOSITY=1
         if VERBOSITY>0:
             print('\nDirect Set Freq:',frq_KHz,VFO,self.rig_type2)
 
@@ -1333,12 +1331,51 @@ class direct_connect(no_connect):
 
     # Function to spectrum display
     def spectrum(self,opt,span,VERBOSITY=0):
-        print('Spectrum Display not yet supported for DIRECT')
-        return -1
+        VERBOSITY=1
+        if VERBOSITY>0:
+            print('DIRECT SPECTRUM: opt=',opt,'\tspan=',span)
+            
+        if self.rig_type2 not in ['IC9700','IC7300']:
+            print('Spectrum Display not yet supported for DIRECT to ',self.rig_type2)
+            return -1
+
+        if opt==-1:
+            # Read current setting
+            cmd = self.civ.icom_form_command([0x27,0x15, 0x00])
+            x   = self.get_response(cmd)
+            y   = self.civ.icom_response(cmd,x)                        
+            if VERBOSITY>0:
+                print('DIRECT SPECTRUM READ SPAN: cmd=',show_hex(cmd),'\n\tx=',x,'\n\ty=',y)
+
+            try:
+                span = .001*bcd2int(y[2:])     # KHz
+            except Exception as e: 
+                error_trap("**** DIRECT IO -> GET_FREQ ERROR ***")
+
+                span=None
+            return span
+            
+        elif opt<2:
+            
+            # Set span
+            #y2  = int2bcd(int(1000*span),5,1)
+            y2  = int2bcd(int(500*span),5,1)       # Need to sort out convention
+            y2  = y2[::-1]
+            cmd =  self.civ.icom_form_command([0x27,0x15, 0x00]+y2)   
+            x   = self.get_response(cmd)
+            y   = self.civ.icom_response(cmd,x)                        
+            if VERBOSITY>0:
+                print('DIRECT SPECTRUM SET SPAN: cmd=',show_hex(cmd),'\n\tx=',x,'\n\ty=',y)
+            
+        else:
+
+            print('DIRECT SPECTRUM: Invalid opt',opt)
+            return -1
+
+
         
     # Function to effect pressing of TUNE button
-    def tuner(self,opt):
-        #VERBOSITY=1
+    def tuner(self,opt,VERBOSITY=0):
         if VERBOSITY>0:
             print('DIRECT TUNER:',opt)
         if self.rig_type1=='Kenwood' or self.rig_type1=='Icom':

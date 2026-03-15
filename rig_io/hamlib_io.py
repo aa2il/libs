@@ -1,7 +1,7 @@
 ############################################################################################
 #
 # Hamlib Rig IO - Rev 1.0
-# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
+# Copyright (C) 2021-6 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Socket I/O routines related to commanding the radio via hamlib.
 #
@@ -779,7 +779,7 @@ class hamlib_connect(direct_connect):
             buf = self.get_response('U APF '+str(int(iopt)))            
                 
     # Function to effect pressing of TUNE button
-    def tuner(self,opt):
+    def tuner(self,opt,VERBOSITY=0):
         if VERBOSITY>0:
             print('HAMLIB TUNER:',opt)
         if opt==-1:

@@ -1,7 +1,7 @@
 ############################################################################################
 #
 # Dummy Rig IO - Rev 1.0
-# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
+# Copyright (C) 2021-6 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Dummied-up socket I/O routines so codes will work if there is not a
 # rig connection.
@@ -241,7 +241,7 @@ class no_connect:
         #return [None,None]
         return ['Wide','500 Hz']
 
-    def tuner(self,opt):
+    def tuner(self,opt,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0

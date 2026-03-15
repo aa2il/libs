@@ -158,7 +158,14 @@ def load_history(history,DEBUG_CALL=None):
                         HIST[call][field]=''
                 HIST[call]['name']   = name.upper()
                 HIST[call]['state']  = state.upper()
-                HIST[call]['cwops']  = str( int(number) )
+                try:
+                    HIST[call]['cwops']  = str( int(number) )
+                except:
+                    print('LOAD HISTORY - CW Oooops!   call=',call)
+                    print('\tHIST=',HIST[call])
+                    #HIST[call]['cwops']  = ''
+                    continue
+                    #sys.exit(0)
 
                 if True:
                     status  = str( sheet.iloc[i,1] )
