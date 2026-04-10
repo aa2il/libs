@@ -326,7 +326,7 @@ class no_connect:
             logging.info('Ignoring call')
         return 
 
-    def set_PLtone(self,tone):
+    def set_PLtone(self,tone,VERBOSITY=1):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 

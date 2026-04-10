@@ -802,9 +802,9 @@ class hamlib_connect(direct_connect):
             print('HAMLIB TUNER - Invalid option:',opt)
 
 
-    def get_PLtone(self):
+    def get_PLtone(self,VERBOSITY=1):
         if VERBOSITY>0:
-            print('\nHAMLIBIO: Get PL Tone ...')
+            print('\nHAMLIB_IO: Get PL Tone ...')
 
         if self.rig_type2=='FT991a':
 
@@ -836,7 +836,7 @@ class hamlib_connect(direct_connect):
             
         return tone
             
-    def set_PLtone(self,tone):
+    def set_PLtone(self,tone,VERBOSITY=0):
         if VERBOSITY>0:
             print('HAMLIB Set PL Tone ...')
 
@@ -951,11 +951,11 @@ class hamlib_connect(direct_connect):
 
 
 
-    def read_meter_hamlib(self,meter):
+    def read_meter_hamlib(self,meter,VERBOSITY=0):
         if VERBOSITY>0:
             print('HAMLIB READ_METER:',meter)
 
-        # Hamlib does not work - use direct verion instead
+        # Hamlib does not work - use direct version instead
         buf = self.get_response('p METER')
         print('HAMLIB READ_MEATER: buf=',buf)
         #print('buf=',buf[idx:-1])
@@ -964,7 +964,7 @@ class hamlib_connect(direct_connect):
 
 
     # Function to turn PTT on and off
-    def ptt(self,on_off,VFO='A'):
+    def ptt(self,on_off,VFO='A',VERBOSITY=0):
         VERBOSITY=1
         if VERBOSITY>0:
             print('\nHAMLIB PTT: on_off=',on_off,'\tVFO=',VFO)
@@ -1369,6 +1369,8 @@ class hamlib_connect(direct_connect):
         if VERBOSITY>0:
             print('HAMLIB_IO SEND_MORSE: msg=',msg)
         cmd='b '+str(msg)
+        if self.rig_type2=='FTdx3000' and len(msg)==1:
+            cmd+=' '
         self.get_response(cmd)        
     
     def set_if_shift(self,shift):

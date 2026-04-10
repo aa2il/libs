@@ -1146,7 +1146,7 @@ class fldigi_xlmrpc(direct_connect):
         self.lock.release()
 
     # Function to turn PTT on and off or to query T/R state
-    def ptt(self,on_off,VFO='A'):
+    def ptt(self,on_off,VFO='A',VERBOSITY=0):
         VERBOSITY=1
         if VERBOSITY>0:
             print('FLDIGI_IO PTT: on/off=',on_off,'\tVFO=',VFO,'...')
@@ -1159,7 +1159,7 @@ class fldigi_xlmrpc(direct_connect):
                   '\tvfo=',VFO)
             self.lock.acquire()
             if on_off<0:
-                print('FLRIG PTT - Need to add some code to query t/r state')
+                print('FLDIGI PTT - Need to add some code to query t/r state')
                 return None
             elif on_off:
                 # Need to set both TX&RX VFOs to get ant correct if
@@ -1178,10 +1178,14 @@ class fldigi_xlmrpc(direct_connect):
                         break
                     
                 self.tx_evt.set()
+                if VERBOSITY>0:
+                    print('FLDIGI_IO PTT: Turning PTT ON ...')
                 self.s.rig.set_ptt(1)
                 
             else:
                 
+                if VERBOSITY>0:
+                    print('FLDIGI_IO PTT: Turning PTT OFF ...')
                 self.s.rig.set_ptt(0)
                 self.tx_evt.clear()
                 time.sleep(DELAY)
@@ -1380,39 +1384,48 @@ class fldigi_xlmrpc(direct_connect):
         print('Keyer not yet supported for FLRIG')
         return -1
 
-    # Function to spectrum display
+    # Function to spectrum display - defaults to DIRECT_IO code
     #def spectrum(self,opt,span,VERBOSITY=0):
     #    print('Spectrum Display not yet supported for FLRIG')
     #    return -1
 
     
     # This should be possible via flrig?
+    # See
+    # rig.cwio_set_wpm          n:i  set cwio WPM
+    # rig.cwio_text             i:s  send text via cwio interface
+    # rig.cwio_send             n:i  cwio transmit 1/0 (on/off)
     def send_morse(self,msg,VERBOSITY=0):
         print('FLDIGI_IO SEND_MORSE: Command has not been implemented (yet)')
         if VERBOSITY>0:
             print('FLDIGI_IO SEND_MORSE: msg=',msg)
         return
 
-    def read_meter(self,meter):
+    def read_meter(self,meter,VERBOSITY=0):
         if VERBOSITY>0:
             print('FLDIGI_IO - READ_METER:',meter)
 
         self.lock.acquire()
         if meter=='S':
             # Flrig processes the raw number read from the rigs
-            # It returns the dB above S0. So 0 for S0 and 54 for S9. 
+            # It returns the dB above S0. So 0 for S0 and 54 for S9.
+            # Convert back to S-units
             buf=self.s.rig.get_smeter()
+            val = int(buf)/6.
         elif meter=='Power':
             buf=self.s.rig.get_pwrmeter()
+            val = int(buf)
         elif meter=='SWR':
             buf=self.s.rig.get_swrmeter()
+            val = int(buf)
         else:
             print('FLDIGI_IO - READ_METER: Unknown meter',meter)
             buf=0
         
-        #print('buf=',buf)
+        if VERBOSITY>0:
+            print('\tbuf=',buf,'\tval=',val)
         self.lock.release()
-        return int(buf)
+        return val
 
 
     def cwio_set_wpm(self,wpm):

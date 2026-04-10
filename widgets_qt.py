@@ -42,28 +42,11 @@ def FindQtFrontEnds():
 
     return None
 
-if True:
-    # Dynamic importing - this works!
-    QTLIB=FindQtFrontEnds()
-    exec('from '+QTLIB+'.QtWidgets import QLCDNumber,QLabel,QSplashScreen,QRadioButton')
-    exec('from '+QTLIB+'.QtCore import Qt')
-    exec('from '+QTLIB+'.QtGui import QPixmap')    
-elif False:
-    # This works
-    from PyQt6.QtWidgets import QLCDNumber,QLabel,QSplashScreen,QRadioButton
-    from PyQt6.QtCore import Qt         # was *
-    from PyQt6.QtGui import QPixmap
-elif False:
-    # ... there was a bug in PySide6 and this hangs on exit but it seems fixed now
-    # But there is problem try to use alongside pyqtgraph under uv
-    from PySide6.QtWidgets import QLCDNumber,QLabel,QSplashScreen,QRadioButton
-    from PySide6.QtCore import Qt       # was *
-    from PySide6.QtGui import QPixmap
-else:
-    # Discard at some point
-    from PyQt5.QtWidgets import QLCDNumber,QLabel,QSplashScreen,QRadioButton
-    from PyQt5.QtCore import Qt         # was *
-    from PyQt5.QtGui import QPixmap
+# Dynamic importing - this works!
+QTLIB=FindQtFrontEnds()
+exec('from '+QTLIB+'.QtWidgets import QLCDNumber,QLabel,QSplashScreen,QRadioButton')
+exec('from '+QTLIB+'.QtCore import Qt')
+exec('from '+QTLIB+'.QtGui import QPixmap')    
 
 ################################################################################
 
@@ -229,6 +212,8 @@ class SPLASH_SCREEN():
 class StatusBar():
     def __init__(self,root,nrows):
 
+        self.txt = ''
+
         if nrows<0:
             # For a splash screen
             self.label = root
@@ -241,17 +226,24 @@ class StatusBar():
             root.grid.addWidget(self.label,nrows,0)
             self.splish_splash = False
      
-    def setText(self, newText):
-        if self.splish_splash:
-            self.label.showMessage(newText,alignment=Qt.AlignmentFlag.AlignBottom)
+    def setText(self, newText, APPEND=False,VERBOSITY=0):
+        if APPEND:
+            self.txt = self.txt + ' ' +newText
         else:
-            self.label.setText(newText)
-        #self.root.update()
+            self.txt = newText
+
+        if VERBOSITY>0:
+            print('STATUS BAR SET TEXT: APPEND=',APPEND,
+                  '\n\tnewText=',newText,
+                  '\n\tself.txt=',self.txt)
+
+        if self.splish_splash:
+            self.label.showMessage(self.txt,alignment=Qt.AlignmentFlag.AlignBottom)
+        else:
+            self.label.setText(self.txt)
  
     def clearText(self):
         self.label.setText("")
-        #self.label.config(text = "")
-        #self.root.update()
         pass
 
 ################################################################################

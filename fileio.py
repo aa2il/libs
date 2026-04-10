@@ -503,7 +503,7 @@ def qso_time(rec):
 def read_csv_file(fname,delim=',',FLAT_DATA=False,VERBOSITY=0):
 
     if VERBOSITY>0 or True:
-        print('READing CSV FILE ',fname,' ...',FLAT_DATA)
+        print('READing CSV FILE ',fname,' ... flat=',FLAT_DATA)
 
     pth,name,ext = parse_file_name(fname)
     print('READ_CSV_FILE: path=',pth,'\tname=',name,'\text=',ext)

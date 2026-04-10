@@ -610,21 +610,21 @@ class direct_connect(no_connect):
         if self.rig_type2=='FTdx3000':
             buf = self.get_response('CO'+str(int(iopt)).zfill(4))
                 
-    def get_PLtone(self):
-        #VERBOSITY=1
+    def get_PLtone(self,VERBOSITY=0):
         if VERBOSITY>0:
             print('DIRECT Get PL Tone ...')
-        if self.rig_type=='Kenwood' or self.rig_type1=='Hamlib':
-            print('GET_PLtone: Function not yet implemented for Kenwood or Hamlib  rigs')
+        if self.rig_type=='Kenwood':
+            print('GET_PLtone: Function not yet implemented for Kenwood rigs')
             return 0
             
         elif self.rig_type1=='Icom':
             cmd = self.civ.icom_form_command([0x16,0x42])                 # See if tone is on or off
             x   = self.get_response(cmd)
             y   = self.civ.icom_response(cmd,x)                        
-            #print('DIRECT GET_PL_TONE: cmd =',show_hex(cmd))
             on_off = int(y[1],16)
-            #print('DIRECT GET_PL_TONE: y   =',y,on_off)
+            if VERBOSITY>0:
+                print('\tcmd =',show_hex(cmd))
+                print('\ty   =',y,on_off)
 
             if on_off==0:
                 return 0
@@ -632,9 +632,10 @@ class direct_connect(no_connect):
                 cmd = self.civ.icom_form_command([0x1b,0x0])             # Get tone freq
                 x   = self.get_response(cmd)
                 y   = self.civ.icom_response(cmd,x)
-                #print('DIRECT GET_PL_TONE: cmd =',show_hex(cmd))
                 tone = 0.1*bcd2int(y,1)
-                #print('DIRECT GET_PL_TONE: y=',y,on_off,tone)
+                if VERBOSITY>0:
+                    print('\tcmd =',show_hex(cmd))
+                    print('\ty=',y,on_off,tone)
                 return tone
             
         else:
@@ -681,41 +682,46 @@ class direct_connect(no_connect):
                     print('DIRECT GET_PL_TONE: CN idx=',buf[4:8],idx,tone)
                 return tone
 
-    def set_PLtone(self,tone):
+    def set_PLtone(self,tone,VERBOSITY=0):
         if VERBOSITY>0:
-            print('DIRECT Set PL Tone ...')
+            print('DIRECT Set PL Tone to ',tone,' Hz ...')
             
         if self.rig_type=='Kenwood' or self.rig_type2=='KC505':
-            print('SET_PLtone: Function not yet implemented for Kenwood & KC505 rigs')
+            print('DIRECT SET_PLtone: Function not yet implemented for Kenwood & KC505 rigs')
             return 0
 
         elif self.rig_type1=='Icom':
             if tone==0:
                 cmd = self.civ.icom_form_command([0x16,0x42,0x0])         # Turn off tone
                 buf = self.get_response(cmd)
-                #print('DIRECT SET_PL_TONE: buf=',buf)
+                if VERBOSITY>0:
+                    print('\tbuf=',buf)
             else:
                 cmd = self.civ.icom_form_command([0x16,0x42,0x1])         # Turn on tone
-                #print('DIRECT SET_PL_TONE: cmd =',show_hex(cmd))
                 buf = self.get_response(cmd)
-                #print('DIRECT SET_PL_TONE: buf=',show_hex(buf))
+                if VERBOSITY>0:
+                    print('\tcmd =',show_hex(cmd))
+                    print('\tbuf=',show_hex(buf))
 
                 bcd = int2bcd(10*tone,2,1)
-                #print('DIRECT SET_PL_TONE: bcd=',show_hex(bcd),tone)
                 cmd = self.civ.icom_form_command([0x1b,0x0]+bcd)          # Set tone freq
-                #print('DIRECT SET_PL_TONE: cmd =',show_hex(cmd))
                 buf = self.get_response(cmd)
-                #print('DIRECT SET_PL_TONE: buf=',show_hex(buf))
+                if VERBOSITY>0:
+                    print('\tbcd=',show_hex(bcd),tone)
+                    print('\tcmd =',show_hex(cmd))
+                    print('\tbuf=',show_hex(buf))
             
         else:
             if tone==0:
                 buf = self.get_response('CT00;')
-                #print('DIRECT SET_PL_TONE: CT buf=',buf)
+                if VERBOSITY>0: 
+                   print('\tCT buf=',buf)
             else:
                 p3 = str( np.where(PL_TONES==tone)[0][0] ).zfill(3)
                 cmd='CN00'+p3+';CT02;'
                 buf = self.get_response(cmd)
-                #print('DIRECT SET_PL_TONE: CT buf=',buf)
+                if VERBOSITY>0:
+                    print('\tCT buf=',buf)
                 
                 
     
@@ -813,8 +819,7 @@ class direct_connect(no_connect):
 
         return 1000*frq_KHz
     
-    def set_mode(self,mode,VFO='A',Filter=None):
-        #VERBOSITY=1
+    def set_mode(self,mode,VFO='A',Filter=None,VERBOSITY=0):
         if VERBOSITY>0:
             print('DIRECT SET_MODE:',mode,VFO)
 
@@ -858,7 +863,6 @@ class direct_connect(no_connect):
 
     # Function to set active VFO
     def select_vfo(self,VFO,VERBOSITY=0):
-        #VERBOSITY=1
         if VERBOSITY>0:
             print('DIRECT SELECT_VFO:',VFO,self.rig_type,self.rig_type1)
             
@@ -895,8 +899,7 @@ class direct_connect(no_connect):
         
         self.set_vfo_direct(rx,tx,op)
         
-    def set_vfo_direct(self,rx=None,tx=None,op=None):
-        #VERBOSITY=1
+    def set_vfo_direct(self,rx=None,tx=None,op=None,VERBOSITY=0):
         if VERBOSITY>0:
             print('DIRECT SET_VFO:',rx,tx)
         if self.rig_type1=='Icom':
@@ -959,8 +962,7 @@ class direct_connect(no_connect):
         return buf
         
 
-    def get_vfo(self):
-        #VERBOSITY=1
+    def get_vfo(self,VERBOSITY=0):
         if VERBOSITY>0:
             print('\nDIRECT GET_VFO...')
             
@@ -1040,13 +1042,23 @@ class direct_connect(no_connect):
         return [filt1,filt2]
 
     def send_morse(self,msg,VERBOSITY=0):
-        print('DIRECT_IO SEND_MORSE: Command has not been implemented (yet)')
         if VERBOSITY>0:
             print('DIRECT_IO SEND_MORSE: msg=',msg)
+
+        if self.rig_type2 not in ['IC9700','IC7300']:
+            print('DIRECT_IO SEND_MORSE: Command has not been implemented (yet)')
+            return
+
+        y2=show_hex(msg)
+        cmd =  self.civ.icom_form_command([0x17]+y2)   
+        x   = self.get_response(cmd)
+        y   = self.civ.icom_response(cmd,x)                        
+        if VERBOSITY>0:
+            print('DIRECT SEND MORSE: cmd=',show_hex(cmd),'\n\tx=',x,'\n\ty=',y)
+        
         return
     
     def set_breakin(self,onoff,VERBOSITY=0):
-        #VERBOSITY=1
         if VERBOSITY>0:
             print('DIRECT SET_BREAKIN: onoff=',onoff,type(onoff))
         
@@ -1331,7 +1343,6 @@ class direct_connect(no_connect):
 
     # Function to spectrum display
     def spectrum(self,opt,span,VERBOSITY=0):
-        VERBOSITY=1
         if VERBOSITY>0:
             print('DIRECT SPECTRUM: opt=',opt,'\tspan=',span)
             
@@ -1395,7 +1406,7 @@ class direct_connect(no_connect):
             print('DIRECT TUNER - Invalid option:',opt)
 
     # Function to turn PTT on and off
-    def ptt(self,on_off,VFO='A'):
+    def ptt(self,on_off,VFO='A',VERBOSITY=0):
         if VERBOSITY>0:
             print('\nDIRECT PTT:',on_off,VFO)
 
@@ -1442,7 +1453,6 @@ class direct_connect(no_connect):
 
     # Routine to get date & time 
     def get_date_time(self,VERBOSITY=0):
-        #VERBOSITY=1
         if self.rig_type2=='FT991a':
             buf=self.get_response('DT0;',VERBOSITY)
             d=buf[3:-1]
@@ -1537,7 +1547,6 @@ class direct_connect(no_connect):
         
     # Routine to put rig into sat mode
     def sat_mode(self,opt,VERBOSITY=0):
-        #VERBOSITY=1
         if VERBOSITY>0:
             print('DIRECT - SAT_MODE: opt=',opt,self.rig_type2)
 
@@ -1581,8 +1590,7 @@ class direct_connect(no_connect):
     
 
     # Routine to put rig into dual watch
-    def dual_watch(self,opt):
-        VERBOSITY=1
+    def dual_watch(self,opt,VERBOSITY=0):
         if VERBOSITY>0:
             print('DIRECT - DUAL_WATCH:',opt,'\trig_type2=',self.rig_type2)
 
@@ -1627,7 +1635,6 @@ class direct_connect(no_connect):
 
     # Routine to put rig into split mode
     def split_mode(self,opt,VERBOSITY=0):
-        #VERBOSITY=1
         if VERBOSITY>0:
             print('DIRECT - SPLIT_MODE:',opt)
 
@@ -1694,8 +1701,7 @@ class direct_connect(no_connect):
     
     
     # Routine to get/put fldigi squelch mode
-    def squelch_mode99(self,opt):
-        VERBOSITY=1
+    def squelch_mode99(self,opt,VERBOSITY=1):
         if VERBOSITY>0:
             print('DIRECT_IO - SQUELCH_MODE: opt=',opt)
 
@@ -1703,8 +1709,7 @@ class direct_connect(no_connect):
         return
 
 
-    def init_keyer(self):
-        #VERBOSITY=1
+    def init_keyer(self,VERBOSITY=1):
         
         if self.rig_type2 in ['IC9700','IC7300']:
 
@@ -1750,8 +1755,7 @@ class direct_connect(no_connect):
             return -1
 
 
-    def read_speed(self):
-        #VERBOSITY=1
+    def read_speed(self,VERBOSITY=0):
         if VERBOSITY>0:
             print('DIRECT READing keyer SPEED ...',self.rig_type,self.rig_type2)
 
@@ -1803,8 +1807,7 @@ class direct_connect(no_connect):
         return wpm
 
     # Set sub-dial function on Yaesu rigs
-    def set_sub_dial(self,func='CLAR'):
-        VERBOSITY=1
+    def set_sub_dial(self,func='CLAR',VERBOSITY=1):
         if VERBOSITY>0:
             print('DIRECT - SET SUB DIAL: func=',func,
                   '\tcurrent=',self.sub_dial_func)
@@ -1865,8 +1868,7 @@ class direct_connect(no_connect):
         return rx,tx    #,shift
         
     
-    def set_speed(self,wpm):
-        #VERBOSITY=1
+    def set_speed(self,wpm,VERBOSITY=0):
         if VERBOSITY>0:
             print('DIRECT SETting keyer SPEED ...',self.rig_type,self.rig_type2,wpm)
 
@@ -1905,17 +1907,41 @@ class direct_connect(no_connect):
             print('DIRECT SET SPEED - Unknown Rig Type:',self.rig_type)
             
 
-    def read_meter(self,meter):
-        #VERBOSITY=1
+    # Function to read various meters (S, PWR, etc.)
+    # For S-meter, need to do some standardization
+    def read_meter(self,meter,VERBOSITY=0):
         if VERBOSITY>0:
             print('DIRECT READ_METER ...',meter)
 
         idx=3
-        if self.rig_type1=='Icom' or  self.rig_type2=='Dummy':
-            print('DIRECT_IO: Read meter not support yet for Icom rigs')
-            return 0
+        if self.rig_type1=='Icom':
+
+            if meter=='S':
+                cmd = self.civ.icom_form_command([0x15,0x02])
+                x   = self.get_response(cmd)
+                y   = self.civ.icom_response(cmd,x)                        
+                s   = bcd2int(y[1:],1)
+                
+                # The IC9700 returns values between 0-255:  0=S0, 120=S9, 241=S9+60
+                # Note that these are pretty close to values for FT991 (see below)
+                # Implied slope is 9/120 so 241*9/120 = 18.075 = S9+9.075*6 dB = S9 + 54dB
+                # A bit off but do we really care?!
+                # FLRIG returns the dB above S0. So 0 for S0 and 54 for S9
+                # Map IC9700 to be consistent with FLRIG
+                #sc=54./120.*s
+                # There is a further scaling of 100/265 for Yaesu rigs - apply reverse of this also
+                #sc=int( 2.56*sc + 0.5 )
+                sc = 9./120.
+                if VERBOSITY>0:
+                    print('DIRECT_IO READ S METER: cmd=',show_hex(cmd),'\n\tx=',x,
+                          '\n\ty=',y,'\n\ts=',s,'\tsc=',sc)
+                return sc*s
+            else:
+                print('Unknown meter',meter)
+                return 0
             
         elif self.rig_type=='Kenwood':
+            
             if meter=='S':
                 cmd = 'SM;'
                 idx=2
@@ -1942,9 +1968,31 @@ class direct_connect(no_connect):
             sc=255./30
             
         else:
+            
             # Yaesu
+            # From hamlib/newcat.c, for Yaesu FT991,
+            #     S0    =   0    = -54dB
+            #     S2    =  26
+            #     S4    =  51
+            #     S6    =  81
+            #     S7.5  = 105
+            #     S9    = 130
+            #     S9+12 = 157
+            #     S9+25 = 186
+            #     S9+35 = 203
+            #     S9+50 = 237
+            #     S9+60 = 255    = S0+114 dB
+            # So if we want to return 'S-units,' scale by 9/130 ?
+            # Then 255*9/130 = S 17.6 = S9 + 8.6 = S9 + 8.6*6 dB = 52 dB
+            # Perhaps try a LS fit to this data - see ft991.m in pattern
+            # slope=0.072789, offset = -0.029853
+            sc=1.
+            offset=0.
             if meter=='S':
-                cmd = 'RM0;'
+                cmd = 'RM0;'            # SM?
+                #sc=9./130.
+                sc = 0.072789
+                offset = -0.029853
             elif meter=='Power':
                 cmd = 'RM5;'
             elif meter=='SWR':
@@ -1957,21 +2005,18 @@ class direct_connect(no_connect):
                 print('Unknown meter')
                 return 0
 
-            sc=1.
-                
         if VERBOSITY>0:
             print('DIRECT READ_METER cmd=',cmd,len(cmd))
         buf = self.get_response(cmd,True)
         if VERBOSITY>0:
             print('DIRECT READ_METER buf=',buf)
             #print('buf=',buf[idx:-1])
-        meter = sc*int(buf[idx:-1])
+        meter = sc*int(buf[idx:-1]) + offset
         return meter
             
 
     # Function to control front-end reamp & attenuator
-    def frontend(self,opt,pamp=0,atten=0):
-        VERBOSITY=1
+    def frontend(self,opt,pamp=0,atten=0,VERBOSITY=0):
         if VERBOSITY>0:
             print('DIRECT FRONTEND: opt=',opt,'\tpamp=',pamp,'\tatten=',atten,
                   '\trig1=',self.rig_type1)
@@ -2070,13 +2115,12 @@ class direct_connect(no_connect):
         
     
     # Function to control RIT
-    def rit(self,opt,df=0,VFO='A'):
-        #VERBOSITY=1
+    def rit(self,opt,df=0,VFO='A',VERBOSITY=0):
         if VERBOSITY>0:
             print('DIRECT RIT:',opt,df,VFO)
             
         if self.rig_type1=='Kenwood' or self.rig_type1=='Icom':
-            print('SET_PLtone: Function not yet implemented for Kenwood and Icom rigs')
+            print('DIRECT RIT: Function not yet implemented for Kenwood and Icom rigs')
             return 0
 
         if opt==-1:
@@ -2124,8 +2168,7 @@ class direct_connect(no_connect):
     # The doc for this isn't clear but it finally seems to work
     # Note - this seems different than menu item 035 which is General Monitor Level
     # We can acces the latter via EX035xxx command
-    def set_monitor_gain(self,gain):
-        #VERBOSITY=1
+    def set_monitor_gain(self,gain,VERBOSITY=0):
         if self.rig_type1=='Kenwood' or self.rig_type1=='Icom':
             print('DIRECT - SET MONITOR GAIN: Function not yet implemented for Kenwood and Icom rigs')
             return 0
@@ -2163,8 +2206,7 @@ class direct_connect(no_connect):
     # P36 - 360-deg mode
     # P45 - 450-deg mode
     #
-    def set_position(self,pos,VERBOSITY=0):
-        VERBOSITY=1
+    def set_position(self,pos,VERBOSITY=1):
         if VERBOSITY>0:
             print('DIRECT_IO SET POSITION: pos=',pos)
 
@@ -2184,8 +2226,7 @@ class direct_connect(no_connect):
     # C2 - Az and El angles
     # H,H2,H3 - Help list of commands
     #
-    def get_position(self,VERBOSITY=0):
-        VERBOSITY=1
+    def get_position(self,VERBOSITY=1):
         if VERBOSITY>0:
             print('DIRECT_IO GET POSITION...')
         
@@ -2212,8 +2253,7 @@ class direct_connect(no_connect):
     # A - Az STOP!
     # E - El STOP!
     #
-    def stop_rotor(self,VERBOSITY=0):
-        VERBOSITY=1
+    def stop_rotor(self,VERBOSITY=1):
         if VERBOSITY>0:
             print('\n--- DIRECT - STOP ROTOR ---')
         cmd='S\r'

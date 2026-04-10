@@ -239,7 +239,14 @@ SATELLITE_LIST = ['None','ISS','PO-101','SO-50', \
                   'AO-123','AO-73','AO-91','RS-44', \
                   'AO-7','JO-97',\
                   'MO-122','FO-29',\
-                  'SO-124','SO-125']
+                  'SO-124','SO-125','Ten-Koh2']
+
+SAT_PL_TONES = {'ISS'    : 67.0,
+                'AO-91'  : 67.0,
+                'AO-123' : 67.0,
+                'PO-101' : 141.3,
+                'SO-50'  : 67.0                 # Use 74.4 to turn on transponder
+                }
 
 # Celestial bodies of interest - i.e. Sun and Moon
 CELESTIAL_BODY_LIST=['Sun','Moon']
