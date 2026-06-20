@@ -310,8 +310,7 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False,DF=Fal
 
 
 # Function to create entire ADIF record and write it to a file
-def write_adif_record(fp,rec,P,long=False,sort=True,VERBOSITY=0):
-    #VERBOSITY=1
+def write_adif_record(fp,rec,P,long=False,sort=True,UPPER_CASE=False,VERBOSITY=0):
     if VERBOSITY>=1:
         print('rec=',rec)
 
@@ -319,8 +318,14 @@ def write_adif_record(fp,rec,P,long=False,sort=True,VERBOSITY=0):
         contest = P.contest_name
     except:
         contest = ''
-    MY_CALL = P.SETTINGS['MY_CALL']
-    MY_GRID = P.SETTINGS['MY_GRID']
+    try:
+        MY_CALL = P.SETTINGS['MY_CALL']
+    except:
+        MY_CALL=''
+    try:
+        MY_GRID = P.SETTINGS['MY_GRID']
+    except:
+        MY_GRID =''
     try:
         MY_CITY = P.SETTINGS['MY_CITY']+', '+P.SETTINGS['MY_STATE']
     except:
@@ -332,9 +337,13 @@ def write_adif_record(fp,rec,P,long=False,sort=True,VERBOSITY=0):
         NL=' '
         
     # Convert keys to upper case to avoid further complications
+    # Optionally convert values to upper as well
     if VERBOSITY>0:
         print('\nqso in  =',rec)
-    qso = dict((key.upper(), value) for key, value in rec.items())
+    if UPPER_CASE:
+        qso = dict((key.upper(), value.upper()) for key, value in rec.items())
+    else:
+        qso = dict((key.upper(), value) for key, value in rec.items())
     if VERBOSITY>0:
         print('\nqso out =',qso)
         print('WRITE_ADIF_RECORD: keys=',list(qso.keys()))

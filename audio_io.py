@@ -3,7 +3,7 @@
 #
 # audio_io.py - Rev 1.1 
 #
-# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
+# Copyright (C) 2021-6 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Various routines/objects related to audio recording and play
 #
@@ -185,7 +185,7 @@ class AudioIO():
         self.active=False
         self.nchan = 2
 
-        # This can eventually be smplified since I now know how to do this with an object method
+        # This can eventually be simplified since I now know how to do this with an object method
         self.FirstTime = True
         self.callback = self.AudioPlayCB
         print('Player Init')
@@ -526,7 +526,8 @@ class WaveRecorder(object):
               '\n\tDevice index=',index,'\tnchan=',self.channels,\
               '\tfs=',self.rate,'\twave rate=',self.wav_rate,'\tdown=',self.down,
               '\tframes/buf=',self.frames_per_buffer)
-        self._stream = self._pa.open(format=pyaudio.paInt16,
+        #self._stream = self._pa.open(format=pyaudio.paInt16,
+        self._stream = self._pa.open(format=self._pa.get_format_from_width(2),
                                      channels=self.channels,
                                      rate=self.rate,
                                      input=True,
@@ -558,7 +559,7 @@ class WaveRecorder(object):
 
             # Generate indecies into the array
             # Keep track of starting point for next time around
-            N=self.frames_per_buffer
+            N=int(self.frames_per_buffer/self.channels)
             idx = list(range(self.istart,N,self.down))
             self.istart = idx[-1]+self.down-N
             if DEBUG>0:
@@ -566,12 +567,28 @@ class WaveRecorder(object):
                       '\n\tistart=',self.istart,'\tidx=',idx[-1],
                       '\tnchan=',self.channels,'\tnamp=',self.rb.nsamps)  
 
-            # Left channel is audio from RX
             # Direct decimation of the data
-            data1 = np.fromstring(in_data,dtype=np.int16);
-            left  = np.int16( self.GAIN[0]*data1[idx] )
-            
-            self.rb.push(left)
+            if self.channels==1:
+                # Left channel is audio from RX
+                # OLD - probably can discard this
+                data1 = np.frombuffer(in_data,dtype=np.int16)
+                #self.rb.push(data1)
+                left  = np.int16( self.GAIN[0]*data1[idx] )
+                self.rb.push(left)
+            else:
+                # L&R channels - decimate each 
+                data1 = np.frombuffer(in_data,dtype=np.int16)
+                data2 = np.reshape( data1, (2,-1), order='F')
+                data3 = np.reshape( data2[:,idx] , (1,-1), order='F')
+                #print(data1)
+                #print(data1.shape)
+                #print(data2)
+                #print(data2.shape)
+                #print(data3)
+                #print(data3.shape)
+                #print(idx)
+                #sys.exit(0)
+                self.rb.push(data3[0,:])
             
             return in_data, pyaudio.paContinue
         return callback

@@ -2,7 +2,7 @@
 ################################################################################
 #
 # tcp_server.py - Rev 1.0
-# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
+# Copyright (C) 2021-6 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 #    Simple tcp server to allow clients to communicate to keyer app.
 #
@@ -34,10 +34,11 @@ import zlib
 
 ################################################################################
 
-VERBOSITY=0
-SDR_UDP_PORT     = 7373
-KEYER_UDP_PORT   = 7474
-BANDMAP_UDP_PORT = 7575
+VERBOSITY = 0
+SDR_UDP_PORT         = 7373
+KEYER_UDP_PORT       = 7474
+BANDMAP_UDP_PORT     = 7575
+BROADCAST_UDP_PORT   = 12060          # Same as N1MM
 
 ################################################################################
 
@@ -51,12 +52,12 @@ def open_udp_client(P,port,msg_handler,BUFFER_SIZE=1024):
 
     if not port:
         #port = KEYER_UDP_PORT
-        print('OPEN_UDP_CLIENT - Must specify port',port)
+        print('TCP_SERVER->OPEN_UDP_CLIENT - Must specify port',port)
         sys.exit(0)
     
     try:
         
-        print('OPEN_UDP_CLIENT: Opening UDP client on port',port,' ...')
+        print('TCP_SERVER->OPEN_UDP_CLIENT: Opening UDP client on port',port,' ...')
         udp_client = TCP_Server(P,None,port,Server=False,
                                   BUFFER_SIZE=BUFFER_SIZE,Handler=msg_handler)
         worker = Thread(target=udp_client.Listener,args=(), kwargs={},
@@ -68,12 +69,59 @@ def open_udp_client(P,port,msg_handler,BUFFER_SIZE=1024):
     
     except Exception as e:
         
-        print('OPEN UDP CLIENT: Exception Raised:\n',e)
+        print('TCP_SERVER->OPEN UDP CLIENT: Exception Raised:\n',e)
         print('--- Unable to connect to UDP socket ---')
         print('\tport=',port)
         return None
     
     
+################################################################################
+
+# UDP Broadcast Server class
+class UDP_Broadcast_Server(Thread):
+    
+    def __init__(self,P,host,port,Server=False,BUFFER_SIZE=1024,Handler=None): 
+        Thread.__init__(self)
+
+        self.P=P
+        if not host:
+            #host='127.0.0.1'
+            host='<broadcast>'
+        self.host=host
+        self.port=port
+        self.Server=Server
+        self.BUFFER_SIZE = BUFFER_SIZE
+        self.running=False
+        if Handler:
+            self.msg_handler=Handler
+        else:
+            self.msg_handler=dummy_msg_handler
+        if P and hasattr(P,'Stopper'):
+            self.Stopper = P.Stopper
+        else:
+            self.Stopper = Event()
+            
+        print('UDP Server Init: host=',host,'\tport=',port,'\tBuf Size=',self.BUFFER_SIZE,
+              '\tHandler=',self.msg_handler)
+
+        # Enable port reusage so we will be able to run multiple clients and servers on single (host, port). 
+        # Do not use socket.SO_REUSEADDR except you using linux(kernel<3.9):
+        # goto https://stackoverflow.com/questions/14388706/how-do-so-reuseaddr-and-so-reuseport-differ for more information.
+        # For linux hosts all sockets that want to share the same address and port combination must belong to
+        # processes that share the same effective user ID!
+
+        self.udpServer = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        self.udpServer.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        self.udpServer.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        self.udpServer.settimeout(0.2)
+
+    # Function to broadcast a message 
+    def Broadcast(self,msg,DEBUG=False):
+        self.udpServer.sendto(msg.encode(), (self.host,self.port))
+        print("UDP_Broadcast_Server: Message sent!")
+        
+################################################################################
+
 # TCP Server class
 class TCP_Server(Thread):
     
@@ -114,6 +162,7 @@ class TCP_Server(Thread):
         self.tcpServer.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) # Not sure why we need these?
         if self.Server:
             self.tcpServer.bind((self.host,self.port))                       # Server binds socket to server address
+            #self.tcpServer.listen(1)   # ???
         else:
             self.tcpServer.connect((self.host, self.port))                   # Client connects to server
         self.socks = [self.tcpServer]        
@@ -253,15 +302,17 @@ class TCP_Server(Thread):
         self.Broadcast(msg)
 
     # Function to broadcast a message to all connected clients
-    def Broadcast(self,msg):
+    def Broadcast(self,msg,DEBUG=False):
 
         # Get list of sockets
+        #if True:
         try:
             readable,writeable,inerror = select.select([],self.socks,[],0)
-            if False:
-                print('BROADCAST: readable =',readable)
-                print('BROADCAST: writeable=',writeable)
-                print('BROADCAST: inerror =',inerror)
+            if DEBUG:
+                print('BROADCAST: socks     =',self.socks)
+                print('BROADCAST: readable  =',readable)
+                print('BROADCAST: writeable =',writeable)
+                print('BROADCAST: inerror   =',inerror)
         except:
             writeable=[]
         if len(writeable)==0:

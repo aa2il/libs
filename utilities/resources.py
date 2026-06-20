@@ -1,7 +1,7 @@
 ############################################################################
 #
 # resources.py - Rev 1.0
-# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
+# Copyright (C) 2021-6 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Routine to locate various resources.
 #
@@ -44,7 +44,8 @@ VERBOSITY=0
 #DEVICE_IDs={'nanoIO'   : '1A86' ,
 #DEVICE_IDs={'nanoIO'   : 'USB2.0-Ser' ,
 DEVICE_IDs={'nanoIO'   : '1A86:7523' ,
-            'nanoIO32' : '10C4:EA60' ,
+            #'nanoIO32' : '10C4:EA60' ,
+            'nanoIO32' : '2886:802F' ,
             'FTdx3000' : 'SER=AH046H3M120067',
             'FT991a'   : 'SER=00A50791',
             'IC9700'   : '10C4:EA60',

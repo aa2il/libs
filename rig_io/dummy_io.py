@@ -114,7 +114,7 @@ class no_connect:
 
         return band
 
-    def set_band(self,b,VFO='A'):
+    def set_band(self,b,VFO='A',VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0
@@ -124,22 +124,22 @@ class no_connect:
             logging.info('Ignoring call')
         return 0
     
-    def set_breakin(self,onoff):
+    def set_breakin(self,onoff,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0
     
-    def get_ant(self):
+    def get_ant(self,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0
 
-    def set_if_shift(self,shift):
+    def set_if_shift(self,shift,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0
     
-    def set_ant(self,a,VFO='A'):
+    def set_ant(self,a,VFO='A',VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0
@@ -149,7 +149,7 @@ class no_connect:
             logging.info('Ignoring call')
         return 0
         
-    def get_fldigi_mode(self):
+    def get_fldigi_mode(self,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return '0'
@@ -180,37 +180,37 @@ class no_connect:
         self.default_freq=f
         return f
 
-    def set_filter(self,filt,mode=None):
+    def set_filter(self,filt,mode=None,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0
 
-    def set_vfo(self,rx=None,tx=None,op=None):
+    def set_vfo(self,rx=None,tx=None,op=None,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return
 
-    def set_vfo_direct(self,rx=None,tx=None,op=None):
+    def set_vfo_direct(self,rx=None,tx=None,op=None,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return
     
-    def send(self,cmd):
+    def send(self,cmd,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0
 
-    def set_log_fields(self,fields):
+    def set_log_fields(self,fields,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0
         
-    def set_call(self,call):
+    def set_call(self,call,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0
 
-    def get_serial_out(self):
+    def get_serial_out(self,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0
@@ -220,22 +220,22 @@ class no_connect:
             logging.info('Ignoring call')
         return ''
 
-    def get_info(self):
+    def get_info(self,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return ''
     
-    def set_speed(self,wpm):
+    def set_speed(self,wpm,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0
 
-    def get_PLtone(self):
+    def get_PLtone(self,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0
     
-    def get_filters(self,VFO='A'):
+    def get_filters(self,VFO='A',VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         #return [None,None]
@@ -246,47 +246,47 @@ class no_connect:
             logging.info('Ignoring call')
         return 0
     
-    def read_meter(self,meter):
+    def read_meter(self,meter,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0
 
-    def read_speed(self):
+    def read_speed(self,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0
     
-    def get_position(self):
+    def get_position(self,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return [None,None]
 
-    def modem_carrier(self,frq=None):
+    def modem_carrier(self,frq=None,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0
 
-    def split_mode(self,opt):
+    def split_mode(self,opt,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0
 
-    def squelch_mode99(self,opt):
+    def squelch_mode99(self,opt,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0
     
-    def set_power(self,p):
+    def set_power(self,p,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0
         
-    def set_position(self,pos):
+    def set_position(self,pos,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0
 
-    def recorder(self,on_off=None):
+    def recorder(self,on_off=None,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return False
@@ -300,28 +300,28 @@ class no_connect:
         if VERBOSITY>0:
             logging.info('Ignoring call')
 
-    def get_vfo(self):
+    def get_vfo(sefl,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 'A'
     
-    def set_sub_dial(self,func='CLAR'):
+    def set_sub_dial(self,func='CLAR',VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 
     
-    def get_monitor_gain(self):
+    def get_monitor_gain(self,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 0
     
-    def set_monitor_gain(self,gain):
+    def set_monitor_gain(self,gain,VERBOSITY=0):
         #print('DUMMY_IO: Set Monitor Level - Ignored')
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 
 
-    def sat_mode(self,opt):
+    def sat_mode(self,opt,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')
         return 
@@ -331,7 +331,7 @@ class no_connect:
             logging.info('Ignoring call')
         return 
 
-    def frontend(self,opt,pamp=0,atten=0):
+    def frontend(self,opt,pamp=0,atten=0,VERBOSITY=0):
         VERBOSITY=1
         if VERBOSITY>0:
             print('DUMMY FRONTEND: opt=',opt,'\tpamp=',pamp,'\tatten=',atten,
