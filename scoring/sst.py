@@ -1,7 +1,7 @@
 ############################################################################################
 #
 # sst.py - Rev 1.0
-# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
+# Copyright (C) 2021-6 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Routines for scoring K1USN Slow Speed Mini Tests (SSTs).
 # Also for NS and NCJ Sprints.

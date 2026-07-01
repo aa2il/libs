@@ -1183,29 +1183,27 @@ class hamlib_connect(direct_connect):
                 
 
     # Function to control RIT
-    # This doesn't work quite right so use direct commands for now.
-    # It did work in v4 but not latest v4.1 --> look at newcat
-    # Hopefully, this will be fixed in a future version Hamlib
-    # When it does, also enable commands in socket_io->ClarReset
-    #
-    # Disabled broken code in newcat.c so now this works
-    # Keep an eye on it
-    def rit(self,opt,df,VFO='A',VERBOSITY=0):
+    # Note - this needs (small) mod to newcat.c to work correctly
+    def rit(self,opt,df=0,VFO='A',VERBOSITY=0,RELATIVE=False):
         if VERBOSITY>0:
             print('HAMLIB RIT: opt=',opt,'\tdf=',df,'\tvfo=',VFO)
 
         if opt==-1:
+            
             # Read current rit setting
             buf1=self.get_response('u RIT')
             buf2=self.get_response('j')
-            return [buf1,buf2]
+            return [int(buf1),int(buf2)]
     
         elif opt<2:
             
             # Get current shift and compute new shift
             cmd='j'
             buf2=self.get_response(cmd)
-            offset = int(buf2) + df  
+            if RELATIVE:
+                offset = int(buf2) + df
+            else:
+                offset = df
             if VERBOSITY>0:
                 print('\tcmd    =',cmd)
                 print('\tbuf2   =',buf2)
@@ -1216,16 +1214,56 @@ class hamlib_connect(direct_connect):
             buf=self.get_response(cmd)
             if VERBOSITY>0:
                 print('\tcmd  =',cmd)
-                print('\tbuf  =',buf2)
+                print('\tbuf  =',buf)
 
             # ... and adjust shift            
-            if USE_HAMLIB_WORK_AROUNDS and self.rig_type1=='Yaesu':
-                if df>=0:
-                    cmd='W RU'+str(df).zfill(4)+'; 0'
-                else:
-                    cmd='W RD'+str(-df).zfill(4)+'; 0'
+            cmd='J '+str(offset)
+            buf2=self.get_response(cmd)
+            if VERBOSITY>0:
+                print('\tcmd  =',cmd)
+                print('\tbuf2 =',buf2,flush=True)
+
+        else:
+
+            print('HAMLIB RIT: Invalid opt',opt)
+            return -1
+
+
+    # Function to control XIT
+    # Note - this needs (small) mod to newcat.c to work correctly
+    def xit(self,opt,df=0,VFO='A',VERBOSITY=0,RELATIVE=False):
+        if VERBOSITY>0:
+            print('HAMLIB XIT: opt=',opt,'\tdf=',df,'\tvfo=',VFO)
+
+        if opt==-1:
+            # Read current rit setting
+            buf1=self.get_response('u XIT')
+            buf2=self.get_response('z')
+            return [int(buf1),int(buf2)]
+    
+        elif opt<2:
+            
+            # Get current shift and compute new shift
+            cmd='z'
+            buf2=self.get_response(cmd)
+            if RELATIVE:
+                offset = int(buf2) + df
             else:
-                cmd='J '+str(offset)
+                offset = df
+            if VERBOSITY>0:
+                print('\tcmd    =',cmd)
+                print('\tbuf2   =',buf2)
+                print('\toffset =',offset)
+            
+            # Turn xit on/off ...
+            cmd='U XIT '+str(opt)
+            buf=self.get_response(cmd)
+            if VERBOSITY>0:
+                print('\tcmd  =',cmd)
+                print('\tbuf  =',buf)
+
+            # ... and adjust shift            
+            cmd='Z '+str(offset)
             buf2=self.get_response(cmd)
             if VERBOSITY>0:
                 print('\tcmd  =',cmd)
@@ -1496,8 +1534,7 @@ class hamlib_connect(direct_connect):
 
 
     # Function to read the clarifier
-    def read_clarifier(self):
-        VERBOSITY=0
+    def read_clarifier99(self,VERBOSITY=0):
         if VERBOSITY>0:
             print('HAMLIB_IO: READ_CLARIFIER ...')
         

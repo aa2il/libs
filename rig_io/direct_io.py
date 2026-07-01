@@ -1835,7 +1835,7 @@ class direct_connect(no_connect):
 
 
     # Function to read the clarifier
-    def read_clarifier(self):
+    def read_clarifier99(self,VERBOSITY=0):
         if VERBOSITY>0:
             print('DIRECT_IO: READ_CLARIFIER ...')
         
@@ -2115,35 +2115,120 @@ class direct_connect(no_connect):
         
     
     # Function to control RIT
-    def rit(self,opt,df=0,VFO='A',VERBOSITY=0):
+    def rit(self,opt,df=0,VFO='A',VERBOSITY=0,RELATIVE=False):
         if VERBOSITY>0:
             print('DIRECT RIT:',opt,df,VFO)
             
         if self.rig_type1=='Kenwood' or self.rig_type1=='Icom':
             print('DIRECT RIT: Function not yet implemented for Kenwood and Icom rigs')
-            return 0
+            return 0        
 
+        # Read current rit setting
+        buf = self.get_response('IF;')
+
+        if self.rig_type2=='FT991a':
+            p3=buf[15:20]
+            p4=buf[20]
+            p5=buf[21]
+        else:
+            p3=buf[13:18]
+            p4=buf[18]
+            p5=buf[19]
+
+        rit=int(p3)
+        onoff=int(p4)
+        
+        if VERBOSITY>0:
+            print('buf=',buf)
+            print('p3=',p3)
+            print('p4=',p4)
+            print('p5=',p5)
+            print('onoff=',onoff,'\trit=',rit)
+            
         if opt==-1:
-            # Read current rit setting - need to test this!
-            buf1=self.get_response('RT;')
-            buf2='0'
-            return [buf1,buf2]
+            
+            return [onoff,rit]
     
         elif opt<2:
+
+            if RELATIVE:
+                offset=df
+            else:
+                offset=rit+df
+            
             # Turn it on/off & adjust offset
             # For ftdx3000, df seems to offset from current rit, not abosolute shift
-            if df>=0:
+            if offset>=0:
                 #self.sock.send('RT1;RU0050;')
-                p4 = str( df ).zfill(4)
+                p4 = str( offset ).zfill(4)
                 cmd='BY;RT'+str(opt)+';RU'+p4+';'
             else:
-                p4 = str( -df ).zfill(4)
+                p4 = str( -offset ).zfill(4)
                 cmd='BY;RT'+str(opt)+';RD'+p4+';'
             buf = self.get_response(cmd)
 
         else:
 
             print('DIRECT RIT: Invalid opt',opt)
+            return -1
+
+
+
+    # Function to control XIT
+    def xit(self,opt,df=0,VFO='A',VERBOSITY=0):
+        if VERBOSITY>0:
+            print('DIRECT RIT:',opt,df,VFO)
+
+        if self.rig_type1=='Kenwood' or self.rig_type1=='Icom':
+            print('DIRECT RIT: Function not yet implemented for Kenwood and Icom rigs')
+            return 0
+
+        # Read current rit setting
+        buf = self.get_response('IF;')
+
+        if self.rig_type2=='FT991a':
+            p3=buf[15:20]
+            p4=buf[20]
+            p5=buf[21]
+        else:
+            p3=buf[13:18]
+            p4=buf[18]
+            p5=buf[19]
+
+        xit=int(p3)
+        onoff=int(p5)
+        
+        if VERBOSITY>0:
+            print('buf=',buf)
+            print('p3=',p3)
+            print('p4=',p4)
+            print('p5=',p5)
+            print('onoff=',onoff,'\txit=',xit)
+            
+        if opt==-1:
+            
+            return [onoff,rit]
+    
+        elif opt<2:
+            
+            if RELATIVE:
+                offset=df
+            else:
+                offset=rit+df
+            
+            # Turn it on/off & adjust offset
+            # For ftdx3000, df seems to offset from current rit, not abosolute shift
+            if df>=0:
+                p4 = str( offset ).zfill(4)
+                cmd='BY;XT'+str(opt)+';RU'+p4+';'
+            else:
+                p4 = str( -offset ).zfill(4)
+                cmd='BY;XT'+str(opt)+';RD'+p4+';'
+            buf = self.get_response(cmd)
+
+        else:
+
+            print('DIRECT XIT: Invalid opt',opt)
             return -1
 
 

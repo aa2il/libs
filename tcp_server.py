@@ -4,7 +4,8 @@
 # tcp_server.py - Rev 1.0
 # Copyright (C) 2021-6 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
-#    Simple tcp server to allow clients to communicate to keyer app.
+#    Simple tcp and udp servers/clients to allow communications between various
+#    modules in this project (e.g. keyer to/from sdr, bandmap, etc.)
 #
 # THIS OBJECT NOW ALSO INCLUDES THE CLIENT OBJECT!
 # Use tcp_server instead with Server=False - see test program below.
@@ -45,7 +46,7 @@ BROADCAST_UDP_PORT   = 12060          # Same as N1MM
 # Prototype message handler
 def dummy_msg_handler(self,sock,msg):
     id=sock.getpeername()
-    print('TCP_SERVER->DUMMY MSG HANDLER: id=',id,'\tmsg=',msg.rstrip())
+    print('TCP_SERVER->DUMMY MSG HANDLER: id=',id,'\nmsg=',msg.rstrip())
 
 # Function to open UDP client
 def open_udp_client(P,port,msg_handler,BUFFER_SIZE=1024):
@@ -113,12 +114,30 @@ class UDP_Broadcast_Server(Thread):
         self.udpServer = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self.udpServer.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         self.udpServer.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        self.udpServer.settimeout(0.2)
-
+        if Server:
+            self.udpServer.settimeout(0.2)
+        else:
+            worker = Thread(target=self.Listener,args=(), kwargs={},
+                            name='UDP Broadcast Client' )
+            worker.setDaemon(True)
+            worker.start()
+            P.threads.append(worker)
+            
     # Function to broadcast a message 
     def Broadcast(self,msg,DEBUG=False):
         self.udpServer.sendto(msg.encode(), (self.host,self.port))
         print("UDP_Broadcast_Server: Message sent!")
+
+
+    # Client listening for broadcasts
+    def Listener(self):
+        print('UDP SERVER -> Broadcast client Listener started ... port=',self.port)
+        self.udpServer.bind(("", self.port))
+        while True:
+            data, addr = self.udpServer.recvfrom(1024)
+            print("UDP SERVER -> LISTENER: Received message from addr=",addr)
+            print("\tMsg =",data)
+    
         
 ################################################################################
 
@@ -259,7 +278,7 @@ class TCP_Server(Thread):
                     if data:
                         
                         # We received a message from a client
-                        #print('LISTERNER: \r{}:'.format(sock.getpeername()),data)
+                        #print('LISTENER: \r{}:'.format(sock.getpeername()),data)
                         try:
                             # Some messages are compressed
                             #print('DATA TYPE:',type(data))
@@ -292,7 +311,7 @@ class TCP_Server(Thread):
     def Close(self):
         
         self.tcpServer.close()
-        print('LISTERNER (',self.port,'): Bye bye!')
+        print('LISTENER (',self.port,'): Bye bye!')
 
 ################################################################################
 
