@@ -201,6 +201,8 @@ class SETTINGS_GUI():
                 self.SETTINGS['MY_QTH']=self.SETTINGS['MY_CITY']+', ' \
                     +self.SETTINGS['MY_STATE']
             self.P.SETTINGS=self.SETTINGS
+            if 'MY_CALL' in self.SETTINGS:
+                self.P.MY_CALL=self.SETTINGS['MY_CALL']
             print('Writing settings to',self.P.RCFILE,'...')
             print(self.P.SETTINGS)
             with open(self.P.RCFILE, "w") as outfile:

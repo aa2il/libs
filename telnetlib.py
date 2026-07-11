@@ -290,7 +290,6 @@ class Telnet:
         return self.sock.fileno()
 
     def write(self, buffer):
-        #print('TELNETLIB write: buffer=',buffer,type(buffer))
         """Write a string to the socket, doubling any IAC characters.
 
         Can block if the connection is blocked.  May raise

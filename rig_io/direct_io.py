@@ -125,9 +125,13 @@ def try_port(port,baud,verbosity,ICOM=None):
             self.civ = icom_civ(ICOM)            
             cmd = self.civ.icom_form_command(0x03)            # Get freq
         else:
-            cmd='ID;'.encode()
+            #cmd='ID;'.encode()
+            cmd='PS;'.encode()
+
+        ntries=10
+        while ntries>0:
+            ntries -=1
             
-        while True:
             if verbosity>=1:
                 print('TRY_PORT: Sending command cmd=',cmd)
             self.s.write(cmd)
@@ -163,11 +167,23 @@ def try_port(port,baud,verbosity,ICOM=None):
             else:
                 buf = self.s.read(256).decode("utf-8")
                 
-            #print('buf=',buf)
             if verbosity>=1:
                 print('TRY_PORT: cmd=%s \t response=%s' % (cmd,buf))
-                
-            if 'ID0460;' in buf:
+
+            if 'PS0;' in buf:
+                if verbosity>=1:
+                    print('TRY_PORT: Rig appears to have power but is turned off - assuming Yaesu for now')
+                self.rig_type  = 'Yaesu'
+                self.rig_type1 = 'Yaesu'
+                self.rig_type2 = 'FTdx3000'
+                self.mode      = ''
+                self.lock      = threading.Lock() 
+                return ['Yaesu','FTdx3000',self]
+            elif 'PS1;' in buf:
+                if verbosity>=1:
+                    print('TRY_PORT: Rig appears to be powered up - assuming Yaesu for now')
+                cmd='ID;'.encode()
+            elif 'ID0460;' in buf:
                 self.rig_type  = 'Yaesu'
                 self.rig_type1 = 'Yaesu'
                 self.rig_type2 = 'FTdx3000'
@@ -188,17 +204,17 @@ def try_port(port,baud,verbosity,ICOM=None):
                 self.mode      = ''
                 self.lock      = threading.Lock() 
                 return ['Kenwood','TS850',self]
-            elif buf=='?;' or  buf=='E;':
+            elif len(buf)==0 or buf=='?;' or  buf=='E;':
                 if verbosity>=1:
                     print('DIRECT TRY_PORT: Got a ? response - trying again')
-                    print('cmd=%s \t response=%s',(cmd,buf))
+                    print('cmd=',cmd,'\tresponse=',buf)
             elif len(buf)>0:
                 print('\nDIRECT TRY_PORT: Trying port %s at %d baud ...' % (port,baud) )
                 print('DIRECT TRY_PORT: Got a response but dont know what to do?!')
                 print('cmd=',cmd,'\tresponse=',buf)
                 sys.exit(0)
-            else:
-                break
+            #else:
+            #    break
 
     #except:
     except Exception as e: 
@@ -243,6 +259,13 @@ def try_rig(self,type1,type2,port,baud):
             print('Hmmm - so far so good ... baud=',baud)
             self.get_position()
             return True
+
+        if type1=='Yaesu':
+            ps = self.power_switch(-1,VERBOSITY=1)
+            print('\tps=',ps)
+            if not ps:
+                print('Rig appears to have power but turned off\n')
+                return True
         
         #print('Hey4',self.rig_type)
         freq = self.get_freq()
@@ -379,21 +402,27 @@ class direct_connect(no_connect):
                 print('DIRECT INIT - put test here!')
                 return
 
-            if self.rig_type1=='Icom':
+            if self.rig_type1=='Yaesu':
+
+                ps = self.power_switch(-1,VERBOSITY=1)
+                print('\tps=',ps)
+                if not ps:
+                    print('Rig appears to have power but turned off\n')
+                else:
+                    self.send('FA;')
+                    x = self.recv(256)
+                    print('DIRECT INIT:',x)
+                    if x[0:2]!='FA':
+                        print('*** DIRECT INIT - USB port appears to be there but no connection to rig ***')
+                        self.active=False or force
+                        return
+                
+            elif self.rig_type1=='Icom':
 
                 # Read freq
                 freq = self.get_freq()
                 print('\nIcom init - freq =',freq)
                 return
-            
-            self.send('FA;')
-            x = self.recv(256)
-            print('DIRECT INIT:',x)
-            if x[0:2]!='FA':
-                print('*** DIRECT INIT - USB port appears to be there but no connection to rig ***')
-                self.active=False or force
-                return
-
 
     def send(self,cmd):
         # TODO - add ability to detect or override if we already have the lock
@@ -1697,6 +1726,46 @@ class direct_connect(no_connect):
         else:
 
             print('DIRECT SPLIT_MODE: Invalid rig',self.rig_type2)
+            return -1
+    
+    
+    # Routine to turn rig power on and off
+    def power_switch(self,opt,VERBOSITY=0):
+        if VERBOSITY>0:
+            print('DIRECT - POWER_SWITCH:',opt)
+
+        if self.rig_type=='Yaesu':
+        
+            if opt==-1:
+                if VERBOSITY>0:
+                    print('\tQuerying power switch ...')
+                for itry in range(3):
+                    buf=self.get_response('PS;')
+                    if VERBOSITY>0:
+                        print('\t',itry,'\tbuf=',buf,'\t',len(buf))
+                    if len(buf)>0:
+                        break
+                return buf[2]=='1'
+
+            elif opt in [0,1]:
+
+                if VERBOSITY>0:
+                    print('Setting POWER SWITCH',opt)
+                buf=self.get_response('PS'+str(opt)+';')
+                if VERBOSITY>0:
+                    print('\tbuf=',buf)
+                return opt==1
+                
+            else:
+
+                print('DIRECT POWER_SWITCH: Invalid opt',opt)
+                return -1
+            
+        #elif self.rig_type2 in ['IC9700','IC7300']:
+        
+        else:
+
+            print('DIRECT POWER_SWITCH: Invalid rig',self.rig_type)
             return -1
     
     

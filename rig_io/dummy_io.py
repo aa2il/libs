@@ -256,6 +256,11 @@ class no_connect:
             logging.info('Ignoring call')
         return 0
     
+    def power_switch(self,opt,VERBOSITY=0):
+        if VERBOSITY>0:
+            logging.info('Ignoring call')
+        return None
+        
     def get_position(self,VERBOSITY=0):
         if VERBOSITY>0:
             logging.info('Ignoring call')

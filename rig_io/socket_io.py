@@ -1,7 +1,7 @@
 ############################################################################################
 #
 # Socket IO - Rev 1.0
-# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
+# Copyright (C) 2021-6 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # This module contains socket I/O routines related to commanding the radio.
 #
@@ -308,7 +308,7 @@ def read_radio_status(sock,verbosity=0):
         
     else:
         sock.freq = sock.get_freq()
-        sock.mode = sock.get_mode()
+        sock.mode,sock.bw = sock.get_mode()
         sock.pl_tone = sock.get_PLtone()
         if sock.rig_type=='Yaesu':
             wpm = sock.read_speed()
@@ -334,7 +334,7 @@ def get_status(self):
     if s.rig_type=='Hamlib' or s.rig_type=='FLDIGI' or s.rig_type=='FLRIG':
 
         frq  = s.get_freq() * 1e-3
-        mode = s.get_mode()
+        mode,bw = s.get_mode()
         ant  = s.get_ant()
         read_mic_gain(self)
         print(("GAIN: %d" % self.gain))
@@ -359,7 +359,7 @@ def get_status(self):
         # Icom's commands are quite different
         #print 'ICOM;;;;;;;;;'
         frq  = s.get_freq() * 1e-3
-        mode = s.get_mode()
+        mode,bw = s.get_mode()
         ant  = 1
         
     else:
@@ -387,7 +387,7 @@ def get_status(self):
             mode = Decode_Mode(m)
         else:
             # So does this but requires more functions in class defs
-            mode=s.get_mode()
+            mode,bw=s.get_mode()
 
         # Decode antenna
         ant=s.get_ant()
@@ -790,7 +790,7 @@ def SelectBand(self,b=None,m=None,df=0):
             m = s.mode
             
         if m=='':
-            m = s.get_mode()
+            m,bw = s.get_mode()
 
     print("%%%%%%%%%% Select band: Setting band ... b=",b,"  m=",m,"  df=",df,"%%%%%%%%",s.rig_type)
     
@@ -871,7 +871,7 @@ def SelectBand(self,b=None,m=None,df=0):
     buf=self.sock.get_response(cmd2)        # Set meter to SWR
     print("\nSetting Roofing Filter ...")
     if m=='':
-        m = s.get_mode()
+        m,bw = s.get_mode()
     SetFilter(self,b,m)                         # Set roofing filter
     
     print(("\nSetting audio level -%s- ..." % cmd3))
@@ -893,9 +893,9 @@ def SelectMode(self,b=None,m=None):
     s=self.sock
     #print('SelectMode',self.mode)  # ,self.TxT
     if not m:
-        m = self.mode.get()
+        m,bw = self.mode.get()
     elif m=='':
-        m = s.get_mode()
+        m,bw = s.get_mode()
 
     if self.sock.rig_type=='Hamlib' or self.sock.rig_type1=='Icom':
         split=self.sock.split_mode(-1)
@@ -996,9 +996,9 @@ def SetFilter(self,b=None,m=None):
             b = s.get_band()
     if not m:
         try:
-            m = self.mode.get()
+            m,bw = self.mode.get()
         except:
-            m = s.get_mode()
+            m,bw = s.get_mode()
     print("\nSetFilter: band=",b,'\tmode=',m)
     
     if self.ContestMode:
@@ -1080,7 +1080,7 @@ def set_mic_gain(self,gain=None):
     if not gain:
         gain = self.gain
 
-    mode=s.get_mode()
+    mode,bw=s.get_mode()
     print("SET_MIC_GAIN: Setting Mic Gain to",gain,mode)
     if mode=='CW':
         # There's no mic gain to set in CW!
@@ -1206,7 +1206,7 @@ def read_mic_gain(self):
         print('READ_MIC_GAIN not available in',s.rig_type,s.rig_type2,'command set')
         return self.gain
 
-    mode=s.get_mode()
+    mode,bw=s.get_mode()
     print("SOCKET_IO: READ_MIC_GAIN - Reading Mic Gain ... mode=",mode)
     if mode=='CW':
         # There's no mic gain to set in CW!
@@ -1277,7 +1277,7 @@ def SetSubBand(self,iopt):
         print('1: m=',m)
     except:
         #b = str( s.get_band() ) + 'm'
-        #m = s.get_mode()
+        #m,bw = s.get_mode()
         b = self.band
         m = self.mode
         print('2: b=',b)
