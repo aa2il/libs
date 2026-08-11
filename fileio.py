@@ -1,7 +1,7 @@
 #######################################################################################
 #
 # File IO - Rev 1.0
-# Copyright (C) 2022-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
+# Copyright (C) 2022-6 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Functions related to file I/O
 #
@@ -509,7 +509,13 @@ def qso_time(rec):
 
 #######################################################################################
 
-def read_csv_file(fname,delim=',',FLAT_DATA=False,VERBOSITY=0):
+# Simple class to convert dictionary to a class object (data structure)
+class DictToClass(object):
+    def __init__(self, dictionary):
+        for key, value in dictionary.items():
+            setattr(self, key, value)
+
+def read_csv_file(fname,delim=',',FLAT_DATA=False,DICT=False,VERBOSITY=0):
 
     if VERBOSITY>0 or True:
         print('READing CSV FILE ',fname,' ... flat=',FLAT_DATA)
@@ -572,6 +578,8 @@ def read_csv_file(fname,delim=',',FLAT_DATA=False,VERBOSITY=0):
                             #print(key,'\t',val)
                             val=val.replace("'","")
                         qso[key]=val
+                    if DICT:
+                        qso=DictToClass(qso)
                     QSOs.append(qso)
                     
             if FLAT_DATA:

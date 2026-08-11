@@ -1,7 +1,7 @@
 ############################################################################################
 #
 # presets.py - Rev 1.0
-# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
+# Copyright (C) 2021-6 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Routines for handling preset memory programming
 #
@@ -23,10 +23,10 @@ import os
 from .ft_tables import *
 from .icom_io import *
 import xlrd
-if sys.version_info[0]==3:
-    import tkinter.messagebox
-else:
-    import tkMessageBox
+#if sys.version_info[0]==3:
+import tkinter.messagebox
+#else:
+#    import tkMessageBox
 
 ############################################################################################
 
@@ -280,7 +280,6 @@ def read_mem_chan_icom(self,ch,band):
 
 ############################################################################################
 
-
 class MEM_CHAN:
     def __init__(self):
         self.chan=None
@@ -299,34 +298,38 @@ class MEM_CHAN:
 # Routine to read contents of FTdx3000 or FT991a memories
 # At some point, might want to use MT command for FT991a instead since
 # it will return tag as well but for now ...
-def read_mem_yaesu(self,chan):
+def read_mem_yaesu(self,chan,VERSOSITY=0):
 
     for ch in [chan]:
         cmd = 'BY;MC'+str(ch+1).zfill(3)+';'
         buf=self.sock.get_response(cmd)
-        print('\nReading channel',ch,cmd)
-        print('response=',buf)
+        if VERBOSITY>0:
+            print('\nReading channel',ch,cmd)
+            print('response=',buf)
 
         if self.sock.rig_type2=='FT991a':    
             cmd = 'MT'+str(ch+1).zfill(3)+';'
         else:
             cmd = 'MR'+str(ch+1).zfill(3)+';'
         buf=self.sock.get_response(cmd)
-        print('\nReading channel',ch,cmd)
-        print('response=',buf)
+        if VERBOSITY>0:
+            print('\nReading channel',ch,cmd)
+            print('response=',buf)
 
-        return resp2struct(self,buf)
+        return resp2struct(self,buf,VERBOSITY)
         
 
-def resp2struct(self,buf):
+def resp2struct(self,buf,VERSOSITY=0):
     mem=MEM_CHAN()
-    print('\nresp2struct: buf=',buf)
+    if VERBOSITY>0:
+        print('\nresp2struct: buf=',buf)
 
     if True:
         if buf[0:2] in ['MR','MT','MW']:
             P2=buf[2:5]
             mem.chan=int(P2)
-            print('P2=',P2,'\tChan=',mem.chan)
+            if VERBOSITY>0:
+                print('P2=',P2,'\tChan=',mem.chan)
             
             if self.sock.rig_type2=='FTdx3000':
                 last=13
@@ -334,58 +337,69 @@ def resp2struct(self,buf):
                 last=14
             P3=buf[5:last]
             mem.freq=float(P3)/1000.
-            print('P3=',P3,'\tf=',mem.freq,'KHz')
+            if VERBOSITY>0:
+                print('P3=',P3,'\tf=',mem.freq,'KHz')
 
             first=last
             last=last+5
             P4=buf[first:last]
             mem.clar_offset=float(P4)
-            print('P4=',P4,'\tClar Offset=',mem.clar_offset,'Hz')
+            if VERBOSITY>0:
+                print('P4=',P4,'\tClar Offset=',mem.clar_offset,'Hz')
             
             P5=buf[last]
             last=last+1
             mem.rx_clar_on_off=OFF_ON[int(P5)]
-            print('P5=',P5,'\tRX Clar=',mem.rx_clar_on_off)
+            if VERBOSITY>0:
+                print('P5=',P5,'\tRX Clar=',mem.rx_clar_on_off)
             
             P6=buf[last]
             last=last+1
             mem.tx_clar_on_off=OFF_ON[int(P6)]
-            print('P6=',P6,'\tTX Clar=',mem.tx_clar_on_off)
+            if VERBOSITY>0:
+                print('P6=',P6,'\tTX Clar=',mem.tx_clar_on_off)
             
             P7=buf[last]
             last=last+1
             mem.mode=FTDX_MODES[int(P7,16)]
-            print('P7=',P7,'\tmode=',mem.mode)
+            if VERBOSITY>0:
+                print('P7=',P7,'\tmode=',mem.mode)
             
             P8=buf[last]
             last=last+1
-            print('P8=',P8,'\tVFO/Mem=',VFO_MEM[int(P8)])
+            if VERBOSITY>0:
+                print('P8=',P8,'\tVFO/Mem=',VFO_MEM[int(P8)])
 
             P9=buf[last]
             last=last+1
             mem.ctcss=CTCSS[int(P9)]
-            print('P9=',P9,'\tCTCSS=',mem.ctcss)
+            if VERBOSITY>0:
+                print('P9=',P9,'\tCTCSS=',mem.ctcss)
             
             first=last
             last=last+2
             P10=buf[first:last]
             mem.tone=PL_TONES[ int(P10) ]
-            print('P10=',P10,'\tTone=',mem.tone)
+            if VERBOSITY>0:
+                print('P10=',P10,'\tTone=',mem.tone)
             
             P11=buf[last]
             mem.shift=SHIFTS[int(P11)]
-            print('P11=',P11,'\tShift=',mem.shift)
+            if VERBOSITY>0:
+                print('P11=',P11,'\tShift=',mem.shift)
             
             first=last+2
             last=first+12
             P12=buf[first:last]
             mem.tag=P12
-            print('P12=',P12,'\tTag=',mem.tag,len(mem.tag))
+            if VERBOSITY>0:
+                print('P12=',P12,'\tTag=',mem.tag,len(mem.tag))
 
             mem.response=buf
             
         else:
-            print('Mem channel not programmed')
+            if VERBOSITY>0:
+                print('Mem channel not programmed')
             mem=None
         
     return mem

@@ -1,7 +1,7 @@
 ############################################################################################
 #
 # iaru.py - Rev 1.0
-# Copyright (C) 2021-5 by Joseph B. Attili, aa2il AT arrl DOT net
+# Copyright (C) 2021-6 by Joseph B. Attili, aa2il AT arrl DOT net
 #
 # Routines for scoring IARU HF contest.
 #
@@ -326,6 +326,34 @@ class IARU_HF_SCORING(CONTEST_SCORING):
             nhq    += len(hq)
             nmults += len(zones)+len(hq)
 
+        nmults=0
+        nzones=0
+        nhq=0
+        nqsos=0
+        npts=0
+        print('\nBAND\tCW\tSSB\tZONES\tHQ\tPTS')
+        print('----------------------------------------------')
+        for b in self.BANDS:
+            pts=self.POINTS[b]
+            mults = list( self.ZONES[b] )
+            mults.sort()
+            hq    = []
+            zones = []
+            for mult in mults:
+                if mult.isnumeric():
+                    zones.append(mult)
+                else:
+                    hq.append(mult)
+            nzones += len(zones)
+            nhq    += len(hq)
+            nmults += nzones+nhq
+            nqsos  += self.NQSOS[b]
+            npts   += pts
+            print(b,'\t',self.NQSOS[b],'\t',0,'\t',len(zones),'\t',len(hq),'\t',pts)
+        print('----------------------------------------------')
+        print('Total:\t',nqsos,'\t',0,'\t',nzones,'\t',nhq,'\t',npts)
+        print('Claimed Score   =',self.total_points*nmults)
+        
         print('\nNo. QSOs        =',self.nqsos1)
         print('No. Uniques     =',self.nqsos2)
         print('QSO points      =',self.total_points)

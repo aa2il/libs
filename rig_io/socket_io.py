@@ -318,11 +318,15 @@ def read_radio_status(sock,verbosity=0):
     sock.filt = sock.get_filters()
     #sock.band = str( sock.get_band(sock.freq * 1e-6) ) + 'm'
     #print('frq=',sock.freq*1e-6)
-    b=sock.get_band(sock.freq * 1e-6)
+    f=sock.freq * 1e-6
+    b=sock.get_band(f)
     if isinstance(b, str):
         sock.band = b
     else:
-        sock.band = str( b ) + 'm'
+        if f<250:
+            sock.band = str( b ) + 'm'
+        else:
+            sock.band = str( b ) + 'cm'
 
     
 # Legacy Function to read radio status
@@ -745,10 +749,10 @@ def GetInfo(self):
 
 # Function to reset rx attenuator
 def AttenReset(self):
-    if sock.rig_type=='Hamlib':
+    if self.P.sock.rig_type=='Hamlib':
         cmd='L ATT 0'
         reply = s.get_response(cmd)
-    elif sock.rig_type=='Yaesu' or sock.rig_type1=='Yaesu':
+    elif self.P.sock.rig_type=='Yaesu' or sock.rig_type1=='Yaesu':
         self.sock.get_response("BY;RA00;")
     else:
         print('ATTEN RESET - Not implemented on Kenwood or ICOM or FLDIGI or FLRIG or KCAT rigs yet')
@@ -1069,7 +1073,8 @@ def set_tx_pwr(self,tx_pwr=None):
         
     print('TX Power set.')
 
-    
+
+
 def set_mic_gain(self,gain=None):
     s = self.sock
     if s.rig_type1 in ['Kenwood','Icom','Hamlib','KCAT'] or \

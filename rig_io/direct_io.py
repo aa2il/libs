@@ -1279,25 +1279,35 @@ class direct_connect(no_connect):
             print('cmd=',cmd1)
         print('SET_MEM_CHAN: buf=',buf)
         
-    def get_power(self):
+    def get_power(self,VERBOSITY=0):
         if VERBOSITY>0:
             print('DIRECT GET_POWER:')
         buf=self.get_response('PC;')
+        if VERBOSITY>0:
+            print('DIRECT GET_POWER: buf=',buf)
         return int(buf[2:5])
         
-    def mic_setting(self,m,iopt,src=None,lvl=None,prt=None):
+    def mic_setting(self,m,iopt,src=None,lvl=None,prt=None,VERBOSITY=0):
         if VERBOSITY>0:
-            print('DIRECT MIC_SETTING:')
+            print('DIRECT MIC_SETTING: m=',m,'\tiopt=',iopt,
+                  '\tsrc=',src,'\tlvl=',lvl,'\tprt=',prt)
+        if m==None:
+            m,bw=self.get_mode()
         if m=='CW' or m=='RTTY':
             return
         menu_nums=YAESU_MIC_MENU_NUMBERS[self.rig_type2]
         if m=='LSB' or  m=='USB':
             m='SSB'
+            
         source= menu_nums[m][0]
         level = menu_nums[m][1]
         port  = menu_nums[m][2]
-        lvl   = 0
-        prt   = 0
+        if lvl==None:
+            lvl   = 30
+        if self.rig_type2=='FT991a':
+            prt   = 1
+        else:
+            prt   = 0
 
         cmd1='EX'+str(source).zfill(3)
         cmd2='EX'+str(level ).zfill(3)
@@ -1306,39 +1316,74 @@ class direct_connect(no_connect):
             # Read
             buf=self.get_response(cmd1+';')
             src=int(buf[-2])
+            if VERBOSITY>0:
+                print('cmd1=',cmd1,'\tbuf=',buf)
             if level:
                 buf=self.get_response(cmd2+';')
                 lvl=int(buf[5:8])
+                if VERBOSITY>0:
+                    print('cmd2=',cmd2,'\tbuf=',buf)
             if port:
                 buf=self.get_response(cmd3+';')
                 prt=int(buf[-2])
+                if VERBOSITY>0:
+                    print('cmd3=',cmd3,'\tbuf=',buf)
             return [src,lvl,prt]
         else:
             # Set
             if src!=None and source:
                 if self.rig_type2=='FTdx3000':
                     src*=2
-                print('src=',src,cmd1)
-                buf=self.get_response('BY;'+cmd1+str(src)+';')
+                cmd='BY;'+cmd1+str(src)+';'
+                buf=self.get_response(cmd)
+                if VERBOSITY>0:
+                    print('src=',src,'\tcmd1=',cmd,'\tbuf=',buf)
             if lvl!=None and level:
-                print('lvl=',lvl,cmd1)
-                buf=self.get_response('BY;'+cmd2+str(lvl).zfill(2)+';')
+                cmd='BY;'+cmd2+str(lvl).zfill(4)+';'
+                #cmd=cmd2+';'
+                buf=self.get_response(cmd)
+                if VERBOSITY>0:
+                    print('lvl=',lvl,'\tcmd2=',cmd,'\tbuf=',buf)
             if prt!=None and port:
-                print('prt=',prt,cmd3)
-                buf=self.get_response('BY;'+cmd3+str(prt)+';')
+                cmd='BY;'+cmd3+str(prt)+';'
+                #cmd=cmd3+';'
+                buf=self.get_response(cmd)
+                if VERBOSITY>0:
+                    print('prt=',prt,'\tcmd3=',cmd,'\tbuf=',buf)
         
-    def set_power(self,p):
+    def set_power(self,p,PMAX=None,VERBOSITY=0):
         if VERBOSITY>0:
             print('DIRECT SET_POWER: p=',p)
 
         if self.rig_type1=='Kenwood' or self.rig_type1 in ['Icom','Hamlib']:
             print('DIRECT_IO: SET_POWER not support yet for Kenwood/Icom/Hamlib rigs')
-            return 0            
+            return 0
+
+        # Make sure rig power is being limited by menu
+        if PMAX!=None:
+            if self.rig_type2=='FTdx3000':
+                menues=[177]
+            elif self.rig_type2=='FT991a':
+                menues=[137,138,139,140]
+            for m in menues:
+                cmd0='EX'+str(m).zfill(3)+str(PMAX).zfill(3)+';'
+                cmd0+='EX'+str(m).zfill(3)+';'
+                buf=self.get_response(cmd0)
+                if VERBOSITY>0:
+                    print('\tcmd0=',cmd0,'\tbuf=',buf)
             
         p=min(max(p,5),100)
         cmd1 = 'BY;PC'+str(p).zfill(3)+';'          # Power select
         buf=self.get_response(cmd1)
-        
+
+        if VERBOSITY>0:
+            print('\tcmd1=',cmd1,'\tbuf=',buf)
+            cmd2='PC;'
+            buf=self.get_response(cmd2)
+            print('\tcmd2=',cmd2,'\tbuf=',buf)
+            #pwr = get_power(VERBOSITY=0)
+            #print
+
     def set_log_fields(self,fields):
         if VERBOSITY>0:
             print('*** WARNING *** Ignored call to SET_LOG_FIELDS ***')
@@ -1980,7 +2025,7 @@ class direct_connect(no_connect):
     # For S-meter, need to do some standardization
     def read_meter(self,meter,VERBOSITY=0):
         if VERBOSITY>0:
-            print('DIRECT READ_METER ...',meter)
+            print('DIRECT READ_METER: ...',meter)
 
         idx=3
         if self.rig_type1=='Icom':
@@ -2038,20 +2083,20 @@ class direct_connect(no_connect):
             
         else:
             
-            # Yaesu
-            # From hamlib/newcat.c, for Yaesu FT991,
+            # Yaesu - note one S-unit = 6dB
+            # From hamlib/newcat.c, for Yaesu FT991:
             #     S0    =   0    = -54dB
-            #     S2    =  26
-            #     S4    =  51
-            #     S6    =  81
-            #     S7.5  = 105
-            #     S9    = 130
-            #     S9+12 = 157
-            #     S9+25 = 186
-            #     S9+35 = 203
-            #     S9+50 = 237
-            #     S9+60 = 255    = S0+114 dB
-            # So if we want to return 'S-units,' scale by 9/130 ?
+            #     S2    =  26    = S0 + 12 dB
+            #     S4    =  51    = S0 + 24 dB
+            #     S6    =  81    = S0 + 36 dB
+            #     S7.5  = 105    = S0 + 45 dB
+            #     S9    = 130    = S0 + 54 dB = 0 dB
+            #     S9+12 = 157    = S0 + 66 dB
+            #     S9+25 = 186    = S0 + 79 dB
+            #     S9+35 = 203    = S0 + 89 dB
+            #     S9+50 = 237    = S0 + 104 dB
+            #     S9+60 = 255    = S0 + 114 dB  = 60 dB   (114=9*6+60)
+            # So if we want to return 'S-units,' scaled by 9/130=0.069231 ?
             # Then 255*9/130 = S 17.6 = S9 + 8.6 = S9 + 8.6*6 dB = 52 dB
             # Perhaps try a LS fit to this data - see ft991.m in pattern
             # slope=0.072789, offset = -0.029853
@@ -2075,10 +2120,10 @@ class direct_connect(no_connect):
                 return 0
 
         if VERBOSITY>0:
-            print('DIRECT READ_METER cmd=',cmd,len(cmd))
+            print('DIRECT READ_METER: cmd=',cmd,len(cmd))
         buf = self.get_response(cmd,True)
         if VERBOSITY>0:
-            print('DIRECT READ_METER buf=',buf)
+            print('DIRECT READ_METER: buf=',buf,'\tsc=',sc,'\toffset=',offset)
             #print('buf=',buf[idx:-1])
         meter = sc*int(buf[idx:-1]) + offset
         return meter
@@ -2337,13 +2382,40 @@ class direct_connect(no_connect):
             cmd  = 'ML1030;'
             buf=self.get_response(cmd)
             print('buf=',buf)
-                
-        cmd  = 'ML0001;'+'ML1'+str(gain).zfill(3)+';ML1;'
-        #cmd  = 'ML1'+str(gain).zfill(3)+';ML1;'
-        #cmd  = 'ML1'+str(gain).zfill(3)+';'
+
+        if gain<0:
+            # Turn monitor off 
+            cmd  = 'BY;ML0000;'
+        else:
+            cmd  = 'ML0001;'+'ML1'+str(gain).zfill(3)+';ML1;'
+            #cmd  = 'ML1'+str(gain).zfill(3)+';ML1;'
+            #cmd  = 'ML1'+str(gain).zfill(3)+';'
+            
         buf=self.get_response(cmd)
         if VERBOSITY>0:
             print('DIRECT_IO - SET_MONITOR_GAIN: cmd=',cmd,'\tbuf=',buf)
+
+
+    def squelch_level(self,lvl,VERBOSITY=0):
+        if self.rig_type1=='Kenwood' or self.rig_type1=='Icom':
+            print('DIRECT - SQUELCH LEVEL: Function not yet implemented for Kenwood and Icom rigs')
+            return 0
+        
+        if VERBOSITY>0:
+            print('DIRECT_IO - SQUELCH LEVEL: lvl=',lvl)
+            
+        if lvl<0:
+            # Read current setting
+            cmd  = 'SQ0;'
+            buf=self.get_response(cmd)
+            lvl=int(buf[3:3])
+        else:
+            cmd  = 'BY;SQ0'+str(lvl).zfill(3)+';'
+            buf=self.get_response(cmd)
+            
+        if VERBOSITY>0:
+            print('DIRECT_IO - SQUELCH LEVEL: cmd=',cmd,'\tbuf=',buf)
+        return lvl
     
     # Need to fill this out
     def recorder(self,on_off=None):
