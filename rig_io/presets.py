@@ -23,12 +23,24 @@ import os
 from .ft_tables import *
 from .icom_io import *
 import xlrd
-#if sys.version_info[0]==3:
 import tkinter.messagebox
-#else:
-#    import tkMessageBox
 
 ############################################################################################
+
+class MEM_CHAN:
+    def __init__(self):
+        self.chan=None
+        self.band=None
+        self.freq=None
+        self.mode=None
+        self.clar_offset=None
+        self.rx_clar_on_off=None
+        self.tx_clar_on_off=None
+        self.ctcss=None
+        self.tone=None
+        self.shift=None
+        self.tag=None
+        self.response=None
 
 # Various preferences for the different modes
 preset_prefs = OrderedDict()
@@ -45,6 +57,7 @@ preset_prefs['FT8']   = ('10 KHz','4 KHz')
 preset_prefs['FT4']   = ('10 KHz','4 KHz')
 preset_prefs['PKTUSB']   = ('10 KHz','4 KHz')
 
+############################################################################################
 
 # Function to read presets from a spreadsheet
 def read_presets2(rig_type,fname,sheet_name):
@@ -204,11 +217,8 @@ def read_presets_OLD(rig_type):
 ############################################################################################
 
 # Routine to read contents of IC706 or IC9700 memories
-def read_mem_icom(self):
-
-    NCHAN=99
-    NCHAN=6
-
+def read_mem_icom(self,chan,VERBOSITY=0):
+    
     # Select memory mode
     print('Selecting memory mode ...')
     cmd =  self.sock.civ.icom_form_command([0x08]) 
@@ -218,14 +228,19 @@ def read_mem_icom(self):
     y=self.sock.civ.icom_response(cmd,x)
     print('y=',y)
 
-    for band in ['2m','70cm']:
+    memory={}
+    for band in ['2m','70cm','23cm']:
         print('\n',band,' mem chans:++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++')
-        for ch in range(NCHAN):
-            read_mem_chan_icom(self,ch,band)
-
+        mem=[]
+        for ch in [chan]:
+            m=read_mem_chan_icom(self,ch,band,VERBOSITY=0)
+            mem.append(m)
+        memory[band]=mem
+        
+    return memory
         
 # Routine to read contents of a single meory channel
-def read_mem_chan_icom(self,ch,band):
+def read_mem_chan_icom(self,ch,band,VERBOSITY=0):
         
     if self.sock.rig_type2=='IC760':
         # Need to retest this with 706
@@ -234,71 +249,76 @@ def read_mem_chan_icom(self,ch,band):
         cmd =  self.sock.civ.icom_form_command([0x08,0x0]+ch2)              # Select memory channel
     else:
         ch2  = int2bcd(ch+1,2,1)
-        print('\nReading mem',ch+1,ch2)
+        print('\nReading mem ch=',ch+1,ch2,'\tband=',band)
 
+        """
         if band=='2m':
             band_select=0x1
         elif band=='70cm':
             band_select=0x2
+        elif band=='23cm':
+            band_select=0x3
         else:
             print('READ_MEM_CHAN_ICOM: Unknown band')
             sys.exit(0)
+        """
+        band_select = ic9700_bands.index(band)+1
             
         #cmd =  self.sock.civ.icom_form_command([0x1a,0x0,0x1,0x0]+ch2)            # Get contents of mem channel
         cmd =  self.sock.civ.icom_form_command([0x1a,0x0,band_select]+ch2)            # Get contents of mem channel
                 
-        # This works to clear a memory channel!
+        # This works to clear a memory channel
         # cmd =  self.sock.civ.icom_form_command([0x1a,0x0,0x1]+ch2+[0xff])
 
-    print('cmd=',show_hex(cmd))
     x=self.sock.get_response(cmd)
-    print('x=',show_hex(x))
     y=self.sock.civ.icom_response(cmd,x)
-    print('y=',y,len(y))
+    if VERBOSITY>0:
+        print('cmd=',show_hex(cmd))
+        print('x=',show_hex(x))
+        print('y=',y,len(y))
 
-    print('band:       ',y[1],int(y[1],16))
-    print('chan:       ',y[2:4],bcd2int(y[2:4],1))
-    print('mem setting:',y[4],int(y[4],16))
-    if int(y[4],16)==255:
-        print('Empty channel')
+    setting = int( y[4] , 16)
+    if setting==255:
+        if VERBOSITY>0:
+            print('Empty channel')
+        return None
     else:
-        print('freq:       ',y[5:10],bcd2int(y[5:10]))
-        print('mode & filt:',y[10:12],bcd2int(y[10:12],1))
-        print('data mode:  ',y[12],int(y[12],16))
-        print('dup & tone: ',y[13],int(y[13],16))
-        print('digi squel: ',y[14],int(y[14],16))
-        print('rptr tone:  ',y[15:18],bcd2int(y[15:18],1))
-        print('squel tone: ',y[18:21],bcd2int(y[18:21],1))
-        print('dtcs tone:  ',y[21:24],bcd2int(y[21:24],1))
-        print('dv:         ',y[24],int(y[24],16))
-        print('dup offset: ',y[25:28],bcd2int(y[25:28]))
-        # Table is incomplete
-        print('name:       ',y[52:68])
-    
+        mem=MEM_CHAN()
+        mem.band    = ic9700_bands[ int( y[1] , 16 )-1 ]
+        mem.chan    = bcd2int( y[2:4] , 1 )
+        mem.freq = 1e-3*bcd2int( y[5:10] )
+        #mem.mode = bcd2int(y[10:12],1)
+        mem.mode = Icom_Decode_Mode( y[10] )
+        mem.filt = int( y[10] ,16 )
+        mem.tag  = ''.join( chr(int(ch,16)) for ch in y[52:68] )
+
+        if VERBOSITY>0:
+            print('band:       ',y[1],mem.band)
+            print('chan:       ',y[2:4],mem.chan)
+            print('mem setting:',y[4],mem.setting)
+            print('freq:       ',y[5:10],mem.freq)
+            print('mode & filt:',y[10:12],mem.mode)
+            print('data mode:  ',y[12],int(y[12],16))
+            print('dup & tone: ',y[13],int(y[13],16))
+            print('digi squel: ',y[14],int(y[14],16))
+            print('rptr tone:  ',y[15:18],bcd2int(y[15:18],1))
+            print('squel tone: ',y[18:21],bcd2int(y[18:21],1))
+            print('dtcs tone:  ',y[21:24],bcd2int(y[21:24],1))
+            print('dv:         ',y[24],int(y[24],16))
+            print('dup offset: ',y[25:28],bcd2int(y[25:28]))
+            # Table is incomplete
+            print('name:       ',mem.tag)
+
+    return mem
 
         
 
 ############################################################################################
 
-class MEM_CHAN:
-    def __init__(self):
-        self.chan=None
-        self.freq=None
-        self.mode=None
-        self.clar_offset=None
-        self.rx_clar_on_off=None
-        self.tx_clar_on_off=None
-        self.ctcss=None
-        self.tone=None
-        self.shift=None
-        self.tag=None
-        self.response=None
-
-
 # Routine to read contents of FTdx3000 or FT991a memories
 # At some point, might want to use MT command for FT991a instead since
 # it will return tag as well but for now ...
-def read_mem_yaesu(self,chan,VERSOSITY=0):
+def read_mem_yaesu(self,chan,VERBOSITY=0):
 
     for ch in [chan]:
         cmd = 'BY;MC'+str(ch+1).zfill(3)+';'
@@ -319,7 +339,7 @@ def read_mem_yaesu(self,chan,VERSOSITY=0):
         return resp2struct(self,buf,VERBOSITY)
         
 
-def resp2struct(self,buf,VERSOSITY=0):
+def resp2struct(self,buf,VERBOSITY=0):
     mem=MEM_CHAN()
     if VERBOSITY>0:
         print('\nresp2struct: buf=',buf)

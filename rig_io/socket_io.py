@@ -1086,19 +1086,22 @@ def set_mic_gain(self,gain=None):
         gain = self.gain
 
     mode,bw=s.get_mode()
-    print("SET_MIC_GAIN: Setting Mic Gain to",gain,mode)
+    print("SET_MIC_GAIN: Setting Mic Gain to",gain,'\tmode=',mode)
     if mode=='CW':
         # There's no mic gain to set in CW!
         return
     
     elif mode in DIGI_MODES:
         if s.rig_type2=='FT991a':
+            # FT991a - haven't figured this out yet!
             cmd = 'BY;'                                # No-op since what we really need isn't available
-            #cmd = 'BY;EX073'+str(gain).zfill(3)+';'   # Set input audio level for digital modes - nope
-            #cmd = 'BY;EX049'+str(gain).zfill(3)+';'   # Set input audio level for digital modes - nope
+            #cmd = 'BY;EX073'+str(gain).zfill(3)+';'   # Set input audio level for digital modes - nope - "DATA OUT LEVEL"
+            #cmd = 'BY;EX049'+str(gain).zfill(3)+';'   # Set input audio level for digital modes - nope  - "AM DATA GAIN"
+            #cmd = 'BY;EX078'+str(gain).zfill(3)+';'   # Set input audio level for digital modes - ??? - "FM PKT TX GAIN"
             # What we really want is to control the "DT GAIN" under F-LIST but there doesn't seem to be any
             # CAT command for this - ugh!  See comments at top for how to proceed
         else:
+            # FTdx3000
             cmd = 'BY;EX076'+str(gain).zfill(4)+';'   # Set input audio level for digital modes
     else:
         cmd = 'BY;MG'+str(gain).zfill(3)+';'       # Set input audio level for voice modes

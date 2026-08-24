@@ -1,7 +1,7 @@
 ############################################################################################
 #
 # Icom Rig IO - Rev 1.0
-# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
+# Copyright (C) 2021-6 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Functions to support communicating with Icom 706 & 9700 rigs
 #
@@ -64,7 +64,7 @@ class icom_civ:
         return self.ICOM_PREAMBLE1 + cmd + self.ICOM_EOM
 
     # Function to strip out the important part of the rig's response to a command
-    def icom_response(self,cmd,x):
+    def icom_response(self,cmd,x,QUIET=False):
         x=list(x)                      # Python 3
         if False:
             print('ICOM_RESPONSE: x=',x,x[-2]==0xfa )
@@ -109,7 +109,7 @@ class icom_civ:
             preamble = x[N:N2]
             eom = [cmd[-1]]
             valid = valid and (preamble==self.ICOM_PREAMBLE2) and (eom==self.ICOM_EOM)
-            if not valid:
+            if not valid and not QUIET:
                 print('N,N2=',N,N2)
                 print('Preamble and EOM ok:\t',valid,(preamble==self.ICOM_PREAMBLE2),(eom==self.ICOM_EOM))
                 print('preamble  =',show_hex(preamble))
@@ -120,7 +120,7 @@ class icom_civ:
             #print('xN2 =',x[N2])
             #valid = valid and cmd[4]==ord(x[N2])       # Python2
             valid = valid and cmd[4]==x[N2]
-            if not valid:
+            if not valid and not QUIET:
                 print('Proper command:\t',valid)
 
         # Extract the response
@@ -129,9 +129,10 @@ class icom_civ:
             #response = [hex(ord(c)) for c in x[N2:-1] ]      # Python2
             response = [hex(c) for c in x[N2:-1] ]
         else:
-            print('ICOM_RESPONSE: Invalid message')
-            print('\tcmd      =',show_hex(cmd))
-            print('\tresponse =',show_hex(x))
+            if not QUIET:
+                print('ICOM_RESPONSE: Invalid message')
+                print('\tcmd      =',show_hex(cmd))
+                print('\tresponse =',show_hex(x))
             response=''
 
         #print 'response=',response

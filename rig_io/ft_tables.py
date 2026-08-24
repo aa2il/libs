@@ -1,7 +1,7 @@
 ############################################################################################
 #
 # FT Tables - Rev 1.0
-# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
+# Copyright (C) 2021-6 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Tables defining various operating parameters and capabilities
 #
@@ -541,6 +541,8 @@ icom_modes["AM-N"]  = {"Index":16, "Code":0x02, "Filter1":0x01, "Filter2":0x02}
 
 icom_modes["PKTUSB"] = icom_modes["PKT-U"]
 
+ic9700_bands=['2m','70cm','23cm']
+
 
 # Filters for FT991a - SH width command - use NA cmd to select wide/narrow:
 FT991A_SSB_FILTERS1  = [1500,200,400,600,850,1100,1350,1500,1650,1800]
@@ -564,8 +566,14 @@ TS850_FILTERS = ['FM-W','FM-N','AM','SSB','CW','CW-N']
 
 # Menu numbers
 YAESU_MIC_MENU_NUMBERS = OrderedDict()
-YAESU_MIC_MENU_NUMBERS['FT991a']   = {'AM':[45,46,48],   'FM':[74,75,77],   'SSB':[106,107,109],'PKTUSB':[106,107,109],'RTTY':[106,107,109]}
-YAESU_MIC_MENU_NUMBERS['FTdx3000'] = {'AM':[53,52,None], 'FM':[85,84,None], 'SSB':[103,None,None]}
+YAESU_MIC_MENU_NUMBERS['FT991a']   = {'AM':[45,46,48],
+                                      'FM':[74,75,77],
+                                      'SSB':[106,107,109],
+                                      'PKTUSB':[106,107,109],
+                                      'RTTY':[106,107,109]}
+YAESU_MIC_MENU_NUMBERS['FTdx3000'] = {'AM':[53,52,None],
+                                      'FM':[85,84,None],
+                                      'SSB':[103,None,None]}
 
 # A list of preset AM stations
 stations = OrderedDict([ ("KOGO",600),
@@ -682,10 +690,14 @@ def Icom_Decode_Mode(m):
 
     #print m,m.replace('0x','')
     m=int(m.replace('0x',''))
-    if m==0x00 or m==0x01:
-        mode='SSB'
-    elif m==0x03 or m==0x07:
+    if m==0x00:
+        mode='USB'
+    elif m==0x01:
+        mode='USB'
+    elif m==0x03:
         mode='CW'
+    elif m==0x07:
+        mode='CW-R'
     elif m==0x05 or m==0x06:
         mode='FM'
     elif m==0x02 or m==0x11:

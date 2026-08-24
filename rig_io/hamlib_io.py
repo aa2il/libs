@@ -1388,7 +1388,7 @@ class hamlib_connect(direct_connect):
             print('HAMLIB_IO: SET_DATE_TIME - Unknown rig',self.rig_type2)
             sys.exit(0)
             
-    def set_power(self,p):
+    def set_power(self,p,PMAX=None,VERBOSITY=0):
         if VERBOSITY>0:
             print('HAMLIB_IO SET_POWER: p=',p)
 

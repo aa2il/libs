@@ -250,10 +250,18 @@ def try_rig(self,type1,type2,port,baud):
         self.rig_type  = type1
         self.rig_type1  = type1
         self.rig_type2 = type2
+        self.port=port
+        self.baud=baud
 
         if type1=='Icom':
-            #print(port)
+            print(self.s)
+            ps = self.power_switch(-1,VERBOSITY=1)
+            print('\tps=',ps)
             self.civ = icom_civ(self.rig_type2)
+            if not ps:
+                print("Rig appears to be available but can't tell if its on or off ...")
+                print("... we're going to assume its off until we can get a better idea how to do this query!\n")
+                return True
 
         if type2=='GS232b':
             print('Hmmm - so far so good ... baud=',baud)
@@ -271,12 +279,20 @@ def try_rig(self,type1,type2,port,baud):
         freq = self.get_freq()
         print('Freq test=',freq)
         if type2=='IC9700' and False:
+
+            cmd = 40*[0xfe]
+            x=self.get_response(cmd)
+            y=self.civ.icom_response(cmd,x)
+
+            if VERBOSITY>0:
+                print('\tcmd=',show_hex(cmd))
+                print('\tx=',x)
+                print('\ty=',y)
+            
             print('Stopping for debug')
             sys.exit(0)
         
         if freq>0:
-            self.port=port
-            self.baud=baud
             return True
         else:
             print("%s %s doesn't seem to be responding - giving up" % (type1,type2))
@@ -358,6 +374,8 @@ def find_direct_rig(self,port_in,baud_in,force=False):
 class direct_connect(no_connect):
     def __init__(self,port,baud,force=False):
 
+        self.baud          = baud
+        self.port          = port
         self.wpm           = 0
         self.freq          = 0
         self.band          = ''
@@ -370,6 +388,8 @@ class direct_connect(no_connect):
         self.pl_tone       = 0
         self.sub_dial_func = None
         self.ntimeouts     = 0
+        self.filt          = None        
+        self.civ           = False
 
         print('DIRECT_CONNECT: Looking for rig - port=',port,'\tbaud=',baud,'...')
         Found = find_direct_rig(self,port,baud,force)
@@ -419,9 +439,14 @@ class direct_connect(no_connect):
                 
             elif self.rig_type1=='Icom':
 
-                # Read freq
-                freq = self.get_freq()
-                print('\nIcom init - freq =',freq)
+                ps = self.power_switch(-1,VERBOSITY=1)
+                print('\tps=',ps)
+                if not ps:
+                    print('Rig appears to have power but turned off\n')
+                else:
+                    # Read freq
+                    freq = self.get_freq()
+                    print('\nIcom init - freq =',freq)
                 return
 
     def send(self,cmd):
@@ -785,11 +810,11 @@ class direct_connect(no_connect):
                 error_trap("**** DIRECT IO -> GET_FREQ ERROR ***")
 
                 frq=0
-                print('DIRECT Icom get freq - problem reading freq')
+                print('DIRECT ICOM GET FREQ: Problem reading freq')
                 #print('\tcmd      =',[hex(c) for c in cmd])
                 #print('\tresponse =',[hex(ord(c)) for c in x])
                 #print('\ty        =',[hex(ord(c)) for c in y])
-                print('\tcmd      =',cmd)
+                print('\tcmd      =',show_hex(cmd))
                 print('\tresponse =',x)
                 print('\ty        =',y)
 
@@ -1235,7 +1260,7 @@ class direct_connect(no_connect):
             y   = self.civ.icom_response(cmd,buf)
             #print('y=',y)
             mode = Icom_Decode_Mode( y[0] )
-            return mode
+            return mode,None
         elif self.rig_type2=='FT991a':
             if VFO=='A':
                 cmd = 'MD0;'
@@ -1264,16 +1289,49 @@ class direct_connect(no_connect):
     def get_fldigi_mode(self):
         return self.get_mode()
 
-    def set_mem_chan(self,ch):
+    def set_mem_chan(self,ch,frq,VERBOSITY=0):
         if VERBOSITY>0:
-            print('DIRECT SET_MEM_CHAN: mem chan=',ch)
+            print('DIRECT SET_MEM_CHAN: mem chan=',ch,'\tfrq=',frq)    # '\tband=',band,
         if self.rig_type=='Kenwood':
+            
             # Haven't figured this out yet
-            #cmd1 = 'FR0;MC '+str(ch).zfill(2)+';'     
-            cmd1 = 'MC '+str(ch).zfill(2)+';'     
-            #cmd1 = 'MR'+str(ch).zfill(4)+';'     
+            cmd1 = 'MC '+str(ch).zfill(2)+';'
+            
+        elif self.rig_type1=='Icom':
+
+            """
+            # Cant seem to figure out how to select vfo band ...
+            band_select = ic9700_bands.index(band)+1
+            cmd =  self.civ.icom_form_command([0x07,0xd0,band_select])            # Set main band
+            x=self.get_response(cmd)
+            y=self.civ.icom_response(cmd,x)
+            if VERBOSITY>0:
+                print('\tband=',band,'\tband_select=',band_select)
+                print('\tcmd=',show_hex(cmd))
+                print('\tx=',show_hex(x))
+                print('\ty=',y,len(y))
+            """
+
+            # ... So, instead, set channel freq to force the issue
+            self.set_freq(frq)
+            
+            ch2  = int2bcd(ch,2,1)
+            cmd =  self.civ.icom_form_command([0x08]+ch2)  
+            x=self.get_response(cmd)
+            y=self.civ.icom_response(cmd,x)
+            if VERBOSITY>0:
+                print('\tch2=',ch2)
+                print('\tcmd=',show_hex(cmd))
+                print('\tx=',show_hex(x))
+                print('\ty=',y,len(y))
+
+            return
+            
         else:
-            cmd1 = 'BY;MC'+str(ch).zfill(3)+';'  
+            
+            # Yaesu
+            cmd1 = 'BY;MC'+str(ch).zfill(3)+';'
+            
         buf=self.get_response(cmd1)
         if VERBOSITY>0:
             print('cmd=',cmd1)
@@ -1302,12 +1360,26 @@ class direct_connect(no_connect):
         source= menu_nums[m][0]
         level = menu_nums[m][1]
         port  = menu_nums[m][2]
-        if lvl==None:
-            lvl   = 30
         if self.rig_type2=='FT991a':
-            prt   = 1
-        else:
-            prt   = 0
+            cmd4='BY;EX0721;'
+            buf4=self.get_response(cmd4)
+            cmd5='EX072;'
+            buf5=self.get_response(cmd5)
+            cmd7='EX077;'
+            buf7=self.get_response(cmd7)
+            cmd8='EX078;'
+            buf8=self.get_response(cmd8)
+            if VERBOSITY>0:
+                print('cmd4=',cmd4,'\tbuf4=',buf4)
+                print('cmd5=',cmd5,'\tbuf5=',buf5)
+                print('cmd7=',cmd7,'\tbuf7=',buf7)
+                print('cmd8=',cmd8,'\tbuf8=',buf8)
+            if lvl==None:
+                lvl   = 75  # 30
+                prt   = 1
+            else:
+                lvl   = 0
+                prt   = 0
 
         cmd1='EX'+str(source).zfill(3)
         cmd2='EX'+str(level ).zfill(3)
@@ -1346,7 +1418,6 @@ class direct_connect(no_connect):
                     print('lvl=',lvl,'\tcmd2=',cmd,'\tbuf=',buf)
             if prt!=None and port:
                 cmd='BY;'+cmd3+str(prt)+';'
-                #cmd=cmd3+';'
                 buf=self.get_response(cmd)
                 if VERBOSITY>0:
                     print('prt=',prt,'\tcmd3=',cmd,'\tbuf=',buf)
@@ -1806,14 +1877,65 @@ class direct_connect(no_connect):
                 print('DIRECT POWER_SWITCH: Invalid opt',opt)
                 return -1
             
-        #elif self.rig_type2 in ['IC9700','IC7300']:
-        
+        elif self.rig_type2 in ['IC9700','IC7300']:
+
+            if opt==-1:
+                if VERBOSITY>0 or True:
+                    print('\tQuerying power switch still a bit quirky for ICOM rigs ...')
+
+                try:
+                    if not self.civ:
+                        print('\t\t... No CIV yet --> FALSE')
+                        return False
+                    else:
+                        print('\t\t.... get freq ....')
+                        cmd = self.civ.icom_form_command([0x03])   
+                        buf = self.get_response(cmd)
+                        y=self.civ.icom_response(cmd,buf,QUIET=True)
+                        if len(y)==0:
+                            print('\t\t... NO RESPONSE --> FALSE')
+                        return len(y)>0
+                except:                    
+                    print('\t\t... Bombed out --> FALSE')
+                    return False
+
+            elif opt in [0,1]:
+
+                if VERBOSITY>0:
+                    print('\tSetting POWER SWITCH for ICOM',opt,'...')
+                if self.baud==115200:
+                    cmd0 = 119*[0xfe]
+                elif self.baud==57600:
+                    cmd0 = 59*[0xfe]
+                elif self.baud==38400:
+                    cmd0 = 40*[0xfe]
+                else:
+                    print('*** DIRECT POWER SWITCH - NEED a little more code here !!! ***')
+                    print('\tbaud=',self.baud)
+                    return -1
+                cmd =  cmd0 + self.civ.icom_form_command([0x18,opt])
+                x=self.get_response(cmd)
+                y=self.civ.icom_response(cmd,x)
+
+                if VERBOSITY>0:
+                    print('\tcmd=',show_hex(cmd))
+                    print('\tx=',x)
+                    print('\ty=',y)
+                return opt==1
+                
+            else:
+
+                print('DIRECT POWER_SWITCH: Invalid opt',opt)
+                return -1
+            
+            
         else:
 
             print('DIRECT POWER_SWITCH: Invalid rig',self.rig_type)
             return -1
     
-    
+
+    """
     # Routine to get/put fldigi squelch mode
     def squelch_mode99(self,opt,VERBOSITY=1):
         if VERBOSITY>0:
@@ -1821,7 +1943,7 @@ class direct_connect(no_connect):
 
         print('DIRECT_IO: SQUELCH_MODE not available yet for DIRECT')
         return
-
+    """
 
     def init_keyer(self,VERBOSITY=1):
         
@@ -2408,7 +2530,9 @@ class direct_connect(no_connect):
             # Read current setting
             cmd  = 'SQ0;'
             buf=self.get_response(cmd)
-            lvl=int(buf[3:3])
+            if VERBOSITY>0:
+                print('\tcmd=',cmd,'\n\tbuf=',buf,'\t',buf[2:6])
+            lvl=int(buf[2:6])
         else:
             cmd  = 'BY;SQ0'+str(lvl).zfill(3)+';'
             buf=self.get_response(cmd)
