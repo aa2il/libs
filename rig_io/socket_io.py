@@ -1019,6 +1019,7 @@ def SetFilter(self,b=None,m=None):
 
 ############################################################################################
 
+"""
 # Function to set output power
 def SetPower(self,b=None,m=None):
     s=self.sock
@@ -1044,10 +1045,8 @@ def SetPower(self,b=None,m=None):
         buf=self.sock.get_response('BY;'+cmd+'005;');              # Set max power to 5W
     else:
         buf=self.sock.get_response('BY;'+cmd+'099;');              # Set max power to 99W
+"""
 
-############################################################################################
-
-# Functions related to reading and setting microphone gain
 def set_tx_pwr(self,tx_pwr=None):
     s = self.sock
     if not tx_pwr:
@@ -1073,8 +1072,9 @@ def set_tx_pwr(self,tx_pwr=None):
         
     print('TX Power set.')
 
+############################################################################################
 
-
+# Functions related to reading and setting microphone gain
 def set_mic_gain(self,gain=None):
     s = self.sock
     if s.rig_type1 in ['Kenwood','Icom','Hamlib','KCAT'] or \
@@ -1211,7 +1211,7 @@ def read_mic_gain(self):
     self.gain=0
     if s.rig_type1 in ['Kenwood','KCAT','Icom','Hamlib'] or \
        (s.rig_type=='Hamlib' and s.rig_type2!='FTdx3000' and s.rig_type2!='FT991a'):
-        print('READ_MIC_GAIN not available in',s.rig_type,s.rig_type2,'command set')
+        print('SOCKET_IO: READ_MIC_GAIN not available in',s.rig_type,s.rig_type2,'command set')
         return self.gain
 
     mode,bw=s.get_mode()

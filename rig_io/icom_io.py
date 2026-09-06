@@ -34,7 +34,7 @@
 
 import sys
 import numpy as np
-from utilities import bcd2int,int2bcd,show_hex
+from utilities import show_hex
 
 ############################################################################################
     

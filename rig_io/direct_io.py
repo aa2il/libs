@@ -37,7 +37,7 @@ import serial
 from .icom_io import *
 from datetime import timedelta,datetime
 from pytz import timezone
-from utilities import find_serial_device,error_trap,show_ascii
+from utilities import find_serial_device,error_trap,show_ascii,bcd2int,int2bcd,show_hex
 from .dummy_io import no_connect
 
 #######################################################################################
@@ -1314,13 +1314,25 @@ class direct_connect(no_connect):
 
             # ... So, instead, set channel freq to force the issue
             self.set_freq(frq)
-            
+            time.sleep(DELAY)
+
+            # Put rig into memory mode ...
+            cmd1 =  self.civ.icom_form_command([0x08])  
+            x1=self.get_response(cmd1)
+            y1=self.civ.icom_response(cmd1,x1)
+            time.sleep(DELAY)
+
+            # ... and then select mem channel
             ch2  = int2bcd(ch,2,1)
             cmd =  self.civ.icom_form_command([0x08]+ch2)  
             x=self.get_response(cmd)
             y=self.civ.icom_response(cmd,x)
             if VERBOSITY>0:
-                print('\tch2=',ch2)
+                print('\tcmd1=',show_hex(cmd1))
+                print('\tx1=',show_hex(x1))
+                print('\ty1=',y1,len(y1))
+                print('\tch =',ch, ' =',show_hex(ch))
+                print('\tch2=',ch2,' =',show_hex(ch2))
                 print('\tcmd=',show_hex(cmd))
                 print('\tx=',show_hex(x))
                 print('\ty=',y,len(y))
@@ -1336,92 +1348,95 @@ class direct_connect(no_connect):
         if VERBOSITY>0:
             print('cmd=',cmd1)
         print('SET_MEM_CHAN: buf=',buf)
+
+
+    # Function to deal with transmit power
+    # THIS SHOULD REPLACE THE TWO FUNCTIONS BELOW AND THE REDUNDANT FUNCTION IN SOCKET_IO!!!!
+    def tx_power(self,pwr,PMAX=None,VERBOSITY=0):
+        if self.rig_type1=='Kenwood':
+            print('DIRECT - TX POWER: Function not yet implemented for Kenwood rigs')
+            return 0
         
-    def get_power(self,VERBOSITY=0):
+        if VERBOSITY>0:
+            print('DIRECT_IO - TX POWER: pwr in=',pwr,'\tPmax=',PMAX)
+
+        if self.rig_type1=='Icom':
+
+            civ_cmd = [0x14,0x0a]             # Base command
+            if pwr>=0:                        # Append to set power
+                pwr2=round( 255/100.* pwr )
+                y2  = int2bcd(min(pwr2,255),2,1)
+                civ_cmd += y2
+                if VERBOSITY>0:
+                    print('\tpwr2=',pwr2,
+                          '\n\ty2=',y2,show_hex(y2))
+                
+            cmd = self.civ.icom_form_command( civ_cmd )
+            x   = self.get_response(cmd)
+            y   = self.civ.icom_response(cmd,x)
+            if pwr<0:
+                # Read
+                pwr = round( 100/255.*bcd2int(y[1:],1) )
+                if VERBOSITY>0:
+                    print('\ty1=',y[1:],
+                          '\n\tbcd=',bcd2int(y[1:],1),
+                          '\n\tpwr=',pwr)
+                    
+            if VERBOSITY>0:
+                print('\tpwr out=',pwr,
+                      '\n\tciv_cmd=',show_hex(civ_cmd),
+                      '\n\tcmd=',show_hex(cmd),'\n\tx=',x,
+                      '\n\ty=',y,'\n')
+            return pwr
+
+        # Yeasu
+        if pwr<0:
+            
+            # Read current setting
+            cmd  = 'PC;'
+            buf=self.get_response(cmd)
+            if VERBOSITY>0:
+                print('\tcmd=',cmd,'\n\tbuf=',buf,'\t',buf[2:6])
+            pwr=int(buf[2:5])
+            
+        else:
+            
+            # Make sure rig power is being limited by menu
+            if PMAX!=None:
+                if self.rig_type2=='FTdx3000':
+                    menues=[177]
+                elif self.rig_type2=='FT991a':
+                    menues=[137,138,139,140]
+                for m in menues:
+                    cmd0='EX'+str(m).zfill(3)+str(PMAX).zfill(3)+';'
+                    cmd0+='EX'+str(m).zfill(3)+';'
+                    buf=self.get_response(cmd0)
+                    if VERBOSITY>0:
+                        print('\tcmd0=',cmd0,'\tbuf=',buf)
+            
+            cmd = 'BY;PC'+str(pwr).zfill(3)+';'          # Power select
+            buf=self.get_response(cmd)
+            
+            if VERBOSITY>0:
+                print('DIRECT_IO - TX POWER: cmd=',cmd,'\tbuf=',buf)
+                
+        return pwr
+    
+        
+    def get_power_OLD(self,VERBOSITY=0):
         if VERBOSITY>0:
             print('DIRECT GET_POWER:')
+            
+        if self.rig_type1=='Kenwood' or self.rig_type1 in ['Icom','Hamlib']:
+            print('DIRECT_IO: GET_POWER not support yet for Kenwood/Icom/Hamlib rigs')
+            return 0
+
         buf=self.get_response('PC;')
         if VERBOSITY>0:
             print('DIRECT GET_POWER: buf=',buf)
         return int(buf[2:5])
-        
-    def mic_setting(self,m,iopt,src=None,lvl=None,prt=None,VERBOSITY=0):
-        if VERBOSITY>0:
-            print('DIRECT MIC_SETTING: m=',m,'\tiopt=',iopt,
-                  '\tsrc=',src,'\tlvl=',lvl,'\tprt=',prt)
-        if m==None:
-            m,bw=self.get_mode()
-        if m=='CW' or m=='RTTY':
-            return
-        menu_nums=YAESU_MIC_MENU_NUMBERS[self.rig_type2]
-        if m=='LSB' or  m=='USB':
-            m='SSB'
-            
-        source= menu_nums[m][0]
-        level = menu_nums[m][1]
-        port  = menu_nums[m][2]
-        if self.rig_type2=='FT991a':
-            cmd4='BY;EX0721;'
-            buf4=self.get_response(cmd4)
-            cmd5='EX072;'
-            buf5=self.get_response(cmd5)
-            cmd7='EX077;'
-            buf7=self.get_response(cmd7)
-            cmd8='EX078;'
-            buf8=self.get_response(cmd8)
-            if VERBOSITY>0:
-                print('cmd4=',cmd4,'\tbuf4=',buf4)
-                print('cmd5=',cmd5,'\tbuf5=',buf5)
-                print('cmd7=',cmd7,'\tbuf7=',buf7)
-                print('cmd8=',cmd8,'\tbuf8=',buf8)
-            if lvl==None:
-                lvl   = 75  # 30
-                prt   = 1
-            else:
-                lvl   = 0
-                prt   = 0
+    
 
-        cmd1='EX'+str(source).zfill(3)
-        cmd2='EX'+str(level ).zfill(3)
-        cmd3='EX'+str(port  ).zfill(3)
-        if iopt==0:
-            # Read
-            buf=self.get_response(cmd1+';')
-            src=int(buf[-2])
-            if VERBOSITY>0:
-                print('cmd1=',cmd1,'\tbuf=',buf)
-            if level:
-                buf=self.get_response(cmd2+';')
-                lvl=int(buf[5:8])
-                if VERBOSITY>0:
-                    print('cmd2=',cmd2,'\tbuf=',buf)
-            if port:
-                buf=self.get_response(cmd3+';')
-                prt=int(buf[-2])
-                if VERBOSITY>0:
-                    print('cmd3=',cmd3,'\tbuf=',buf)
-            return [src,lvl,prt]
-        else:
-            # Set
-            if src!=None and source:
-                if self.rig_type2=='FTdx3000':
-                    src*=2
-                cmd='BY;'+cmd1+str(src)+';'
-                buf=self.get_response(cmd)
-                if VERBOSITY>0:
-                    print('src=',src,'\tcmd1=',cmd,'\tbuf=',buf)
-            if lvl!=None and level:
-                cmd='BY;'+cmd2+str(lvl).zfill(4)+';'
-                #cmd=cmd2+';'
-                buf=self.get_response(cmd)
-                if VERBOSITY>0:
-                    print('lvl=',lvl,'\tcmd2=',cmd,'\tbuf=',buf)
-            if prt!=None and port:
-                cmd='BY;'+cmd3+str(prt)+';'
-                buf=self.get_response(cmd)
-                if VERBOSITY>0:
-                    print('prt=',prt,'\tcmd3=',cmd,'\tbuf=',buf)
-        
     def set_power(self,p,PMAX=None,VERBOSITY=0):
         if VERBOSITY>0:
             print('DIRECT SET_POWER: p=',p)
@@ -1455,6 +1470,137 @@ class direct_connect(no_connect):
             #pwr = get_power(VERBOSITY=0)
             #print
 
+    
+    # Function to deal with mic settings (gain, front/rear, etc.)
+    def mic_settings(self,gain,src=None,prt=None,mode=None,VERBOSITY=0):
+        if self.rig_type1=='Kenwood':
+            print('DIRECT - MIC SETTINGS: Function not yet implemented for Kenwood rigs')
+            return 0
+        
+        if VERBOSITY>0:
+            print('DIRECT MIC_SETTING: mode=',mode,'\tgain=',gain,
+                  '\tsrc=',src,'\tprt=',prt)
+
+        if mode==None:
+            mode,bw=self.get_mode()
+        if mode in ['CW','RTTY']:
+            return
+        elif mode in ['LSB','USB']:
+            mode='SSB'
+        elif mode=='AMN':
+            mode='AM'
+        
+        if self.rig_type1=='Icom':
+
+            # Query or set mic gain
+            if gain!=None:
+                civ_cmd = [0x14,0x0b]              # Base command
+                if gain>=0:                        # Append to set power
+                    gain2=round( 255/100.* gain )
+                    y2  = int2bcd(min(gain2,255),2,1)
+                    civ_cmd += y2
+                
+                cmd = self.civ.icom_form_command( civ_cmd )
+                x   = self.get_response(cmd)
+                y   = self.civ.icom_response(cmd,x)
+                if gain<0:
+                    # Read
+                    gain   = round( 100/255.*bcd2int(y[1:],1) )
+                if VERBOSITY>0:
+                    print('DIRECT_IO MIC SETTINGS: gain out=',gain,
+                          '\n\tciv_cmd=',show_hex(civ_cmd),
+                          '\n\tcmd=',show_hex(cmd),'\n\tx=',x,
+                          '\n\ty=',y,'\n')
+
+            if src!=None:
+                civ_cmd = [0x1a,0x05,0x01,0x15]              # Set Connector -> Mod Input -> Data mod off
+                # Note - there are other possibilities also - need to play with this
+                if src==0:
+                    # Front
+                    civ_cmd+=[0x00]
+                else:
+                    # Rear - usb
+                    civ_cmd+=[0x03]
+
+                cmd = self.civ.icom_form_command( civ_cmd )
+                x   = self.get_response(cmd)
+                y   = self.civ.icom_response(cmd,x)
+                if VERBOSITY>0:
+                    print('DIRECT_IO MIC SETTINGS: civ_cmd=',show_hex(civ_cmd),
+                          '\n\tcmd=',show_hex(cmd),
+                          '\n\tx=',x,
+                          '\n\ty=',y,'\n')
+                    
+            return gain
+
+        # Yeasu - selections are mode-specific
+        menu_nums=YAESU_MIC_MENU_NUMBERS[self.rig_type2]
+            
+        source= menu_nums[mode][0]          # Mic select (0=Front (mic), 1=Rear
+        level = menu_nums[mode][1]          # Output level
+        port  = menu_nums[mode][2]          # Port select (0=Data, 1=USB)
+        if self.rig_type2=='FT991a':
+            cmd4='BY;EX0721;'
+            buf4=self.get_response(cmd4)
+            cmd5='EX072;'
+            buf5=self.get_response(cmd5)
+            cmd7='EX077;'
+            buf7=self.get_response(cmd7)
+            cmd8='EX078;'
+            buf8=self.get_response(cmd8)
+            if VERBOSITY>0:
+                print('cmd4=',cmd4,'\tbuf4=',buf4)
+                print('cmd5=',cmd5,'\tbuf5=',buf5)
+                print('cmd7=',cmd7,'\tbuf7=',buf7)
+                print('cmd8=',cmd8,'\tbuf8=',buf8)
+            if gain==None:
+                gain  = 75  # 30
+                prt   = 1
+            else:
+                gain  = 0
+                prt   = 0
+
+        cmd1='EX'+str(source).zfill(3)
+        cmd2='EX'+str(level ).zfill(3)
+        cmd3='EX'+str(port  ).zfill(3)
+        if gain<0:
+            # Read
+            buf=self.get_response(cmd1+';')
+            src=int(buf[-2])
+            if VERBOSITY>0:
+                print('cmd1=',cmd1,'\tbuf=',buf)
+            if level:
+                buf=self.get_response(cmd2+';')
+                gain=int(buf[5:8])
+                if VERBOSITY>0:
+                    print('cmd2=',cmd2,'\tbuf=',buf)
+            if port:
+                buf=self.get_response(cmd3+';')
+                prt=int(buf[-2])
+                if VERBOSITY>0:
+                    print('cmd3=',cmd3,'\tbuf=',buf)
+            return [src,gain,prt]
+        else:
+            # Set
+            if src!=None and source:
+                if self.rig_type2=='FTdx3000':
+                    src*=2
+                cmd='BY;'+cmd1+str(src)+';'
+                buf=self.get_response(cmd)
+                if VERBOSITY>0:
+                    print('src=',src,'\tcmd1=',cmd,'\tbuf=',buf)
+            if gain!=None and level:
+                cmd='BY;'+cmd2+str(gain).zfill(4)+';'
+                #cmd=cmd2+';'
+                buf=self.get_response(cmd)
+                if VERBOSITY>0:
+                    print('gain=',gain,'\tcmd2=',cmd,'\tbuf=',buf)
+            if prt!=None and port:
+                cmd='BY;'+cmd3+str(prt)+';'
+                buf=self.get_response(cmd)
+                if VERBOSITY>0:
+                    print('prt=',prt,'\tcmd3=',cmd,'\tbuf=',buf)
+        
     def set_log_fields(self,fields):
         if VERBOSITY>0:
             print('*** WARNING *** Ignored call to SET_LOG_FIELDS ***')
@@ -1888,7 +2034,7 @@ class direct_connect(no_connect):
                         print('\t\t... No CIV yet --> FALSE')
                         return False
                     else:
-                        print('\t\t.... get freq ....')
+                        #print('\t\t.... get freq ....')
                         cmd = self.civ.icom_form_command([0x03])   
                         buf = self.get_response(cmd)
                         y=self.civ.icom_response(cmd,buf,QUIET=True)
@@ -1934,16 +2080,6 @@ class direct_connect(no_connect):
             print('DIRECT POWER_SWITCH: Invalid rig',self.rig_type)
             return -1
     
-
-    """
-    # Routine to get/put fldigi squelch mode
-    def squelch_mode99(self,opt,VERBOSITY=1):
-        if VERBOSITY>0:
-            print('DIRECT_IO - SQUELCH_MODE: opt=',opt)
-
-        print('DIRECT_IO: SQUELCH_MODE not available yet for DIRECT')
-        return
-    """
 
     def init_keyer(self,VERBOSITY=1):
         
@@ -2153,11 +2289,8 @@ class direct_connect(no_connect):
         if self.rig_type1=='Icom':
 
             if meter=='S':
-                cmd = self.civ.icom_form_command([0x15,0x02])
-                x   = self.get_response(cmd)
-                y   = self.civ.icom_response(cmd,x)                        
-                s   = bcd2int(y[1:],1)
-                
+
+                # *** NEED TO VERIFY ALL OF THIS!!! ***
                 # The IC9700 returns values between 0-255:  0=S0, 120=S9, 241=S9+60
                 # Note that these are pretty close to values for FT991 (see below)
                 # Implied slope is 9/120 so 241*9/120 = 18.075 = S9+9.075*6 dB = S9 + 54dB
@@ -2167,14 +2300,57 @@ class direct_connect(no_connect):
                 #sc=54./120.*s
                 # There is a further scaling of 100/265 for Yaesu rigs - apply reverse of this also
                 #sc=int( 2.56*sc + 0.5 )
+
+                civ_cmd = [0x15,0x02]
                 sc = 9./120.
-                if VERBOSITY>0:
-                    print('DIRECT_IO READ S METER: cmd=',show_hex(cmd),'\n\tx=',x,
-                          '\n\ty=',y,'\n\ts=',s,'\tsc=',sc)
-                return sc*s
+                offset=0
+                
+            elif meter=='Power':
+
+                # Returns 0-255:    0=0%, 143=50%, 213=100%
+                # Probably need a piecewise linear mapping but go with this for now
+                civ_cmd = [0x15,0x11]
+                sc = 100./213.
+                offset=0
+                
+            elif meter=='SWR':
+
+                # Returns 0-255:    0=1:1  48=1.5:1   80=2:1   120=3:1 
+                # Probably need a piecewise linear mapping but go with this for now
+                civ_cmd = [0x15,0x12]
+                sc = 2./120.
+                offset=1.
+                
+            elif meter=='Comp':
+
+                # Returns 0-255:    0=0dB  130=15dB    210=25.5dB
+                # Probably need a piecewise linear mapping but go with this for now
+                civ_cmd = [0x15,0x14]
+                sc = 25.5/210.
+                offset=0
+                
+            elif meter=='ALC':
+
+                # Returns 0-255:    0=Min   120-Max
+                # Probably need a piecewise linear mapping but go with this for now
+                civ_cmd = [0x15,0x13]
+                sc = 100/120.
+                offset=0
+                
             else:
-                print('Unknown meter',meter)
+                print('DIRECT READ_METER - Icom: Unknown meter=',meter)
                 return 0
+            
+            cmd = self.civ.icom_form_command(civ_cmd)
+            x   = self.get_response(cmd)
+            y   = self.civ.icom_response(cmd,x)                        
+            s   = bcd2int(y[1:],1)
+            if VERBOSITY>0:
+                print('DIRECT_IO READ METER: meter=',meter,
+                      '\n\tcmd=',show_hex(cmd),'\n\tx=',x,
+                      '\n\ty=',y,'\n\ts=',s,'\toffset=',offset)
+                
+            return sc*s+offset
             
         elif self.rig_type=='Kenwood':
             
@@ -2197,7 +2373,7 @@ class direct_connect(no_connect):
             elif meter=='ALC':
                 cmd = 'RM3;RM;'
             else:
-                print('Unknown meter')
+                print('DIRECT READ_METER - Kenwood: Unknown meter=',meter)
                 return 0
 
             # The TS850 returns values between 0-30 - scale so 0-255 (like Yaesu)
@@ -2467,7 +2643,77 @@ class direct_connect(no_connect):
             print('DIRECT XIT: Invalid opt',opt)
             return -1
 
+    # Function to deal with the monitor level
+    # THIS SHOULD REPLACE THE TWO FUNCTIONS BELOW AND THE REDUNDANT FUNCTION IN SOCKET_IO!!!!
+    def monitor_level(self,gain,VERBOSITY=0):
+        if self.rig_type1=='Kenwood':
+            print('DIRECT - MONITOR GAIN: Function not yet implemented for Kenwood rigs')
+            return 0
+        
+        if VERBOSITY>0:
+            print('DIRECT_IO - MONITOR GAIN: gain in=',gain)
 
+        if self.rig_type1=='Icom':
+
+            if gain<0:
+                # Read current settings
+                civ_cmd0 = [0x16,0x45]
+                civ_cmd1 = [0x14,0x15]
+            elif gain==0:
+                # Turn monitor off 
+                civ_cmd0 = [0x16,0x45,0x00]
+                civ_cmd1 = None
+            else:
+                # Turn monitor on and Set monitor gain
+                civ_cmd0 = [0x16,0x45,0x01]
+                gain2=round( 255/100.* gain )
+                y2  = int2bcd(min(gain2,255),2,1)
+                civ_cmd1 = [0x14,0x15]+y2
+
+            cmd0 = self.civ.icom_form_command( civ_cmd0 )
+            x0   = self.get_response(cmd0)
+            y0   = self.civ.icom_response(cmd0,x0)
+            if VERBOSITY>0:
+                print('DIRECT_IO MONITOR GAIN: ',
+                      '\tciv_cmd0=',show_hex(civ_cmd0),
+                      '\n\tcmd0=',show_hex(cmd0),'\n\tx0=',x0,
+                      '\n\ty0=',y0,'\n')
+
+            if cmd1==None:
+                gain=0
+            else:
+                cmd = self.civ.icom_form_command( civ_cmd1 )
+                x   = self.get_response(cmd)
+                y   = self.civ.icom_response(cmd,x)
+                if gain<0:
+                    gain   = int( 100/255.*bcd2int(y[1:],1) )
+                if VERBOSITY>0:
+                    print('DIRECT_IO MONITOR GAIN: gain out=',gain,
+                          '\n\tciv_cmd1=',show_hex(civ_cmd1),
+                          '\n\tcmd=',show_hex(cmd),'\n\tx=',x,
+                          '\n\ty=',y,'\n')
+            return gain
+
+        # Yeasu
+        if gain<0:
+            # Read current setting
+            cmd  = 'ML1;'
+        elif gain==0:
+            # Turn monitor off 
+            cmd  = 'BY;ML0000;'
+        else:
+            # Set monitor gain
+            cmd  = 'ML0001;'+'ML1'+str(gain).zfill(3)+';ML1;'
+
+        buf=self.get_response(cmd)
+        if VERBOSITY>0:
+            print('\tcmd=',cmd,'\n\tbuf=',buf,'\t',buf[2:6])
+
+        if gain<0:
+            gain=int(buf[3:6])
+            
+        return gain
+            
 
     # Function to get monitor level - see note below on set_mon_gain
     def get_monitor_gain(self):
@@ -2519,13 +2765,34 @@ class direct_connect(no_connect):
 
 
     def squelch_level(self,lvl,VERBOSITY=0):
-        if self.rig_type1=='Kenwood' or self.rig_type1=='Icom':
-            print('DIRECT - SQUELCH LEVEL: Function not yet implemented for Kenwood and Icom rigs')
+        if self.rig_type1=='Kenwood':
+            print('DIRECT - SQUELCH LEVEL: Function not yet implemented for Kenwood rigs')
             return 0
         
         if VERBOSITY>0:
-            print('DIRECT_IO - SQUELCH LEVEL: lvl=',lvl)
-            
+            print('DIRECT_IO - SQUELCH LEVEL: lvl in=',lvl)
+
+        if self.rig_type1=='Icom':
+
+            civ_cmd = [0x14,0x3]
+            if lvl>=0:
+                lvl2=round( 255/100.* lvl )
+                y2  = int2bcd(min(lvl2,255),2,1)
+                civ_cmd += y2
+                
+            cmd = self.civ.icom_form_command( civ_cmd )
+            x   = self.get_response(cmd)
+            y   = self.civ.icom_response(cmd,x)
+            if lvl<0:
+                lvl   = round( 100/255.*bcd2int(y[1:],1) )
+            if VERBOSITY>0:
+                print('DIRECT_IO SQUELCH LEVEL: lvl out=',lvl,
+                      '\n\tciv_cmd=',show_hex(civ_cmd),
+                      '\n\tcmd=',show_hex(cmd),'\n\tx=',x,
+                      '\n\ty=',y,'\n')
+            return lvl
+
+        # Yeasu
         if lvl<0:
             # Read current setting
             cmd  = 'SQ0;'
@@ -2541,6 +2808,7 @@ class direct_connect(no_connect):
             print('DIRECT_IO - SQUELCH LEVEL: cmd=',cmd,'\tbuf=',buf)
         return lvl
     
+
     # Need to fill this out
     def recorder(self,on_off=None):
         if False:
