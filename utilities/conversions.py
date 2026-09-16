@@ -1,7 +1,7 @@
 ############################################################################
 #
 # conversions.py - Rev 1.0
-# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
+# Copyright (C) 2021- by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Number and format conversions.
 #
@@ -19,7 +19,7 @@
 #
 ############################################################################
 
-# Function to convert frequency (MHz) to nominald band
+# Function to convert frequency (MHz) to nominal band
 def freq2band(frq):
 
     if type(frq)==str:
@@ -62,9 +62,9 @@ def freq2band(frq):
     elif frq<1000:
         band='33cm'
     elif frq<1500:
-        band='23cgm'
+        band='23cm'
     else:
-        band='70cm'
+        band='Unknown'
         print('FREQ2BAND: frq=',frq,'\tband=',band)
             
     return band

@@ -1437,7 +1437,7 @@ class direct_connect(no_connect):
         return int(buf[2:5])
     
 
-    def set_power(self,p,PMAX=None,VERBOSITY=0):
+    def set_power_OLD(self,p,PMAX=None,VERBOSITY=0):
         if VERBOSITY>0:
             print('DIRECT SET_POWER: p=',p)
 
@@ -1534,6 +1534,7 @@ class direct_connect(no_connect):
             return gain
 
         # Yeasu - selections are mode-specific
+        # Probably need to use MG cat command for FT991a since it doesn't have indivudl mode mic gain
         menu_nums=YAESU_MIC_MENU_NUMBERS[self.rig_type2]
             
         source= menu_nums[mode][0]          # Mic select (0=Front (mic), 1=Rear
@@ -1590,7 +1591,10 @@ class direct_connect(no_connect):
                 if VERBOSITY>0:
                     print('src=',src,'\tcmd1=',cmd,'\tbuf=',buf)
             if gain!=None and level:
-                cmd='BY;'+cmd2+str(gain).zfill(4)+';'
+                if self.rig_type2=='FTdx3000':
+                    cmd='BY;'+cmd2+str(gain).zfill(4)+';'
+                else:
+                    cmd='BY;'+cmd2+str(gain).zfill(3)+';'
                 #cmd=cmd2+';'
                 buf=self.get_response(cmd)
                 if VERBOSITY>0:
@@ -1701,7 +1705,7 @@ class direct_connect(no_connect):
         if VERBOSITY>0:
             print('\nDIRECT PTT:',on_off,VFO)
 
-        if self.rig_type=='Kenwood':
+        if self.rig_type1=='Kenwood':
             if on_off:
                 cmd = 'TX;'
             else:
@@ -1711,6 +1715,25 @@ class direct_connect(no_connect):
             time.sleep(DELAY)
             valid = self.check_port('PTT After send',False)
             return valid
+
+        elif self.rig_type1=='Icom':
+            print('\nDIRECT PTT - ICOM ...')
+            if on_off:
+                self.keyed=True
+                civ_cmd = [0x1c,0x00,0x01]
+            else:
+                self.keyed=False
+                civ_cmd = [0x1c,0x00,0x00] 
+            cmd = self.civ.icom_form_command( civ_cmd )
+            x   = self.get_response(cmd)
+            y   = self.civ.icom_response(cmd,x)
+            if VERBOSITY>0:
+                print('\n\tciv_cmd=',show_hex(civ_cmd),
+                      '\n\tcmd=',show_hex(cmd),
+                      '\n\tx=',x,
+                      '\n\ty=',y,'\n')
+
+            return self.keyed
 
         # Yaesu
         if on_off:
@@ -2308,10 +2331,7 @@ class direct_connect(no_connect):
             elif meter=='Power':
 
                 # Returns 0-255:    0=0%, 143=50%, 213=100%
-                # Probably need a piecewise linear mapping but go with this for now
                 civ_cmd = [0x15,0x11]
-                sc = 100./213.
-                offset=0
                 
             elif meter=='SWR':
 
@@ -2332,7 +2352,6 @@ class direct_connect(no_connect):
             elif meter=='ALC':
 
                 # Returns 0-255:    0=Min   120-Max
-                # Probably need a piecewise linear mapping but go with this for now
                 civ_cmd = [0x15,0x13]
                 sc = 100/120.
                 offset=0
@@ -2349,8 +2368,38 @@ class direct_connect(no_connect):
                 print('DIRECT_IO READ METER: meter=',meter,
                       '\n\tcmd=',show_hex(cmd),'\n\tx=',x,
                       '\n\ty=',y,'\n\ts=',s,'\toffset=',offset)
+
+            # Piecewise linear refinements
+            if meter=='SWR':
+                # Returns 0-255:    0=1:1  48=1.5:1   80=2:1   120=3:1
+                if s<=48:
+                    sc     = 1.5/48
+                    offset = 0
+                elif s<=80:
+                    s      -=1.5
+                    sc     = (1-1.5)/(80-48)
+                    offset = 1.5
+                elif s<=120:
+                    s     -=2
+                    sc     = (3-2)/(120-80)
+                    offset = 2
+                else:
+                    s     -=3
+                    sc     = 3./120
+                    offset = 3
                 
-            return sc*s+offset
+            elif meter=='Power':
+                # Returns 0-255:    0=0%, 143=50%, 213=100%
+                if s<=143:
+                    sc     = 50./143.
+                    offset = 0
+                else:
+                    s -= 143
+                    sc = 50./(213-143)
+                    offset=50
+
+            meter=sc*s+offset 
+            return meter
             
         elif self.rig_type=='Kenwood':
             
@@ -2417,13 +2466,49 @@ class direct_connect(no_connect):
                 print('Unknown meter')
                 return 0
 
-        if VERBOSITY>0:
-            print('DIRECT READ_METER: cmd=',cmd,len(cmd))
         buf = self.get_response(cmd,True)
+        s=int(buf[idx:-1])             
         if VERBOSITY>0:
-            print('DIRECT READ_METER: buf=',buf,'\tsc=',sc,'\toffset=',offset)
-            #print('buf=',buf[idx:-1])
-        meter = sc*int(buf[idx:-1]) + offset
+            print('DIRECT READ_METER: cmd=',cmd,len(cmd),
+                  '\\n\tbuf   =',buf,
+                  '\n\ts      =',s,
+                  '\n\tsc     =',sc,
+                  '\n\toffset =',offset)
+
+        # Piecewise linear refinements
+        if meter=='SWR':
+            # Read SWR - This causes a BEEP on the ts850 - bx RM1 command
+            # Measuremets:
+            # 1.1 --> 13
+            # 3   --> 128
+            swr=s*2./128. + 1
+            meter=swr
+            
+        elif meter=='Power':
+
+            # Scale on rig runs from 0-150W but isn't linear - appears to be logarithmic below 50W
+            # Measurements on ft991a:
+            # 5W   =  7 dBW -->  38
+            # 10W  = 10 dBW -->  59
+            # 20W  = 13 dBW -->  86
+            # 50W  = 17 dBW --> 149
+            # 100W = 20 dBW --> 207
+            # 150W = 21.76 dBW
+            # Still needs some refinement
+            if s>150:
+                #watts = s*150./255.
+                watts = s*100./208.
+                dbw   = -1
+            else:
+                dbw = s*17./150.
+                watts = pow(10.,0.1*dbw)
+                #if watts<2:
+                #    watts=0
+
+            meter = watts
+        else:
+            meter = sc*s + offset
+
         return meter
             
 
@@ -2619,14 +2704,14 @@ class direct_connect(no_connect):
             
         if opt==-1:
             
-            return [onoff,rit]
+            return [onoff,xit]
     
         elif opt<2:
             
             if RELATIVE:
                 offset=df
             else:
-                offset=rit+df
+                offset=xit+df
             
             # Turn it on/off & adjust offset
             # For ftdx3000, df seems to offset from current rit, not abosolute shift
@@ -2679,7 +2764,7 @@ class direct_connect(no_connect):
                       '\n\tcmd0=',show_hex(cmd0),'\n\tx0=',x0,
                       '\n\ty0=',y0,'\n')
 
-            if cmd1==None:
+            if civ_cmd1==None:
                 gain=0
             else:
                 cmd = self.civ.icom_form_command( civ_cmd1 )

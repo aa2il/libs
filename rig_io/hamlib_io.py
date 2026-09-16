@@ -23,6 +23,101 @@
 #
 ############################################################################################
 
+"""
+F: set_freq           (Frequency)           f: get_freq           ()
+M: set_mode           (Mode,Passband)       m: get_mode           ()
+I: set_split_freq     (TX Frequency)        i: get_split_freq     ()
+X: set_split_mode     (TX Mode,TX Passband) x: get_split_mode     ()
+K: set_split_freq_mode(TX Frequency,TX Mode,TX Passband)
+k: get_split_freq_mode()
+S: set_split_vfo      (Split,TX VFO)        s: get_split_vfo      ()
+N: set_ts             (Tuning Step)         n: get_ts             ()
+L: set_level          (Level,Level Value)   l: get_level          (Level)
+U: set_func           (Func,Func Status)    u: get_func           (Func)
+P: set_parm           (Parm,Parm Value)     p: get_parm           (Parm)
+G: vfo_op             (Mem/VFO Op)          g: scan               (Scan Fct,Scan Channel)
+A: set_trn            (Transceive)          a: get_trn            ()
+R: set_rptr_shift     (Repeater Shift)      r: get_rptr_shift     ()
+O: set_rptr_offs      (Repeater Offset)     o: get_rptr_offs      ()
+C: set_ctcss_tone     (CTCSS Tone)          c: get_ctcss_tone     ()
+D: set_dcs_code       (DCS Code)            d: get_dcs_code       ()
+?: set_ctcss_sql      (CTCSS Squelch)       ?: get_ctcss_sql      ()
+?: set_dcs_sql        (DCS Squelch)         ?: get_dcs_sql        ()
+V: set_vfo            (VFO)                 v: get_vfo            ()
+T: set_ptt            (PTT)                 t: get_ptt            ()
+E: set_mem            (Memory#)             e: get_mem            ()
+H: set_channel        (Channel)             h: get_channel        (Channel,Read Only)
+B: set_bank           (Bank)                _: get_info           ()
+J: set_rit            (RIT)                 j: get_rit            ()
+Z: set_xit            (XIT)                 z: get_xit            ()
+Y: set_ant            (Antenna,Option)      y: get_ant            (AntCurr)
+?: set_powerstat      (Power Status)        ?: get_powerstat      ()
+?: send_dtmf          (Digits)              ?: recv_dtmf          ()
+w: send_cmd           (Command)             W: send_cmd_rx        (Command,Reply)
+*: reset              (Reset)               b: send_morse         (Morse)
+?: stop_morse         ()                    ?: wait_morse         ()
+?: send_voice_mem     (Voice Mem#)          ?: stop_voice_mem     ()
+?: get_dcd            ()                    ?: uplink             (1=Sub,2=Main)
+?: set_twiddle        (Timeout (secs))      ?: get_twiddle        ()
+?: set_cache          (Timeout (msecs))     ?: get_cache          ()
+2: power2mW           (Power [0.0..1.0],Frequency,Mode)
+4: mW2power           (Power mW,Freq,Mode)
+1: dump_caps          ()                    3: dump_conf          ()
+?: dump_state         ()                    ?: chk_vfo            ()
+?: set_vfo_opt        (Status)              ?: get_vfo_info       (VFO)
+?: get_rig_info       ()                    ?: get_vfo_list       ()
+?: get_modes          ()                    ?: get_clock          ()
+?: set_clock          (local or utc or YYYY-MM-DDTHH:MM:SS.sss+ZZ or YYYY-MM-DDTHH:MM+ZZ)
+?: halt               ()
+?: pause              (Seconds)             ?: password           (Password)
+?: set_separator      (Separator)           ?: get_separator      ()
+?: set_lock_mode      (Locked)              ?: get_lock_mode      ()
+?: get_mode_bandwidths(Mode)                ?: send_raw           (Terminator,Command)
+?: client_version     (Version)             ?: hamlib_version     ()
+?: set_gpio           (GPIO#,0/1)           ?: get_gpio           (GPIO#)
+?: set_conf           (Token,Token Value)   ?: get_conf           (Token)
+?: test               (routine)             ?: stream_caps        ()
+?: stream_open        (Type,Format,Rate)    ?: stream_close       (Stream ID)
+?: stream_status      (Stream ID)           ?: stream_pause       (Stream ID)
+?: stream_resume      (Stream ID)           ?: stream_mute        (Stream ID)
+?: stream_unmute      (Stream ID)           ?: stream_metadata_read(Stream ID)
+?: stream_drain       (Stream ID)           ?: stream_list        ()
+
+
+In interactive mode prefix long command names with '\', e.g. '\dump_state'
+
+The special command '-' is used to read further commands from standard input
+Commands and arguments read from standard input must be white space separated,
+comments are allowed, comments start with the # character and continue to the
+end of the line.
+
+Error codes and messages
+-0 - Command completed successfully
+-1 - Invalid parameter
+-2 - Invalid configuration
+-3 - Memory shortage
+-4 - Feature not implemented
+-5 - Communication timed out
+-6 - IO error
+-7 - Internal Hamlib error
+-8 - Protocol error
+-9 - Command rejected by the rig
+-10 - Command performed, but arg truncated, result not guaranteed
+-11 - Feature not available
+-12 - Target VFO unaccessible
+-13 - Communication bus error
+-14 - Communication bus collision
+-15 - NULL RIG handle or invalid pointer parameter
+-16 - Invalid VFO
+-17 - Argument out of domain of func
+-18 - Function deprecated
+-19 - Security error password not provided or crypto failure
+-20 - Rig is not powered on
+-21 - Limit exceeded
+-22 - Access denied
+"""
+############################################################################################
+
 from .ft_tables import *
 from .direct_io import direct_connect,set_date_time_FT991a,set_date_time_IC9700
 from .dummy_io import no_connect
@@ -74,6 +169,7 @@ class hamlib_connect(direct_connect):
                 port = HAMLIB_PORT
         self.port=port
         self.ntimeouts = 0
+        self.filt          = None        
 
         self.wpm       = 0
         self.freq      = 0                # in Hz
@@ -87,25 +183,35 @@ class hamlib_connect(direct_connect):
         self.rotor     = False
         self.last_cmd  = ''
         self.sub_dial_func=None
+        self.powered_up = None
         
         try:
             self.s = socket.socket()
             self.s.connect((host, port))
 
             # So far so good - make sure its really an active connection
-            print('\n*** HAMLIB_IO: Hamlib Server Detected - checking if it is still active...',host,port)
+            print('\n*** HAMLIB_CONNECT: Hamlib Server Detected - checking if it is still active...',host,port)
             self.s.settimeout(2.0)
             if tag=='ROTOR':
                 frq = self.get_position()[0]
-                print('HAMLIB_IO: pos=',frq,' on port',port)
+                print('HAMLIB_CONNECT: pos=',frq,' on port',port)
             else:
-                s = self.split_mode(-1)
-                m,bw = self.get_mode()
-                frq = self.get_freq()
-                if frq==-1:
-                    # Try again
+                # Check if rig is powered up
+                self.powered_up = self.power_switch(-1,VERBOSITY=1)
+                print('\tpowered up=',self.powered_up)
+
+                if self.powered_up:
+                    s = self.split_mode(-1)
+                    m,bw = self.get_mode()
                     frq = self.get_freq()
-                print('HAMLIB_IO: frq=',frq,'\tmode=',m,'\tsplit=',s,' on port',port)
+                    if frq==-1:
+                        # Try again
+                        frq = self.get_freq()
+                    print('HAMLIB_CONNECT: frq=',frq,'\tmode=',m,'\tsplit=',s,' on port',port)
+                else:
+                    print('HAMLIB_CONNECT: Rig appears to have power but is turned off')
+                    frq=0
+                    
             self.s.settimeout(None)
 
             if frq>=0:
@@ -124,28 +230,31 @@ class hamlib_connect(direct_connect):
             return
 
         # Determine which rig is on the other end
-        print('HAMLIB_IO: Hamlib Server so far so good - rig on other end ...',host,port)
+        print('HAMLIB_CONNECT: Hamlib Server so far so good - rig on other end ...',host,port)
         #caps = self.get_response('1',N=100).splitlines()       # Read capabilities - this is a long one
         caps = self.get_response('1',wait=True).splitlines()       # Read capabilities - this is a long one
-        print('HAMLIB_IO: caps=',caps)
+        print('HAMLIB_CONNECT: caps=',caps)
         caps2 = OrderedDict()
         for line in caps:
             a=line.split(':')
             caps2[a[0]]=''.join(a[1:]).strip()
-        print('HAMLIB_IO: caps2=',caps2)
-        print('\nHAMLIB_IO: Model=',caps2['Model name'])
+        print('HAMLIB_CONNECT: caps2=',caps2)
+        print('\nHAMLIB_CONNECT: Model=',caps2['Model name'])
         
         # Most rigs will respond with a unique ID
         # Those that don't, we do it the hard way
-        x = self.get_response('_',VERBOSITY=1)
-        print('HAMLIB_IO: info=',x)
+        if self.powered_up:
+            x = self.get_response('_',VERBOSITY=1)
+        else:
+            x=None
+        print('HAMLIB_CONNECT: info=',x)
         if caps2['Model name']=='pySDR':
             self.rig_type1 = 'SDR'
             self.rig_type2 = 'pySDR'            # pySDR
         elif x=='ID0460':
             self.rig_type1 = 'Yaesu'
             self.rig_type2 = 'FTdx3000'
-        elif x=='ID0670':
+        elif (x==None and caps2['Model name']=='FT-991') or x=='ID0670':
             self.rig_type1 = 'Yaesu'
             self.rig_type2 = 'FT991a'
         elif caps2['Model name']=='FT-2000':
@@ -415,6 +524,15 @@ class hamlib_connect(direct_connect):
             self.lock.release()
             if VERBOSITY>0:
                 print('HAMLIB_IO GET_RESPONSE - Lock released 2')
+
+        # Error checking
+        if 'RPRT' in x and x!='RPRT 0':
+            if cmd=='ALC':
+                print('HAMLIB_IO GET_RESPONSE - ALC command only valid when transmitting')
+            else:
+                print('HAMLIB_IO GET_RESPONSE - Houston we have a problem :',
+                      '\n\tcmd=',cmd,'\n\tx=',x)
+            
         return x.replace(NULL,'')
 
     
@@ -621,7 +739,6 @@ class hamlib_connect(direct_connect):
         
                 
     def get_mode(self,VFO='A',VERBOSITY=0):
-        #VERBOSITY=1
         if VERBOSITY>0:
             print('HAMLIB_IO: Get mode - vfo=',VFO,' ...')
 
@@ -644,12 +761,12 @@ class hamlib_connect(direct_connect):
             else:
                 cmd  = 'x'
         else:
-            print('HAMLIB_IO: Get Mode - Unknown VFO',VFO)
+            print('HAMLIB_IO - GET MODE: Unknown VFO',VFO)
             return '',None
         
         buf = self.get_response(cmd)
         if VERBOSITY>0:
-            print('HAMLIB_IO: GET_MODE: cmd=',cmd,'\tbuf=',buf)
+            print('HAMLIB_IO - GET_MODE: cmd=',cmd,'\tbuf=',buf)
 
         if VFO=='B' and self.rig_type1=='Yaesu' and use_direct:
             print('idx=',idx)
@@ -671,6 +788,25 @@ class hamlib_connect(direct_connect):
         return mode,bw
 
 
+    def get_PLtone_NEW(self,VERBOSITY=0):
+        if VERBOSITY>0:
+            print('HAMLIB Get PL Tone ...')
+
+        buf = self.get_response(c)
+
+        return buf
+            
+    def set_mem_chan(self,ch,frq,VERBOSITY=0):
+        if VERBOSITY>0:
+            print('HAMLIB SET_MEM_CHAN: mem chan=',ch,'\tfrq=',frq)    # '\tband=',band,
+            
+        if self.rig_type1=='Icom':
+            self.set_freq(frq)
+            
+        buf1 = self.get_response('E '+str(ch))
+        buf2 = self.get_response('G TO_VFO')
+
+            
     def set_filter(self,filt,mode=None,VERBOSITY=0):
         if VERBOSITY>0:
             print('\nHAMLIB_IO SET_FILTER: filt=',filt,'\tmode=',mode)
@@ -802,7 +938,7 @@ class hamlib_connect(direct_connect):
             print('HAMLIB TUNER - Invalid option:',opt)
 
 
-    def get_PLtone(self,VERBOSITY=1):
+    def get_PLtone(self,VERBOSITY=0):
         if VERBOSITY>0:
             print('\nHAMLIB_IO: Get PL Tone ...')
 
@@ -951,15 +1087,40 @@ class hamlib_connect(direct_connect):
 
 
 
-    def read_meter_hamlib(self,meter,VERBOSITY=0):
+    def read_meter(self,meter,VERBOSITY=0):
         if VERBOSITY>0:
             print('HAMLIB READ_METER:',meter)
 
-        # Hamlib does not work - use direct version instead
-        buf = self.get_response('p METER')
-        print('HAMLIB READ_MEATER: buf=',buf)
-        #print('buf=',buf[idx:-1])
-        return
+        if meter=='S':
+            cmd = 'l STRENGTH'
+        elif meter=='Power':
+            cmd = 'l RFPOWER_METER_WATTS'
+        elif meter=='SWR':
+            cmd = 'l SWR'
+        elif meter=='Comp':
+            cmd = 'l COMP_METER'
+        elif meter=='ALC':
+            cmd = 'ALC'
+        else:
+            print('Unknown meter')
+            return 0
+
+        buf=self.get_response(cmd)
+        if 'RPRT' in buf:
+            val=0
+        else:
+            val = float(buf)
+        if VERBOSITY>0:
+            print('\tcmd=',cmd,'\tbuf=',buf)
+
+        if meter=='S':
+            # Convert dB to S- units
+            S = (val+54)/6.
+            if VERBOSITY>0:
+                print('\n\tval=',val,'\tS=',S)
+            val=S
+        
+        return val
 
 
 
@@ -1112,7 +1273,6 @@ class hamlib_connect(direct_connect):
         
     # Routine to put rig into sat mode
     def sat_mode(self,opt,VERBOSITY=0):
-        #VERBOSITY=1
         if VERBOSITY>0:
             print('HAMLIB - SAT_MODE:',opt)
 
@@ -1134,6 +1294,42 @@ class hamlib_connect(direct_connect):
             return -1
 
 
+    # Routine to turn rig power on and off
+    def power_switch(self,opt,VERBOSITY=0):
+        if VERBOSITY>0:
+            print('HAMLIB - POWER_SWITCH:',opt)
+
+        if opt==-1:
+            if VERBOSITY>0:
+                print('\tQuerying power switch ...')
+            buf=self.get_response('\get_powerstat')
+            if self.rig_type2=='IC9700' and buf=='RPRT -9':
+                print('\tGet Power Stat doesnt work if rig is in SAT MODE')
+                sys.exit(0)
+                    
+                satmode=self.sat_mode(-1)
+                print('\tsatmode1=',satmode)
+                if satmode:
+                    satmode=self.sat_mode(0)
+                    print('\tsatmode2=',satmode)
+            if VERBOSITY>0:
+                print('\tbuf=',buf)
+            return buf=='1'
+
+        elif opt in [0,1]:
+
+            if VERBOSITY>0:
+                print('Setting POWER SWITCH',opt)
+            buf=self.get_response('\set_powerstat '+str(opt))
+            if VERBOSITY>0:
+                print('\tbuf=',buf)
+            return opt==1
+                
+        else:
+
+            print('HAMLIB POWER_SWITCH: Invalid opt',opt)
+            return -1
+            
     # Function to get active VFO
     def get_vfo(self):
         VERBOSITY=1
@@ -1387,8 +1583,34 @@ class hamlib_connect(direct_connect):
 
             print('HAMLIB_IO: SET_DATE_TIME - Unknown rig',self.rig_type2)
             sys.exit(0)
+
+
+    # Function to deal with transmit power
+    # THIS SHOULD REPLACE THE TWO FUNCTIONS BELOW AND THE REDUNDANT FUNCTION IN SOCKET_IO!!!!
+    def tx_power(self,pwr,PMAX=None,VERBOSITY=0):
+
+        if VERBOSITY>0:
+            print('HAMLIB_IO - TX POWER: pwr in=',pwr,'\tPmax=',PMAX)
+        
+        if pwr<0:
             
-    def set_power(self,p,PMAX=None,VERBOSITY=0):
+            # Read current setting
+            cmd = 'l RFPOWER'
+            buf=self.get_response(cmd)
+            if VERBOSITY>0:
+                print('\tcmd=',cmd,'\tbuf=',buf)
+            return int( 100*float(buf) )
+
+        else:
+            
+            p=min(max(pwr,5),100)
+            cmd = 'L RFPOWER '+str(.01*p)
+            buf=self.get_response(cmd)
+            if VERBOSITY>0:
+                print('\tcmd=',cmd,'\tbuf=',buf)
+        
+        
+    def set_power_OLD(self,p,PMAX=None,VERBOSITY=0):
         if VERBOSITY>0:
             print('HAMLIB_IO SET_POWER: p=',p)
 
@@ -1417,28 +1639,48 @@ class hamlib_connect(direct_connect):
         cmd='L IF '+str(shift)
         buf=self.get_response(cmd)
 
-    def mic_setting(self,m,iopt,src=None,lvl=None,prt=None):
+    def mic_settings(self,gain,src=None,prt=None,mode=None,VERBOSITY=0):
         if VERBOSITY>0:
-            print('HAMLIB_IO MIC_SETTING:',m,iopt,src,lvl,prt)
+            print('HAMLIB_IO MIC_SETTING: mode=',mode,'\tgain=',gain,
+                  '\tsrc=',src,'\tprt=',prt)
             
-        if m=='CW' or m=='RTTY':
+        if mode==None:
+            mode,bw=self.get_mode()
+        if mode in['CW','RTTY']:
             return
-        
-        if iopt==0:
+        elif mode in ['LSB','USB']:
+            mode='SSB'
+        elif mode=='AMN':
+            mode='AM'
+
+        if gain==None:
+            print('HAMLIB_IO MIC_SETTINGS - We need some more code fer GAIN!')
+            return None
+        elif gain==-1:
             # Read
             cmd='l MICGAIN'
             buf=self.get_response(cmd)
-            src=None
-            lvl=float(buf)
-            port=None
-            print('HAMLIB_IO MIC_SETTING Get: cmd=',cmd,'\n\tbuf=',buf)
-            return [src,int(100*lvl),prt]
+            try:
+                gain=int( 100*float(buf) )
+            except:
+                gain=0
+                print('HAMLIB_IO MIC_SETTINGS - Problem reading mic gain',
+                      '\n\tcmd=',cmd,'\n\tbuf=',buf,'\n\tgain=',gain)
+                
+            if VERBOSITY>0:
+                print('HAMLIB_IO MIC_SETTINGS - Get: cmd=',cmd,'\n\tbuf=',buf,'\n\tgain=',gain)
+            return gain
         else:
             # Set
-            cmd='L MICGAIN '+str(0.01*lvl)
+            cmd='L MICGAIN '+str(0.01*gain)
             buf=self.get_response(cmd)
-            print('HAMLIB_IO MIC_SETTING Set: cmd=',cmd,'\n\tbuf=',buf)
+            if VERBOSITY>0:
+                print('HAMLIB_IO MIC_SETTING Set: cmd=',cmd,'\n\tbuf=',buf)
+            return gain
         
+        if src!=None:
+            print('HAMLIB_IO MIC_SETTINGS - We need some more code for SRC!')
+
         return 0
 
     def set_vfo(self,rx=None,tx=None,op=None):
