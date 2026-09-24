@@ -226,7 +226,7 @@ def try_port(port,baud,verbosity,ICOM=None):
     
 
 # Routine to test connection to a particular rig
-def try_rig(self,type1,type2,port,baud):
+def try_rig(self,type1,type2,port,baud,VERBOSITY=0):
     try:
         if baud==0:
             if type2=='TS850':
@@ -240,8 +240,9 @@ def try_rig(self,type1,type2,port,baud):
         else:
             TimeOut=0.1
 
-        print('\nTRY_RIG: Trying %s %s\t\tport=%s\tbaud=%d ...' %
-              (type1,type2,port,baud) )
+        if VERBOSITY>0:
+            print('\nTRY_RIG: Trying %s %s\t\tport=%s\tbaud=%d ...' %
+                  (type1,type2,port,baud) )
 
         self.s = serial.Serial(port,baud,timeout=TimeOut)
         if not self.s.is_open:
@@ -254,13 +255,16 @@ def try_rig(self,type1,type2,port,baud):
         self.baud=baud
 
         if type1=='Icom':
-            print(self.s)
-            ps = self.power_switch(-1,VERBOSITY=1)
-            print('\tps=',ps)
+            if VERBOSITY>0:
+                print(self.s)
+            ps = self.power_switch(-1,VERBOSITY=VERBOSITY)
+            if VERBOSITY>0:
+                print('\tps=',ps)
             self.civ = icom_civ(self.rig_type2)
             if not ps:
-                print("Rig appears to be available but can't tell if its on or off ...")
-                print("... we're going to assume its off until we can get a better idea how to do this query!\n")
+                if VERBOSITY>0:
+                    print("Rig appears to be available but can't tell if its on or off ...")
+                    print("... we're going to assume its off until we can get a better idea how to do this query!\n")
                 return True
 
         if type2=='GS232b':
@@ -269,15 +273,17 @@ def try_rig(self,type1,type2,port,baud):
             return True
 
         if type1=='Yaesu':
-            ps = self.power_switch(-1,VERBOSITY=1)
-            print('\tps=',ps)
+            ps = self.power_switch(-1,VERBOSITY=VERBOSITY)
+            if VERBOSITY>0:
+                print('\tps=',ps)
             if not ps:
-                print('Rig appears to have power but turned off\n')
+                if VERBOSITY>0:
+                    print('Rig appears to have power but is turned off\n')
                 return True
         
-        #print('Hey4',self.rig_type)
-        freq = self.get_freq()
-        print('Freq test=',freq)
+        freq = self.get_freq(VERBOSITY=VERBOSITY)
+        if VERBOSITY>0:
+            print('Freq test=',freq)
         if type2=='IC9700' and False:
 
             cmd = 40*[0xfe]
@@ -315,9 +321,11 @@ def try_rig(self,type1,type2,port,baud):
     
 
 # Routine to search known ports & find a rig
-def find_direct_rig(self,port_in,baud_in,force=False):
+def find_direct_rig(self,port_in,baud_in,force=False,VERBOSITY=0):
 
-    print('\nFIND_DIRECT_RIG: Looking for any rigs connected to a USB port - port=',port_in,'\tbaud=',baud_in)
+    if VERBOSITY>0:
+        print('\nFIND_DIRECT_RIG: Looking for any rigs connected to a USB port - port=',
+              port_in,'\tbaud=',baud_in)
     baud=baud_in
     
     # The GS232 rotor
@@ -372,7 +380,7 @@ def find_direct_rig(self,port_in,baud_in,force=False):
 # Object for basic direct connection via serial port
 #class direct_connect:
 class direct_connect(no_connect):
-    def __init__(self,port,baud,force=False):
+    def __init__(self,port,baud,force=False,VERBOSITY=0):
 
         self.baud          = baud
         self.port          = port
@@ -390,8 +398,11 @@ class direct_connect(no_connect):
         self.ntimeouts     = 0
         self.filt          = None        
         self.civ           = False
+        self.VERBOSITY     = VERBOSITY
+        self.powered_up    = None
 
-        print('DIRECT_CONNECT: Looking for rig - port=',port,'\tbaud=',baud,'...')
+        if VERBOSITY>0:
+            print('DIRECT_CONNECT: Looking for rig - port=',port,'\tbaud=',baud,'...')
         Found = find_direct_rig(self,port,baud,force)
 
         if Found:
@@ -403,9 +414,10 @@ class direct_connect(no_connect):
             self.keyed=False
         
             self.s.setDTR(False)           # Make sure DTR is not asserted
-            print('DIRECT_CONNECT: Connection to rig via', \
-                  self.s.name,'\tport=',port,'\tbaud=',baud)
-            print('Rig type=',self.rig_type,self.rig_type2)
+            if VERBOSITY>0:
+                print('DIRECT_CONNECT: Connection to rig via', \
+                      self.s.name,'\tport=',port,'\tbaud=',baud)
+                print('Rig type=',self.rig_type,self.rig_type2)
 
             self.connection='DIRECT'
             self.active = True
@@ -424,14 +436,17 @@ class direct_connect(no_connect):
 
             if self.rig_type1=='Yaesu':
 
-                ps = self.power_switch(-1,VERBOSITY=1)
-                print('\tps=',ps)
-                if not ps:
-                    print('Rig appears to have power but turned off\n')
+                self.powered_up = self.power_switch(-1,VERBOSITY=VERBOSITY)
+                if VERBOSITY>0:
+                    print('\tpowered up=',self.powered_up)
+                if not self.powered_up:
+                    if VERBOSITY>0:
+                        print('Rig appears to have power but is turned off\n')
                 else:
                     self.send('FA;')
                     x = self.recv(256)
-                    print('DIRECT INIT:',x)
+                    if VERBOSITY>0:
+                        print('DIRECT INIT:',x)
                     if x[0:2]!='FA':
                         print('*** DIRECT INIT - USB port appears to be there but no connection to rig ***')
                         self.active=False or force
@@ -439,14 +454,19 @@ class direct_connect(no_connect):
                 
             elif self.rig_type1=='Icom':
 
-                ps = self.power_switch(-1,VERBOSITY=1)
-                print('\tps=',ps)
-                if not ps:
-                    print('Rig appears to have power but turned off\n')
+                self.powered_up = self.power_switch(-1,VERBOSITY=VERBOSITY)
+                if VERBOSITY>0:
+                    print('\tpowered up=',self.powered_up)
+                if VERBOSITY>0:
+                    print('\tps=',ps)
+                if not self.powered_up:
+                    if VERBOSITY>0:
+                        print('Rig appears to have power but is turned off\n')
                 else:
                     # Read freq
                     freq = self.get_freq()
-                    print('\nIcom init - freq =',freq)
+                    if VERBOSITY>0:
+                        print('\nIcom init - freq =',freq)
                 return
 
     def send(self,cmd):
@@ -2049,21 +2069,29 @@ class direct_connect(no_connect):
         elif self.rig_type2 in ['IC9700','IC7300']:
 
             if opt==-1:
-                if VERBOSITY>0 or True:
+                #VERBOSITY=1
+                if VERBOSITY>0:
                     print('\tQuerying power switch still a bit quirky for ICOM rigs ...')
 
                 try:
                     if not self.civ:
-                        print('\t\t... No CIV yet --> FALSE')
+                        if VERBOSITY>0:
+                            print('\t\t... No CIV yet --> FALSE')
                         return False
                     else:
                         #print('\t\t.... get freq ....')
                         cmd = self.civ.icom_form_command([0x03])   
                         buf = self.get_response(cmd)
                         y=self.civ.icom_response(cmd,buf,QUIET=True)
-                        if len(y)==0:
-                            print('\t\t... NO RESPONSE --> FALSE')
-                        return len(y)>0
+                        valid = len(y)>0 and y!='NG'
+                        if VERBOSITY>0:
+                            print('\tcmd=',show_hex(cmd))
+                            print('\tbuf=',buf)
+                            print('\ty=',y)
+                            print('\tvalid=',valid)
+                            if not valid:
+                                print('\t\t... NO RESPONSE --> FALSE')
+                        return valid
                 except:                    
                     print('\t\t... Bombed out --> FALSE')
                     return False
@@ -2728,6 +2756,77 @@ class direct_connect(no_connect):
             print('DIRECT XIT: Invalid opt',opt)
             return -1
 
+    def proc_level(self,gain,VERBOSITY=0):
+        if self.rig_type1=='Kenwood':
+            print('DIRECT - SPEECH PROC LEVEL: Function not yet implemented for Kenwood rigs')
+            return 0
+        
+        if VERBOSITY>0:
+            print('DIRECT_IO - SPEECH PROC LEVEL: level in=',gain)
+
+        if self.rig_type1=='Icom':
+
+            if gain<0:
+                # Read current settings
+                civ_cmd0 = [0x16,0x44]
+                civ_cmd1 = [0x14,0x0E]
+            elif gain==0:
+                # Turn monitor off 
+                civ_cmd0 = [0x16,0x44,0x00]
+                civ_cmd1 = None
+            else:
+                # Turn monitor on and Set monitor gain
+                civ_cmd0 = [0x16,0x44,0x01]
+                gain2=round( 255/100.* gain )
+                y2  = int2bcd(min(gain2,255),2,1)
+                civ_cmd1 = [0x14,0x0E]+y2
+
+            cmd0 = self.civ.icom_form_command( civ_cmd0 )
+            x0   = self.get_response(cmd0)
+            y0   = self.civ.icom_response(cmd0,x0)
+            if VERBOSITY>0:
+                print('DIRECT_IO SPEECH PROC LEVEL: ',
+                      '\tciv_cmd0=',show_hex(civ_cmd0),
+                      '\n\tcmd0=',show_hex(cmd0),'\n\tx0=',x0,
+                      '\n\ty0=',y0,'\n')
+
+            if civ_cmd1==None:
+                onoff=False
+                gain=0
+            else:
+                cmd = self.civ.icom_form_command( civ_cmd1 )
+                x   = self.get_response(cmd)
+                onoff = x!=0
+                y   = self.civ.icom_response(cmd,x)
+                if gain<0:
+                    gain   = int( 100/255.*bcd2int(y[1:],1) )
+                if VERBOSITY>0:
+                    print('DIRECT_IO SPEECH PROC: level out=',gain,
+                          '\n\tciv_cmd1=',show_hex(civ_cmd1),
+                          '\n\tcmd=',show_hex(cmd),'\n\tx=',x,
+                          '\n\ty=',y,'\n')
+            return onoff,gain
+
+        # Yeasu
+        if gain<0:
+            # Read current setting
+            cmd  = 'PR0;'
+        elif gain==0:
+            # Turn speech proc off 
+            cmd  = 'BY;PR00;'
+        else:
+            # Set proc level
+            cmd  = 'PR01;'+'PL'+str(gain).zfill(3)+';PR0;'
+
+        buf=self.get_response(cmd)
+        if VERBOSITY>0:
+            print('\tcmd=',cmd,'\n\tbuf=',buf,'\t',buf[2:6])
+
+        if gain<0:
+            gain=int(buf[3:6])
+            
+        return False,0
+        
     # Function to deal with the monitor level
     # THIS SHOULD REPLACE THE TWO FUNCTIONS BELOW AND THE REDUNDANT FUNCTION IN SOCKET_IO!!!!
     def monitor_level(self,gain,VERBOSITY=0):
@@ -2765,10 +2864,12 @@ class direct_connect(no_connect):
                       '\n\ty0=',y0,'\n')
 
             if civ_cmd1==None:
+                onoff=False
                 gain=0
             else:
                 cmd = self.civ.icom_form_command( civ_cmd1 )
                 x   = self.get_response(cmd)
+                onoff = x!=0
                 y   = self.civ.icom_response(cmd,x)
                 if gain<0:
                     gain   = int( 100/255.*bcd2int(y[1:],1) )
@@ -2777,7 +2878,7 @@ class direct_connect(no_connect):
                           '\n\tciv_cmd1=',show_hex(civ_cmd1),
                           '\n\tcmd=',show_hex(cmd),'\n\tx=',x,
                           '\n\ty=',y,'\n')
-            return gain
+            return onoff,gain
 
         # Yeasu
         if gain<0:

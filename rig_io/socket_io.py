@@ -237,7 +237,8 @@ def open_rig_connection(connection,host=0,port=0,baud=0,tag='',
             if tag=='ROTOR':
                 sock.send('C2\r')
                 print(sock.recv(256))
-            else:
+            elif not quiet and sock.powered_up and rig not in ['IC7300','IC9700']:
+                # Not sure why this is here
                 sock.send('FA;')
                 print(sock.recv(256))
             return sock

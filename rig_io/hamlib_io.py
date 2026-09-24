@@ -183,7 +183,6 @@ class hamlib_connect(direct_connect):
         self.rotor     = False
         self.last_cmd  = ''
         self.sub_dial_func=None
-        self.powered_up = None
         
         try:
             self.s = socket.socket()
@@ -527,11 +526,8 @@ class hamlib_connect(direct_connect):
 
         # Error checking
         if 'RPRT' in x and x!='RPRT 0':
-            if cmd=='ALC':
-                print('HAMLIB_IO GET_RESPONSE - ALC command only valid when transmitting')
-            else:
-                print('HAMLIB_IO GET_RESPONSE - Houston we have a problem :',
-                      '\n\tcmd=',cmd,'\n\tx=',x)
+            print('HAMLIB_IO GET_RESPONSE - Houston we have a problem :',
+                  '\n\tcmd=',cmd,'\n\tx=',x)
             
         return x.replace(NULL,'')
 
@@ -1100,7 +1096,7 @@ class hamlib_connect(direct_connect):
         elif meter=='Comp':
             cmd = 'l COMP_METER'
         elif meter=='ALC':
-            cmd = 'ALC'
+            cmd = 'l ALC'
         else:
             print('Unknown meter')
             return 0
@@ -1119,6 +1115,12 @@ class hamlib_connect(direct_connect):
             if VERBOSITY>0:
                 print('\n\tval=',val,'\tS=',S)
             val=S
+        elif meter=='ALC' and True:
+            # Return Value is 0 to 1
+            # There are no markings on the ALC meter so we use S-meter markings instead
+            # S9 seems to be the cutoff for max allowable ALC so we scale to that
+            # Need to verify this for FT & IC rigs
+            val = 100*val         # Yaesu
         
         return val
 
@@ -1234,26 +1236,43 @@ class hamlib_connect(direct_connect):
                         
     # Routine to put rig into split mode
     def split_mode(self,opt,VERBOSITY=0):
-        #VERBOSITY=1
         if VERBOSITY>0:
             print('HAMLIB - SPLIT_MODE: opt=',opt)
 
         if opt==-1:
-            #print('\nQuerying split ...')
-            buf=self.get_response('s')
+            
             if VERBOSITY>0:
-                print('SPLIT: buf=',buf)
+                print('\tQuerying split ...')
+            cmd='s'
+            buf=self.get_response(cmd)
+            if VERBOSITY>0:
+                print('\tcmd=',cmd)
+                print('\tbuf=',buf)
             return buf[0]=='1'
 
-        elif opt==0:
+        elif opt in [0,1]:
             
-            buf=self.get_response('S 0 VFOA')
-            #print('SPLIT0: buf=',buf)
-                
-        elif opt==1:
-            
-            buf=self.get_response('S 1 VFOB')
-            #print('SPLIT1: buf=',buf)
+            if VERBOSITY>0:
+                txt=['OFF','ON']
+                print('\tTurning split ',txt[opt],' ...')
+            TX_VFO=['A','B']
+            cmd='S '+str(opt)+' VFO'+TX_VFO[opt]  
+            buf=self.get_response(cmd)
+            if VERBOSITY>0:
+                print('\tcmd=',cmd)
+                print('\tbuf=',buf)
+
+            if 0:
+                if VERBOSITY>0:
+                    print('\tQuerying split ...')
+                cmd='s'
+                buf=self.get_response(cmd)
+                if VERBOSITY>0:
+                    print('\tcmd=',cmd)
+                    print('\tbuf=',buf)
+                return buf[0]=='1'
+            else:
+                return opt==1
                 
         else:
             
@@ -1305,13 +1324,16 @@ class hamlib_connect(direct_connect):
             buf=self.get_response('\get_powerstat')
             if self.rig_type2=='IC9700' and buf=='RPRT -9':
                 print('\tGet Power Stat doesnt work if rig is in SAT MODE')
-                sys.exit(0)
-                    
+                #sys.exit(0)
+
+                """
                 satmode=self.sat_mode(-1)
                 print('\tsatmode1=',satmode)
                 if satmode:
                     satmode=self.sat_mode(0)
                     print('\tsatmode2=',satmode)
+                """
+                
             if VERBOSITY>0:
                 print('\tbuf=',buf)
             return buf=='1'
@@ -1498,7 +1520,88 @@ class hamlib_connect(direct_connect):
             return -1
 
 
+    # Function to deal with the speech proc level
+    def proc_level(self,gain,VERBOSITY=0):
+        if VERBOSITY>0:
+            print('HAMLIB_IO - PROC LEVEL: gain in=',gain)
+            
+        if gain<0:
+            # Read current settings
+            cmd1 = 'u COMP'
+            cmd2 = 'l COMP'
+        elif gain==0:
+            # Turn monitor off 
+            cmd1 = 'U COMP 0'
+            cmd2 = 'l COMP'
+        else:
+            # Turn monitor on and Set monitor gain
+            cmd1 = 'U COMP 1'
+            cmd2 = 'L COMP '+str(.01*float(gain))
 
+        buf1 = self.get_response(cmd1)
+        buf2 = self.get_response(cmd2)
+        if VERBOSITY>0:
+            print('HAMLIB_IO PROC_LEVEL: cmd1=',cmd1,
+                  '\n\tbuf1=',buf1,
+                  '\n\tcmd2=',cmd2,
+                  '\n\tbuf2=',buf2)
+            
+        if gain<0:
+            onoff = buf1=='1'
+            level = int( 100*float(buf2) )
+        elif gain==0:
+            onoff = False
+            level = int( 100*float(buf2) )
+        else:
+            onoff = True
+            level = gain
+
+        return onoff,level
+            
+            
+
+    # Function to deal with the monitor level
+    # THIS SHOULD REPLACE THE TWO FUNCTIONS BELOW AND THE REDUNDANT FUNCTION IN SOCKET_IO!!!!
+    def monitor_level(self,gain,VERBOSITY=0):
+        if VERBOSITY>0:
+            print('HAMLIB_IO - MONITOR LEVEL: gain in=',gain)
+            
+        if gain<0:
+            # Read current settings
+            cmd1 = 'u MON'
+            cmd2 = 'l MONITOR_GAIN'
+        elif gain==0:
+            # Turn monitor off 
+            cmd1 = 'U MON 0'
+            cmd2 = 'l MONITOR_GAIN'
+        else:
+            # Turn monitor on and Set monitor gain
+            cmd1 = 'U MON 1'
+            cmd2 = 'L MONITOR_GAIN '+str(.01*float(gain))
+
+        buf1 = self.get_response(cmd1)
+        buf2 = self.get_response(cmd2)
+        if VERBOSITY>0:
+            print('HAMLIB_IO MONITOR_LEVEL: cmd1=',cmd1,
+                  '\n\tbuf1=',buf1,
+                  '\n\tcmd2=',cmd2,
+                  '\n\tbuf2=',buf2)
+            
+        if gain<0:
+            onoff = buf1=='1'
+            level = int( 100*float(buf2) )
+        elif gain==0:
+            onoff = False
+            level = int( 100*float(buf2) )
+        else:
+            onoff = True
+            level = gain
+
+        return onoff,level
+            
+            
+
+    """
     # Function to get monitor level
     def get_monitor_gain(self):
         #VERBOSITY=1
@@ -1507,7 +1610,6 @@ class hamlib_connect(direct_connect):
             print('HAMLIB_IO - GET_MONITOR_GAIN: buf=',buf)
         return int( 100*float(buf) )
     
-        
     # Function to set monitor level
     def set_monitor_gain(self,gain):
         #VERBOSITY=1
@@ -1516,7 +1618,7 @@ class hamlib_connect(direct_connect):
         buf=self.get_response(cmd)
         if VERBOSITY>0:
             print('HAMLIB_IO - SET_MONITOR_GAIN: buf=',buf)
-    
+    """
         
     # Function to turn audio recording on/off - for use with SDR
     def recorder(self,on_off=None):

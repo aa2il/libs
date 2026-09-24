@@ -93,10 +93,11 @@ class icom_civ:
         resp = x[N:]
         N2 = N+len(self.ICOM_PREAMBLE2)
         if resp==self.ICOM_NG:
-            print('ICOM_RESPONSE: Command NO GOOD')
-            print('\tcmd      =',show_hex(cmd))
-            print('\tresponse =',show_hex(x))
-            print('\tresp     =',show_hex(resp))
+            if not QUIET:
+                print('ICOM_RESPONSE: Command NO GOOD')
+                print('\tcmd      =',show_hex(cmd))
+                print('\tresponse =',show_hex(x))
+                print('\tresp     =',show_hex(resp))
             return 'NG'
 
         elif resp==self.ICOM_OK:
