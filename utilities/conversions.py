@@ -110,7 +110,8 @@ def show_hex(x):
     if isinstance(x, str):
         return [hex(ord(c)) for c in x]
     else:
-        return [hex(c) for c in x]            
+        #return [hex(c) for c in x]                      # Hamlib now seems to require leading zeros for numbers less than 16
+        return ["{0:#0{1}x}".format(c,4) for c in x]
 
 # Function to return ascii values of a list of bytes
 def show_ascii(x):

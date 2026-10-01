@@ -184,12 +184,13 @@ def get_screen_size(app):
 
 # Splash screen
 class SPLASH_SCREEN():
-    def __init__(self,app,fname):
+    def __init__(self,app,fname,TITLE=None):
 
         self.app=app
         self.splash = QSplashScreen(QPixmap(fname))
         self.splash.show()
         self.center()
+        self.splash.setWindowTitle(TITLE)
         self.status_bar = StatusBar(self.splash,-1)
         #time.sleep(.1)
         app.processEvents()

@@ -313,8 +313,6 @@ class SPLASH_SCREEN():
         self.root.withdraw()
         self.win  = tk.Toplevel(root)
         self.win.title(TITLE)
-        print('SPLASH TITLE=',TITLE)
-        #self.win.title("Splish Splash")
         
         if False:
             if P.PLATFORM=='Linux':
