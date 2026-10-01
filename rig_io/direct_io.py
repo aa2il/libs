@@ -246,7 +246,8 @@ def try_rig(self,type1,type2,port,baud,VERBOSITY=0):
 
         self.s = serial.Serial(port,baud,timeout=TimeOut)
         if not self.s.is_open:
-            print("... Can't open port - giving up!")
+            if VERBOSITY>0:
+                print("\tCan't open port - giving up!")
             return False
         self.rig_type  = type1
         self.rig_type1  = type1
@@ -372,7 +373,8 @@ def find_direct_rig(self,port_in,baud_in,force=False,VERBOSITY=0):
         if try_rig(self,'Icom','IC706',SERIAL_PORT7,baud):
             return True
 
-    print("\n*** FIND_DIRECT: Can't find any rigs - giving up - PORT =",port_in,'***')
+    if VERBOSITY>0:
+        print("\n*** FIND_DIRECT: Can't find any rigs - giving up - PORT =",port_in,'***')
     return False
 
 ############################################################################################
@@ -423,9 +425,10 @@ class direct_connect(no_connect):
             self.active = True
 
         else:
-            print("\n*** DIRECT_CONNECT: Unable to open DIRECT connection to rig ***")
+            if VERBOSITY>0:
+                print("\n*** DIRECT_CONNECT: Unable to open DIRECT connection to rig ***")
+                print('\tport=',port,'\tbaud=',baud)
             self.active=False
-            print('\tport=',port,'\tbaud=',baud)
             
 
         # Test to make sure USB port is still alive

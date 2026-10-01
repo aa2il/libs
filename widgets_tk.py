@@ -23,12 +23,8 @@
 ############################################################################################
 
 import sys
-if sys.version_info[0]==3:
-    import tkinter as tk
-    import tkinter.font
-else:
-    import Tkinter as tk
-    import tkFont
+import tkinter as tk
+import tkinter.font
 from datetime import datetime,time
 from utilities import find_resource_file
     
@@ -311,48 +307,58 @@ class StatusBar(tk.Frame):
 
 # Splash screen
 class SPLASH_SCREEN():
-    def __init__(self,root,image):
+    def __init__(self,root,image,TITLE=None):
 
         self.root  = root
         self.root.withdraw()
-        self.splash  = tk.Toplevel(root)
+        self.win  = tk.Toplevel(root)
+        self.win.title(TITLE)
+        print('SPLASH TITLE=',TITLE)
+        #self.win.title("Splish Splash")
         
-        self.splash.title("Splish Splash")
         if False:
             if P.PLATFORM=='Linux':
-                self.splash.attributes("-topmost", True,'-type', 'splash')
+                self.win.attributes("-topmost", True,'-type', 'splash')
             elif P.PLATFORM=='Windows':
-                self.splash.attributes("-topmost", True)
+                self.win.attributes("-topmost", True)
             else:
                 print('GUI INIT: Unknown OS',P.PLATFORM)
                 sys.exit(0)
         else:
-            self.splash.overrideredirect(True)           # Remove bvorder
-            self.splash.geometry('+500+500')
+            # Remove bvorder
+            #self.win.overrideredirect(True)    # This loses the title also
+            if sys.platform == "linux" or sys.platform == "linux2":
+                self.win.attributes("-topmost", True,'-type', 'splash')
+            elif sys.platform == "win32":
+                self.win.attributes("-topmost", True)
+            elif sys.platform == "darwin":
+                print('No support for Mac OS')
+                sys.exit(0)
+            self.win.geometry('+500+500')
 
-        self.splash.update()
-        self.splash.deiconify()
+        self.win.update()
+        self.win.deiconify()
         
         fname=find_resource_file(image)
         print(fname)
         self.pic = tk.PhotoImage(file=fname)
-        self.lab = tk.Label(self.splash, bg='white', image=self.pic)
+        self.lab = tk.Label(self.win, bg='white', image=self.pic)
         self.lab.pack()
         root.update_idletasks()
         
-        self.status_bar = StatusBar(self.splash,relief=None)
+        self.status_bar = StatusBar(self.win,relief=None)
         self.status_bar.pack(fill=tk.X, side = tk.BOTTOM)
         self.status_bar.setText("Howdy Ho!")
-        #self.splash.update()
-            
+        #self.win.update()
+
     def destroy(self):
-        self.splash.destroy()
+        self.win.destroy()
     
     def hide(self):
-        self.splash.withdraw()
+        self.win.withdraw()
     
     def show(self):
-        self.splash.deiconify()
+        self.win.deiconify()
     
 ################################################################################
 

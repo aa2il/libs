@@ -243,11 +243,12 @@ def open_rig_connection(connection,host=0,port=0,baud=0,tag='',
                 print(sock.recv(256))
             return sock
         elif connection=='DIRECT':
-            print('SOCKET_IO: Unable to activate DIRECT connection')
-            #sys,exit(0)
-            #return None
+            if not quiet:
+                print('SOCKET_IO: Unable to activate DIRECT connection')
 
-    print('\n*** Unable to open connection to rig via',connection,' route ***\n')
+    if not quiet:
+        print('\n*** Unable to open connection to rig via',connection,' route ***\n')
+        
     return no_connect(host,port)
 
 

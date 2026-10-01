@@ -84,7 +84,7 @@ w: send_cmd           (Command)             W: send_cmd_rx        (Command,Reply
 ?: stream_drain       (Stream ID)           ?: stream_list        ()
 
 
-In interactive mode prefix long command names with '\', e.g. '\dump_state'
+In interactive mode prefix long command names with '\', e.g. "\dump_state"
 
 The special command '-' is used to read further commands from standard input
 Commands and arguments read from standard input must be white space separated,
@@ -183,6 +183,8 @@ class hamlib_connect(direct_connect):
         self.rotor     = False
         self.last_cmd  = ''
         self.sub_dial_func=None
+        self.VERBOSITY     = VERBOSITY
+        self.powered_up    = None
         
         try:
             self.s = socket.socket()
@@ -1321,7 +1323,7 @@ class hamlib_connect(direct_connect):
         if opt==-1:
             if VERBOSITY>0:
                 print('\tQuerying power switch ...')
-            buf=self.get_response('\get_powerstat')
+            buf=self.get_response("\get_powerstat")
             if self.rig_type2=='IC9700' and buf=='RPRT -9':
                 print('\tGet Power Stat doesnt work if rig is in SAT MODE')
                 #sys.exit(0)

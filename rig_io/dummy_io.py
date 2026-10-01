@@ -36,8 +36,9 @@ logging.basicConfig(
 
 # Object with dummy connection
 class no_connect:
-    def __init__(self,host=0,port=0,RIG_TYPE=None):
-        print('DUMMY_IO->NO CONNECT: Init ...')
+    def __init__(self,host=0,port=0,RIG_TYPE=None,VERBOSITY=0):
+        if VERBOSITY>0:
+            print('DUMMY_IO->NO CONNECT: Init ...')
 
         self.s          = None
         self.active     = False
@@ -61,6 +62,8 @@ class no_connect:
 
         self.default_mode = 'CW'
         self.default_freq = 0
+        self.VERBOSITY     = VERBOSITY
+        self.powered_up    = None
 
         if RIG_TYPE=='TYT9000d':
             self.active       = True
