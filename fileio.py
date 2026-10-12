@@ -194,7 +194,7 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False,DF=Fal
         print('PARSE_ADIF: Reading',fname,'...')
 
     # Init - We'll need an attribute to hold the file pointer
-    logbook =[]
+    logbook = []
     if not hasattr(parse_adif, "fp"):
         parse_adif.fp=None
         parse_adif.nflagged=0
@@ -221,7 +221,7 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False,DF=Fal
         
         error_trap('FILE_IO->PARSE_ADIF: *** Unable to open file or other error')
         print('fname=',fname)
-        return None            # ,nflagged
+        return None   # ,parse_adif,nflagged
         
     raw = re.split('(?i)<eor>',raw1[-1] )
     if verbosity>0:
@@ -297,10 +297,10 @@ def parse_adif(fname,line=None,upper_case=False,verbosity=0,REVISIT=False,DF=Fal
     if DF:
         # Convert to pandas data frame
         df = pd.DataFrame.from_dict(logbook).fillna('').astype(str)
-        return df             #,nflagged
+        return df     #,parse_adif,nflagged
     else:
         # Return dict    
-        return logbook          #,nflagged
+        return logbook           # ,parse_adif,nflagged
 
 
 # Convert dict keys to upper case

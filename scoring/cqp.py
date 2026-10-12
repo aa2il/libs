@@ -1,7 +1,7 @@
 ###########################################################################################
 #
 # cqp.py - Rev 1.0
-# Copyright (C) 2021-5 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
+# Copyright (C) 2021-6 by Joseph B. Attili, joe DOT aa2il AT gmail DOT com
 #
 # Routines for scoring Commie-fornia QSO Party.
 #
@@ -48,6 +48,7 @@ class CQP_SCORING(CONTEST_SCORING):
         self.calls       = []
         self.county_cnt  = np.zeros(len(COUNTIES['CA']),dtype=np.int32)
         self.band_cnt    = np.zeros(len(self.BANDS),dtype=np.int32)
+        self.band_cnt2   = np.zeros(len(self.BANDS),dtype=np.int32)
         self.nq          = 0
         self.TRAP_ERRORS = TRAP_ERRORS
         self.init_otf_scoring()
@@ -259,6 +260,9 @@ class CQP_SCORING(CONTEST_SCORING):
         else:
             self.nqsos2 += 1;
             self.calls.append(call)
+            self.band_cnt2[idx1] += 1
+            if county_line:
+                self.band_cnt2[idx1] += 1
             
             try:
                 if qth!='DX':
@@ -278,7 +282,9 @@ class CQP_SCORING(CONTEST_SCORING):
         # Error checking
         if country=='Canada':
             qth2,secs2=Oh_Canada(dx_station,CQP=True)
-            if qth2!=qth_in and self.TRAP_ERRORS:
+            if call=='VY1JA' and qth_in=='NT':
+                print('???? Inconsistancy with callsign ?????')
+            elif qth2!=qth_in and self.TRAP_ERRORS:
                 print('rec     =',rec)
                 print('call    =',call)
                 print('Oh Canada: qth_in=',qth_in,'\tqth2=',qth2)
@@ -417,15 +423,21 @@ class CQP_SCORING(CONTEST_SCORING):
                 tag='*****'
             print(i,'\t',COUNTIES['CA'][i],'\t',int(self.county_cnt[i]),'\t',tag)
 
-        print('\nRaw QSOs by Band:')
-        for i in range(len(self.band_cnt)):
-            print(i,'\t',self.BANDS[i],'\t',int(self.band_cnt[i]) )
-
         uniques = np.unique( self.calls )
         uniques.sort()
         print('\nThere were',len(uniques),'unique calls:\n',uniques)
         print('\nDUPERS:',self.dupers)
         print('Special Calls:',self.special_calls)
+
+        print('\nRaw QSOs by Band:')
+        for i in range(len(self.band_cnt)):
+            print('\t',self.BANDS[i],'\t\t',int(self.band_cnt[i]) )
+        print('\tTotals:\t\t',sum(self.band_cnt))
+
+        print('\nAdjusted QSOs by Band:')
+        for i in range(len(self.band_cnt)):
+            print('\t',self.BANDS[i],'\t\t',int(self.band_cnt2[i]) )
+        print('\tTotals:\t\t',sum(self.band_cnt2))
 
         print('\nNo. raw QSOs (nqsos1)    =\t',self.nqsos1)
         print('No. unique QSOs (nqsos2) =\t',self.nqsos2)
