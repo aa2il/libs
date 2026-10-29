@@ -515,7 +515,7 @@ class DictToClass(object):
         for key, value in dictionary.items():
             setattr(self, key, value)
 
-def read_csv_file(fname,delim=',',FLAT_DATA=False,DICT=False,VERBOSITY=0):
+def read_csv_file(fname,delim=',',FLAT_DATA=False,DICT=False,COMMENT=None,VERBOSITY=0):
 
     if VERBOSITY>0 or True:
         print('READing CSV FILE ',fname,' ... flat=',FLAT_DATA)
@@ -563,6 +563,8 @@ def read_csv_file(fname,delim=',',FLAT_DATA=False,DICT=False,VERBOSITY=0):
                 elif FLAT_DATA:
                     line=[]
                     for val in row:
+                        if COMMENT and COMMENT in val:
+                            val=val.split(COMMENT)[0]
                         line.append(float(val))
                     #if VERBOSITY>0:
                     #    print('line=',line)

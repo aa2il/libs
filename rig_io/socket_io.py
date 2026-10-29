@@ -202,7 +202,10 @@ def open_rig_connection(connection,host=0,port=0,baud=0,tag='',
             return sock
         elif connection=='HAMLIB' and required:
             print('SOCKET_IO: Unable to activate HAMLIB connection - aborting')
-            sys,exit(0)
+            if not sock.powered_up:
+                return sock
+            else:
+                sys,exit(0)
 
     if connection=='DIRECT' or connection=='ANY':
         if tag=='ROTOR':

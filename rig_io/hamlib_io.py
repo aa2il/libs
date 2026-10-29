@@ -211,7 +211,7 @@ class hamlib_connect(direct_connect):
                     print('HAMLIB_CONNECT: frq=',frq,'\tmode=',m,'\tsplit=',s,' on port',port)
                 else:
                     print('HAMLIB_CONNECT: Rig appears to have power but is turned off')
-                    frq=0
+                    frq=-1
                     
             self.s.settimeout(None)
 
@@ -527,9 +527,11 @@ class hamlib_connect(direct_connect):
                 print('HAMLIB_IO GET_RESPONSE - Lock released 2')
 
         # Error checking
-        if 'RPRT' in x and x!='RPRT 0':
+        if x==None or ('RPRT' in x and x!='RPRT 0'):
             print('HAMLIB_IO GET_RESPONSE - Houston we have a problem :',
                   '\n\tcmd=',cmd,'\n\tx=',x)
+            if x==None:
+                return x
             
         return x.replace(NULL,'')
 
