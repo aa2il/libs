@@ -23,12 +23,8 @@
 import sys
 import os
 import json
-if sys.version_info[0]==3:
-    from tkinter import *
-    import tkinter.font
-else:
-    from Tkinter import *
-    import tkFont
+from tkinter import *
+import tkinter.font
 import time
 from rig_io import SATELLITE_LIST
 from widgets_tk import FrameWithScrollBar
